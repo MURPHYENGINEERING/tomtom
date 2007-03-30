@@ -226,7 +226,8 @@ function TomTom:CreateMinimapIcon(label, x, y)
 	model:SetWidth(140.8)
 	model:SetPoint("CENTER", Minimap, "CENTER", 0, 0)
 	model:SetModel("Interface\\Minimap\\Rotating-MinimapArrow.mdx")
-	model:SetFogColor(0.9999977946281433,0.9999977946281433,0.9999977946281433,0.9999977946281433)
+--	model:SetFogColor(0.9999977946281433,0.9999977946281433,0.9999977946281433,0.9999977946281433)
+	model:SetFogColor(math.random(), math.random(), math.random(), math.random())
 	model:SetFogFar(1)
 	model:SetFogNear(0)
 	model:SetLight(0,1,0,0,0,1,1,1,1,1,1,1,1)
@@ -305,45 +306,8 @@ function TomTom:CreateSlashCommands()
 	-- Waypoint placement slash commands
 	self.cmd_way = self:InitializeSlashCommand("TomTom - Waypoints", "TOMTOM_WAY", "way")
 	
-	local sortFunc = function(a,b) 
-		if a.x == b.x then return a.y < b.y else return a.x < b.x end
-	end
-	
 	local Way_Set = function(x,y,desc)
-		if not self.m_points then self.m_points = {} end
-		if not self.w_points then self.w_points = {} end
-
-		local oc,oz = Astrolabe:GetCurrentPlayerPosition()
-		SetMapToCurrentZone()
-		local c,z = Astrolabe:GetCurrentPlayerPosition()
-		SetMapZoom(oc,oz)
-						
-		local m_icon = self:CreateMinimapIcon(desc, x, y)
-		local w_icon = self:CreateWorldMapIcon(desc, x, y)
-		--local c,z = Astrolabe:GetCurrentPlayerPosition()
-
-		x = x / 100
-		y = y / 100
-
-		Astrolabe:PlaceIconOnMinimap(m_icon, c, z, x, y)
-		Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, w_icon, c, z, x, y)
-		
-		w_icon:Show()
-
-		local zone = select(z, GetMapZones(c))
-		m_icon.zone = zone
-		w_icon.zone = zone
-
-		self:PrintF("Setting a waypoint at %.2f, %.2f in %s.", x * 100, y * 100, zone)
-
-		self.m_points[c] = self.m_points[c] or {}
-		self.m_points[c][z] = self.m_points[c][z] or {}
-		self.m_points.current = self.m_points[c][z]
-		
-		table.insert(self.m_points[c][z], {["x"] = x, ["y"] = y, ["icon"] = m_icon})
-		table.sort(self.m_points[c][z], sortFunc)
-
-		table.insert(self.w_points, {["c"] = c, ["z"] = z, ["x"] = x, ["y"] = y, ["icon"] = w_icon})
+		self:AddWaypoint(x,y,desc)
 	end
 	
 	local Way_Reset = function()
@@ -390,7 +354,9 @@ function TomTom:PLAYER_ENTERING_WORLD()
 	local oc,oz = Astrolabe:GetCurrentPlayerPosition()
 	SetMapToCurrentZone()
 	local c,z,x,y = Astrolabe:GetCurrentPlayerPosition()
-	SetMapZoom(oc,oz)
+	if oc and oz then
+		SetMapZoom(oc,oz)
+	end
 
 	if self.m_points and self.m_points[c] then
 		for zone,v in pairs(self.m_points[c]) do
@@ -415,4 +381,48 @@ function TomTom:WORLD_MAP_UPDATE()
 			icon:Hide()
 		end
 	end
+end
+
+local sortFunc = function(a,b) 
+	if a.x == b.x then return a.y < b.y else return a.x < b.x end
+end
+	
+
+function TomTom:AddWaypoint(x,y,desc)
+	if not self.m_points then self.m_points = {} end
+	if not self.w_points then self.w_points = {} end
+
+	local oc,oz = Astrolabe:GetCurrentPlayerPosition()
+	SetMapToCurrentZone()
+	local c,z = Astrolabe:GetCurrentPlayerPosition()
+	if oc and oz then
+		SetMapZoom(oc,oz)
+	end
+	
+	local m_icon = self:CreateMinimapIcon(desc, x, y)
+	local w_icon = self:CreateWorldMapIcon(desc, x, y)
+	--local c,z = Astrolabe:GetCurrentPlayerPosition()
+
+	x = x / 100
+	y = y / 100
+
+	Astrolabe:PlaceIconOnMinimap(m_icon, c, z, x, y)
+	Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, w_icon, c, z, x, y)
+	
+	w_icon:Show()
+
+	local zone = select(z, GetMapZones(c))
+	m_icon.zone = zone
+	w_icon.zone = zone
+
+	self:PrintF("Setting a waypoint at %.2f, %.2f in %s.", x * 100, y * 100, zone)
+
+	self.m_points[c] = self.m_points[c] or {}
+	self.m_points[c][z] = self.m_points[c][z] or {}
+	self.m_points.current = self.m_points[c][z]
+	
+	table.insert(self.m_points[c][z], {["x"] = x, ["y"] = y, ["icon"] = m_icon})
+	table.sort(self.m_points[c][z], sortFunc)
+
+	table.insert(self.w_points, {["c"] = c, ["z"] = z, ["x"] = x, ["y"] = y, ["icon"] = w_icon})
 end
