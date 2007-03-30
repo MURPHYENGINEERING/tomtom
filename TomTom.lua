@@ -8,7 +8,7 @@ local L = setmetatable({
 
 TomTom = DongleStub("Dongle-Beta1"):New("TomTom")
 local DongleFrames = DongleStub("DongleFrames-1.0")
-local Astrolabe = DongleStub("Astrolabe-0.3")
+local Astrolabe = DongleStub("Astrolabe-0.4")
 local profile
 
 function TomTom:Initialize()
