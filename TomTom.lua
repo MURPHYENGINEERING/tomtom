@@ -399,6 +399,10 @@ function TomTom:AddWaypoint(x,y,desc)
 		SetMapZoom(oc,oz)
 	end
 	
+	if not c or not z then
+		return 
+	end
+
 	local m_icon = self:CreateMinimapIcon(desc, x, y)
 	local w_icon = self:CreateWorldMapIcon(desc, x, y)
 	--local c,z = Astrolabe:GetCurrentPlayerPosition()
