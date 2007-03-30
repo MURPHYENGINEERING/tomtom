@@ -347,7 +347,7 @@ function TomTom:CreateSlashCommands()
 	end
 	
 	local Way_Reset = function()
-		if #self.m_points == 0 then
+		if #self.w_points == 0 then
 			self:Print("There are no waypoints to remove.")
 			return
 		end
