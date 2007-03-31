@@ -230,7 +230,8 @@ function TomTom:CreateMinimapIcon(label, x, y)
 	model:SetFogColor(math.random(), math.random(), math.random(), math.random())
 	model:SetFogFar(1)
 	model:SetFogNear(0)
-	model:SetLight(0,1,0,0,0,1,1,1,1,1,1,1,1)
+--	model:SetLight(0,1,0,0,0,1,1,1,1,1,1,1,1)
+	model:SetLight(1, 0, 0, -0.707, -0.707, 0.7, 1.0, 1.0, 1.0, 0.8, 1.0, 1.0, 0.8)
 	model:SetModelScale(.600000023841879)
 	model.parent = icon
 	icon.arrow = model
@@ -273,7 +274,7 @@ function TomTom:CreateWorldMapIcon(label, x, y)
 	texture:SetTexCoord(0.5, 0.75, 0, 0.25)
 	texture:SetAllPoints()
 	icon.dot = texture
-	icon:SetScript("OnEnter", WorldMapIcon_OnEnter)
+	--icon:SetScript("OnEnter", WorldMapIcon_OnEnter)
 
 	return icon
 end
@@ -399,7 +400,7 @@ function TomTom:AddWaypoint(x,y,desc)
 		SetMapZoom(oc,oz)
 	end
 	
-	if not c or not z then
+	if not c or not z or c <= 1 then
 		return 
 	end
 
