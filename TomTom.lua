@@ -6,7 +6,7 @@ local L = setmetatable({
 	TOOLTIP_RIGHTCLICK = "Right-click to toggle the options panel.";
 }, {__index=function(t,k) return k end})
 
-TomTom = DongleStub("Dongle-Beta1"):New("TomTom")
+TomTom = DongleStub("Dongle-1.0-RC3"):New("TomTom")
 local DongleFrames = DongleStub("DongleFrames-1.0")
 local Astrolabe = DongleStub("Astrolabe-0.4")
 local profile
@@ -123,34 +123,57 @@ function TomTom:CreateCoordWindows()
 	TomTomFrame:SetScript("OnEnter", OnEnter)
 	TomTomFrame:SetScript("OnLeave", OnLeave)
 	TomTomFrame:SetScript("OnUpdate", CoordFrame_OnUpdate)
+
+	if not profile.show then
+		TomTomFrame:Hide()
+	end
 		
 	-- Create TomTomWorldFrame, which is anchored to the center of the WorldMap
 	DongleFrames:Create("n=TomTomWorldFrame#p=WorldMapFrame")
 	TomTomWorldFrame.Player = DongleFrames:Create("p=TomTomWorldFrame#t=FontString#inh=GameFontHighlightSmall", "BOTTOM", WorldMapPositioningGuide, "BOTTOM", -100, 11)
 	TomTomWorldFrame.Cursor = DongleFrames:Create("p=TomTomWorldFrame#t=FontString#inh=GameFontHighlightSmall", "BOTTOM", WorldMapPositioningGuide, "BOTTOM", 100, 11)		
 	TomTomWorldFrame:SetScript("OnUpdate", WorldMap_OnUpdate)
+
+	if not profile.worldmap then TomTomWorldFrame:Hide() end	
 	
 	self.frame = CreateFrame("Frame")
 end
 
+local count = 0
+local tooltip_icon
+local function Tooltip_OnUpdate(self, elapsed)
+	count = count + elapsed
+	if count >= 0.1 then
+		local tooltip = TomTom.tooltip
+		local dist,x,y = Astrolabe:GetDistanceToIcon(tooltip_icon)
+		TomTomTooltipTextLeft3:SetText(("%s yards away"):format(math.floor(dist)), 1, 1 ,1)
+	end
+end
+
 local function MinimapIcon_OnEnter(self)
-	GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
+	local tooltip = TomTom.tooltip
+	tooltip:SetOwner(self, "ANCHOR_CURSOR")
+	tooltip_icon = self
 	if self.label then
-		GameTooltip:SetText("TomTom: " .. self.label .. "\n")
+		tooltip:SetText("TomTom: " .. self.label .. "\n")
 	else
-		GameTooltip:SetText("TomTom Waypoint\n")
+		tooltip:SetText("TomTom Waypoint\n")
 	end
 
 	local dist,x,y = Astrolabe:GetDistanceToIcon(self)
 
-	GameTooltip:AddLine(self.coord, 1, 1, 1)
-	GameTooltip:AddLine(("%s yards away"):format(math.floor(dist)), 1, 1 ,1)
-	GameTooltip:AddLine(self.zone, 0.7, 0.7, 0.7)
-	GameTooltip:Show()
+	tooltip:AddLine(self.coord, 1, 1, 1)
+	tooltip:AddLine(("%s yards away"):format(math.floor(dist)), 1, 1 ,1)
+	tooltip:AddLine(self.zone, 0.7, 0.7, 0.7)
+	tooltip:Show()
+	tooltip:SetScript("OnUpdate", Tooltip_OnUpdate)
 end
 
 local function MinimapIcon_OnLeave(self)
-	GameTooltip:Hide()
+	local tooltip = TomTom.tooltip
+	tooltip_icon = nil
+	tooltip:Hide()
+	tooltip:SetScript("OnUpdate", nil)
 end
 
 local halfpi = math.pi / 2
@@ -171,6 +194,7 @@ local function MinimapIcon_OnUpdate(self, elapsed)
 
 	if edge and not arrow then
 		self.arrow:Show()
+		self.arrow.seqtime = 0
 		self.dot:Hide()
 		icon.edge = true
 	elseif not edge and not dot then
@@ -183,6 +207,8 @@ local function MinimapIcon_OnUpdate(self, elapsed)
 	if dist < 11 and profile.clearwaypoints then
 		-- Clear this waypoint
 		Astrolabe:RemoveIconFromMinimap(self)
+		self.pair:Hide()
+		table.insert(TomTom.worldmapIcons, self.pair)
 		TomTom:PrintF("You have arrived at your location (%s)", self.coord)
 	end
 end
@@ -190,6 +216,10 @@ end
 function TomTom:CreateMinimapIcon(label, x, y)
 	if not self.minimapIcons then
 		self.minimapIcons = {}
+	end
+
+	if not self.tooltip then
+		self.tooltip = CreateFrame("GameTooltip", "TomTomTooltip", Minimap, "GameTooltipTemplate")
 	end
 
 	-- Return one from the frame pool, if possible
@@ -227,12 +257,13 @@ function TomTom:CreateMinimapIcon(label, x, y)
 	model:SetPoint("CENTER", Minimap, "CENTER", 0, 0)
 	model:SetModel("Interface\\Minimap\\Rotating-MinimapArrow.mdx")
 --	model:SetFogColor(0.9999977946281433,0.9999977946281433,0.9999977946281433,0.9999977946281433)
-	model:SetFogColor(math.random(), math.random(), math.random(), math.random())
-	model:SetFogFar(1)
-	model:SetFogNear(0)
+--	model:SetFogColor(math.random(), math.random(), math.random(), math.random())
+--	model:SetFogFar(1)
+--	model:SetFogNear(0)
 --	model:SetLight(0,1,0,0,0,1,1,1,1,1,1,1,1)
-	model:SetLight(1, 0, 0, -0.707, -0.707, 0.7, 1.0, 1.0, 1.0, 0.8, 1.0, 1.0, 0.8)
+--	model:SetLight(1, 0, 0, -0.707, -0.707, 0.7, 1.0, 1.0, 1.0, 0.8, 1.0, 1.0, 0.8)
 	model:SetModelScale(.600000023841879)
+
 	model.parent = icon
 	icon.arrow = model
 	model:SetScript("OnUpdate", MinimapIcon_UpdateArrow)
@@ -399,13 +430,15 @@ function TomTom:AddWaypoint(x,y,desc)
 	if oc and oz then
 		SetMapZoom(oc,oz)
 	end
-	
-	if not c or not z or c <= 1 then
+
+	if not c or not z or c < 1 then
+		self:Print("Cannot find a valid zone to place the coordinates")
 		return 
 	end
 
 	local m_icon = self:CreateMinimapIcon(desc, x, y)
 	local w_icon = self:CreateWorldMapIcon(desc, x, y)
+	m_icon.pair = w_icon
 	--local c,z = Astrolabe:GetCurrentPlayerPosition()
 
 	x = x / 100
