@@ -6,7 +6,7 @@ local L = setmetatable({
 	TOOLTIP_RIGHTCLICK = "Right-click to toggle the options panel.";
 }, {__index=function(t,k) return k end})
 
-TomTom = DongleStub("Dongle-1.0-RC3"):New("TomTom")
+TomTom = DongleStub("Dongle-1.0"):New("TomTom")
 local DongleFrames = DongleStub("DongleFrames-1.0")
 local Astrolabe = DongleStub("Astrolabe-0.4")
 local profile
@@ -152,6 +152,7 @@ end
 
 local function MinimapIcon_OnEnter(self)
 	local tooltip = TomTom.tooltip
+	tooltip:SetParent(UIParent)
 	tooltip:SetOwner(self, "ANCHOR_CURSOR")
 	tooltip_icon = self
 	if self.label then
@@ -219,7 +220,7 @@ function TomTom:CreateMinimapIcon(label, x, y)
 	end
 
 	if not self.tooltip then
-		self.tooltip = CreateFrame("GameTooltip", "TomTomTooltip", Minimap, "GameTooltipTemplate")
+		self.tooltip = CreateFrame("GameTooltip", "TomTomTooltip", UIParent, "GameTooltipTemplate")
 	end
 
 	-- Return one from the frame pool, if possible
@@ -273,7 +274,24 @@ function TomTom:CreateMinimapIcon(label, x, y)
 end
 
 local function WorldMapIcon_OnEnter(self)
-	TomTom:Print(self.coord)
+	local tooltip = TomTom.tooltip
+	tooltip:SetParent(self)
+	tooltip:SetOwner(self, "ANCHOR_CURSOR")
+	tooltip_icon = self
+	if self.label then
+		tooltip:SetText("TomTom: " .. self.label .. "\n")
+	else
+		tooltip:SetText("TomTom Waypoint\n")
+	end
+
+	tooltip:AddLine(self.coord, 1, 1, 1)
+	tooltip:AddLine(self.zone, 0.7, 0.7, 0.7)
+	tooltip:Show()
+end
+
+local function WorldMapIcon_OnLeave(self)
+	local tooltip = TomTom.tooltip
+	tooltip:Hide()
 end
 
 function TomTom:CreateWorldMapIcon(label, x, y)
@@ -305,8 +323,8 @@ function TomTom:CreateWorldMapIcon(label, x, y)
 	texture:SetTexCoord(0.5, 0.75, 0, 0.25)
 	texture:SetAllPoints()
 	icon.dot = texture
-	--icon:SetScript("OnEnter", WorldMapIcon_OnEnter)
-
+	icon:SetScript("OnEnter", WorldMapIcon_OnEnter)
+	icon:SetScript("OnLeave", WorldMapIcon_OnLeave)
 	return icon
 end
 

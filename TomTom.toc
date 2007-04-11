@@ -2,6 +2,7 @@
 ## Title: TomTom
 ## Notes: Acts as your portable navigation assistant
 ## SavedVariables: TomTomDB
+## OptionalDeps: Dongle
 
 Dongle.lua
 DongleFrames.lua
