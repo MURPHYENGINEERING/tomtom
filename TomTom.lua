@@ -137,6 +137,7 @@ function TomTom:CreateCoordWindows()
 	if not profile.worldmap then TomTomWorldFrame:Hide() end	
 	
 	self.frame = CreateFrame("Frame")
+
 end
 
 local count = 0
@@ -177,6 +178,74 @@ local function MinimapIcon_OnLeave(self)
 	tooltip:SetScript("OnUpdate", nil)
 end
 
+local function DropDown_RemoveWaypoint()
+	local icon = TomTomDropDown.icon
+
+	Astrolabe:RemoveIconFromMinimap(icon)
+
+	icon.pair:Hide()
+	table.insert(TomTom.worldmapIcons, icon.pair)
+
+	for idx,entry in ipairs(TomTom.w_points) do
+		local w_icon = entry.icon
+		if icon.pair == w_icon then
+			table.remove(TomTom.w_points, idx)
+			break
+		end
+	end
+end
+
+local function DropDown_Init()
+	local dropdown = TomTomDropDown
+	local label = dropdown.icon.label
+
+	if not label:match("[^%s]") then
+		label = "TomTom Waypoint"
+	end
+
+	UIDropDownMenu_AddButton{
+		text = label,
+		isTitle = 1,
+	}
+
+	UIDropDownMenu_AddButton{
+		text = "Remove waypoint",
+		value = "remove",
+		func = DropDown_RemoveWaypoint,
+	}
+	UIDropDownMenu_AddButton{
+		text = "Send to party",
+		value = "sendparty",
+		func = DropDown_SendWaypoint,
+		textR = 0.6,
+		textG = 0.6,
+		textB = 0.6,
+	}
+	UIDropDownMenu_AddButton{
+		text = "Send to raid",
+		value = "sendraid",
+		func = DropDown_SendWaypoint,
+		textR = 0.6,
+		textG = 0.6,
+		textB = 0.6,
+	}
+end
+
+local function MinimapIcon_OnClick(self)
+	local dropdown = TomTom.dropdown
+	if not dropdown then
+		TomTom.dropdown = CreateFrame("Frame", "TomTomDropDown", UIParent, "UIDropDownMenuTemplate")
+		dropdown = TomTom.dropdown
+		--UIDropDownMenu_SetButtonWidth(50, dropdown)
+		--UIDropDownMenu_SetWidth(50, dropdown)
+	end
+
+	dropdown:SetParent(self)
+	dropdown.icon = self
+	UIDropDownMenu_Initialize(dropdown, DropDown_Init, "MENU")
+	ToggleDropDownMenu(1, nil, dropdown, "cursor", 0, 0);
+end
+
 local halfpi = math.pi / 2
 local function MinimapIcon_UpdateArrow(self, elapsed)
 	local icon = self.parent
@@ -211,6 +280,14 @@ local function MinimapIcon_OnUpdate(self, elapsed)
 		self.pair:Hide()
 		table.insert(TomTom.worldmapIcons, self.pair)
 		TomTom:PrintF("You have arrived at your location (%s)", self.coord)
+
+		for idx,entry in ipairs(TomTom.w_points) do
+			local w_icon = entry.icon
+			if self.pair == w_icon then
+				table.remove(TomTom.w_points, idx)
+				break
+			end
+		end
 	end
 end
 
@@ -239,6 +316,7 @@ function TomTom:CreateMinimapIcon(label, x, y)
 	icon = CreateFrame("Button", nil, Minimap)
 	icon:SetHeight(12)
 	icon:SetWidth(12)
+	icon:RegisterForClicks("RightButtonUp")
 
 	icon.label = label
 	icon.coord = string.format("%5.2f, %5.2f", x, y)
@@ -251,6 +329,7 @@ function TomTom:CreateMinimapIcon(label, x, y)
 	icon:SetScript("OnEnter", MinimapIcon_OnEnter)
 	icon:SetScript("OnLeave", MinimapIcon_OnLeave)
 	icon:SetScript("OnUpdate", MinimapIcon_OnUpdate)
+	icon:SetScript("OnClick", MinimapIcon_OnClick)
 
 	local model = CreateFrame("Model", nil, icon)
 	model:SetHeight(140.8)
