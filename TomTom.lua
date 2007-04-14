@@ -153,9 +153,10 @@ end
 
 local function MinimapIcon_OnEnter(self)
 	local tooltip = TomTom.tooltip
-	tooltip:SetParent(UIParent)
-	tooltip:SetOwner(self, "ANCHOR_CURSOR")
-	tooltip_icon = self
+	--tooltip:SetParent(UIParent)
+	tooltip:SetScale(UIParent:GetEffectiveScale())
+    tooltip:SetOwner(self, "ANCHOR_CURSOR")
+    tooltip_icon = self
 	if self.label then
 		tooltip:SetText("TomTom: " .. self.label .. "\n")
 	else
@@ -297,7 +298,7 @@ function TomTom:CreateMinimapIcon(label, x, y)
 	end
 
 	if not self.tooltip then
-		self.tooltip = CreateFrame("GameTooltip", "TomTomTooltip", UIParent, "GameTooltipTemplate")
+		self.tooltip = CreateFrame("GameTooltip", "TomTomTooltip", nil, "GameTooltipTemplate")
 	end
 
 	-- Return one from the frame pool, if possible
@@ -354,8 +355,9 @@ end
 
 local function WorldMapIcon_OnEnter(self)
 	local tooltip = TomTom.tooltip
-	tooltip:SetParent(self)
-	tooltip:SetOwner(self, "ANCHOR_CURSOR")
+    --tooltip:SetParent(self)
+    tooltip:SetScale(UIParent:GetEffectiveScale())
+    tooltip:SetOwner(self, "ANCHOR_CURSOR")
 	tooltip_icon = self
 	if self.label then
 		tooltip:SetText("TomTom: " .. self.label .. "\n")
@@ -428,9 +430,9 @@ function TomTom:CreateSlashCommands()
 		self:PrintF("The coordinate display has been %s.", profile.lock and "locked" or "unlocked")
 	end
 	
-	self.cmd:RegisterSlashHandler("coord - Show/Hide the coordinate display", "^(coord)$", ToggleDisplay)
-	self.cmd:RegisterSlashHandler("mapcoord - Show/Hide the world map coordinate display", "^(mapcoord)$", ToggleDisplay)
-	self.cmd:RegisterSlashHandler("lock - Lock/Unlock the coordinate display", "^lock$", LockDisplay)
+	self.cmd:RegisterSlashHandler("|cffffff00coord|r - Show/Hide the coordinate display", "^(coord)$", ToggleDisplay)
+	self.cmd:RegisterSlashHandler("|cffffff00mapcoord|r - Show/Hide the world map coordinate display", "^(mapcoord)$", ToggleDisplay)
+	self.cmd:RegisterSlashHandler("|cffffff00lock|r - Lock/Unlock the coordinate display", "^lock$", LockDisplay)
 
 	-- Waypoint placement slash commands
 	self.cmd_way = self:InitializeSlashCommand("TomTom - Waypoints", "TOMTOM_WAY", "way")
