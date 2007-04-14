@@ -153,10 +153,9 @@ end
 
 local function MinimapIcon_OnEnter(self)
 	local tooltip = TomTom.tooltip
-	--tooltip:SetParent(UIParent)
 	tooltip:SetScale(UIParent:GetEffectiveScale())
-    tooltip:SetOwner(self, "ANCHOR_CURSOR")
-    tooltip_icon = self
+	tooltip:SetOwner(self, "ANCHOR_CURSOR")
+	tooltip_icon = self
 	if self.label then
 		tooltip:SetText("TomTom: " .. self.label .. "\n")
 	else
@@ -355,9 +354,8 @@ end
 
 local function WorldMapIcon_OnEnter(self)
 	local tooltip = TomTom.tooltip
-    --tooltip:SetParent(self)
-    tooltip:SetScale(UIParent:GetEffectiveScale())
-    tooltip:SetOwner(self, "ANCHOR_CURSOR")
+	tooltip:SetScale(UIParent:GetEffectiveScale())
+	tooltip:SetOwner(self, "ANCHOR_CURSOR")
 	tooltip_icon = self
 	if self.label then
 		tooltip:SetText("TomTom: " .. self.label .. "\n")
