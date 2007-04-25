@@ -1,7 +1,7 @@
 --[[
 Name: Astrolabe
-Revision: $Rev: 627 $
-$Date: 2007-04-20T00:59:57.617577Z $
+Revision: $Rev: 626 $
+$Date: 2007-03-30T18:56:21.734670Z $
 Author(s): Esamynn (esamynn@wowinterface.com)
 Inspired By: Gatherer by Norganna
              MapLibrary by Kristofer Karlsson (krka@kth.se)
@@ -42,7 +42,7 @@ Note:
 -- DO NOT MAKE CHANGES TO THIS LIBRARY WITHOUT FIRST CHANGING THE LIBRARY_VERSION_MAJOR
 -- STRING (to something unique) OR ELSE YOU MAY BREAK OTHER ADDONS THAT USE THIS LIBRARY!!!
 local LIBRARY_VERSION_MAJOR = "Astrolabe-0.4"
-local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 627 $", "(%d+)") or 1)
+local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 626 $", "(%d+)") or 1)
 
 if not DongleStub then error(LIBRARY_VERSION_MAJOR .. " requires DongleStub.") end
 if not DongleStub:IsNewerVersion(LIBRARY_VERSION_MAJOR, LIBRARY_VERSION_MINOR) then return end
@@ -329,14 +329,6 @@ end
 -- Minimap Icon Placement
 --------------------------------------------------------------------------------------------------------------
 
--- local variables specifically for use in this section
-local minimapRotationEnabled = false;
-local MinimapCompassRing = MiniMapCompassRing;
-local twoPi = math.pi * 2;
-local atan2 = math.atan2;
-local sin = math.sin;
-local cos = math.cos;
-
 local function placeIconOnMinimap( minimap, minimapZoom, mapWidth, mapHeight, icon, dist, xDist, yDist )
 	--TODO: add support for non-circular minimaps
 	local mapDiameter;
@@ -350,14 +342,6 @@ local function placeIconOnMinimap( minimap, minimapZoom, mapWidth, mapHeight, ic
 	local yScale = mapDiameter / mapHeight;
 	local iconDiameter = ((icon:GetWidth() / 2) + 3) * xScale;
 	local iconOnEdge = nil;
-	
-	if ( minimapRotationEnabled ) then
-		-- for the life of me, I cannot figure out why the following 
-		-- math works, but it does
-		local dir = atan2(xDist, yDist) + MinimapCompassRing:GetFacing();
-		xDist = dist * sin(dir);
-		yDist = dist * cos(dir);
-	end
 	
 	if ( (dist + iconDiameter) > mapRadius ) then
 		-- position along the outside of the Minimap
@@ -403,12 +387,6 @@ function Astrolabe:PlaceIconOnMinimap( icon, continent, zone, xPos, yPos )
 	iconData.xDist = xDist;
 	iconData.yDist = yDist;
 	
-	if ( GetCVar("rotateMinimap") ~= "0" ) then
-		minimapRotationEnabled = true;
-	else
-		minimapRotationEnabled = false;
-	end
-	
 	-- place the icon on the Minimap and :Show() it
 	local map = Minimap
 	placeIconOnMinimap(map, map:GetZoom(), map:GetWidth(), map:GetHeight(), icon, dist, xDist, yDist);
@@ -450,15 +428,9 @@ function Astrolabe:UpdateMinimapIconPositions()
 	local lastPosition = self.LastPlayerPosition;
 	local lC, lZ, lx, ly = unpack(lastPosition);
 	
-	if ( GetCVar("rotateMinimap") ~= "0" ) then
-		minimapRotationEnabled = true;
-	else
-		minimapRotationEnabled = false;
-	end
-	
 	if ( lC == C and lZ == Z and lx == x and ly == y ) then
 		-- player has not moved since the last update
-		if ( lastZoom ~= Minimap:GetZoom() or self.ForceNextUpdate or minimapRotationEnabled ) then
+		if ( lastZoom ~= Minimap:GetZoom() or self.ForceNextUpdate ) then
 			local currentZoom = Minimap:GetZoom();
 			lastZoom = currentZoom;
 			local mapWidth = Minimap:GetWidth();
@@ -505,12 +477,6 @@ function Astrolabe:CalculateMinimapIconPositions()
 		return;
 	end
 	
-	if ( GetCVar("rotateMinimap") ~= "0" ) then
-		minimapRotationEnabled = true;
-	else
-		minimapRotationEnabled = false;
-	end
-	
 	local currentZoom = Minimap:GetZoom();
 	lastZoom = currentZoom;
 	local Minimap = Minimap;
@@ -547,6 +513,8 @@ function Astrolabe:IsIconOnEdge( icon )
 	return self.IconsOnEdge[icon];
 end
 
+local twoPi = math.pi * 2;
+local atan2 = math.atan2;
 function Astrolabe:GetDirectionToIcon( icon )
 	local data = self.MinimapIcons[icon];
 	if ( data ) then
