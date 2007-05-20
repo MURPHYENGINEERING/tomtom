@@ -155,7 +155,7 @@ end
 ---------------------------------------------------------------------------]]
 
 local major = "Dongle-1.0"
-local minor = tonumber(string.match("$Revision: 349 $", "(%d+)") or 1) + 500
+local minor = tonumber(string.match("$Revision: 360 $", "(%d+)") or 1) + 500
 -- ** IMPORTANT NOTE **
 -- Due to some issues we had previously with Dongle revision numbers
 -- we need to artificially inflate the minor revision number, to ensure
@@ -1244,6 +1244,9 @@ local function Activate(self, old)
 
 	local lib = old or self
 
+	-- Lets make sure the lookup table has us.
+	lookup[lib] = lookup[major]
+
 	-- Register for events using Dongle itself
 	lib:RegisterEvent("ADDON_LOADED", ADDON_LOADED)
 	lib:RegisterEvent("PLAYER_LOGIN", PLAYER_LOGIN)
@@ -1270,6 +1273,13 @@ local function Activate(self, old)
 			cmd[method] = self[method]
 		end
 	end
+end
+
+-- Lets nuke any Dongle deactivate functions, please
+-- I hate nasty hacks.
+if DongleStub:HasVersion(major) then
+	local reg = DongleStub.versions[major]
+	reg.deactivate = nil
 end
 
 Dongle = DongleStub:Register(Dongle, Activate)
