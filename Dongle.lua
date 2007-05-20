@@ -29,7 +29,7 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------]]
 local major = "DongleStub"
-local minor = tonumber(string.match("$Revision: 291 $", "(%d+)") or 1)
+local minor = tonumber(string.match("$Revision: 313 $", "(%d+)") or 1)
 
 local g = getfenv(0)
 
@@ -118,6 +118,7 @@ if not g.DongleStub or g.DongleStub:IsNewerVersion(major, minor) then
 
 		-- Deactivate the old libary if necessary
 		if type(oldDeactivate) == "function" then
+			local major, minor = oldInstance:GetVersion()
 			table.insert(self.log, string.format("Deactivate: %s, %s", major, minor))
 			oldDeactivate(oldInstance, newInstance)
 		end
@@ -154,9 +155,13 @@ end
 ---------------------------------------------------------------------------]]
 
 local major = "Dongle-1.0"
-local minor = tonumber(string.match("$Revision: 303 $", "(%d+)") or 1)
+local minor = tonumber(string.match("$Revision: 349 $", "(%d+)") or 1) + 500
+-- ** IMPORTANT NOTE **
+-- Due to some issues we had previously with Dongle revision numbers
+-- we need to artificially inflate the minor revision number, to ensure
+-- we load sequentially.
 
-assert(DongleStub, string.format("Dongle requires DongleStub.", major))
+assert(DongleStub, string.format("%s requires DongleStub.", major))
 
 if not DongleStub:IsNewerVersion(major, minor) then return end
 
@@ -182,7 +187,7 @@ local messages = {}
 local frame
 
 --[[-------------------------------------------------------------------------
-  Message Localization
+	Message Localization
 ---------------------------------------------------------------------------]]
 
 local L = {
@@ -190,7 +195,7 @@ local L = {
 	["ALREADY_REGISTERED"] = "A Dongle with the name '%s' is already registered.",
 	["BAD_ARGUMENT"] = "bad argument #%d to '%s' (%s expected, got %s)",
 	["BAD_ARGUMENT_DB"] = "bad argument #%d to '%s' (DongleDB expected)",
-	["CANNOT_DELETE_ACTIVE_PROFILE"] = "You cannot delete your active profile.  Change profiles, then attempt to delete.",
+	["CANNOT_DELETE_ACTIVE_PROFILE"] = "You cannot delete your active profile. Change profiles, then attempt to delete.",
 	["DELETE_NONEXISTANT_PROFILE"] = "You cannot delete a non-existant profile.",
 	["MUST_CALLFROM_DBOBJECT"] = "You must call '%s' from a Dongle database object.",
 	["MUST_CALLFROM_REGISTERED"] = "You must call '%s' from a registered Dongle.",
@@ -198,7 +203,7 @@ local L = {
 	["PROFILE_DOES_NOT_EXIST"] = "Profile '%s' doesn't exist.",
 	["REPLACE_DEFAULTS"] = "You are attempting to register defaults with a database that already contains defaults.",
 	["SAME_SOURCE_DEST"] = "Source/Destination profile cannot be the same profile.",
-	["EVENT_REGISTER_SPECIAL"] = "You cannot register for the '%s' event.  Use the '%s' method instead.",
+	["EVENT_REGISTER_SPECIAL"] = "You cannot register for the '%s' event. Use the '%s' method instead.",
 	["Unknown"] = "Unknown",
 	["INJECTDB_USAGE"] = "Usage: DongleCmd:InjectDBCommands(db, ['copy', 'delete', 'list', 'reset', 'set'])",
 	["DBSLASH_PROFILE_COPY_DESC"] = "profile copy <name> - Copies profile <name> into your current profile.",
@@ -215,7 +220,7 @@ local L = {
 }
 
 --[[-------------------------------------------------------------------------
-  Utility functions for Dongle use
+	Utility functions for Dongle use
 ---------------------------------------------------------------------------]]
 
 local function assert(level,condition,message)
@@ -225,8 +230,9 @@ local function assert(level,condition,message)
 end
 
 local function argcheck(value, num, ...)
-	assert(1, type(num) == "number",
-		string.format(L["BAD_ARGUMENT"], 2, "argcheck", "number", type(level)))
+	if type(num) ~= "number" then
+		error(L["BAD_ARGUMENT"]:format(2, "argcheck", "number", type(num)), 1)
+	end
 
 	for i=1,select("#", ...) do
 		if type(value) == select(i, ...) then return end
@@ -234,7 +240,7 @@ local function argcheck(value, num, ...)
 
 	local types = strjoin(", ", ...)
 	local name = string.match(debugstack(2,2,0), ": in function [`<](.-)['>]")
-	error(string.format(L["BAD_ARGUMENT"], num, name, types, type(value)), 3)
+	error(L["BAD_ARGUMENT"]:format(num, name, types, type(value)), 3)
 end
 
 local function safecall(func,...)
@@ -245,7 +251,7 @@ local function safecall(func,...)
 end
 
 --[[-------------------------------------------------------------------------
-  Dongle constructor, and DongleModule system
+	Dongle constructor, and DongleModule system
 ---------------------------------------------------------------------------]]
 
 function Dongle:New(name, obj)
@@ -295,7 +301,7 @@ function Dongle:HasModule(module)
 	assert(3, reg, string.format(L["MUST_CALLFROM_REGISTERED"], "HasModule"))
 	argcheck(module, 2, "string", "table")
 
-	return reg.modules[module]
+	return reg.modules and reg.modules[module]
 end
 
 local function ModuleIterator(t, name)
@@ -316,7 +322,7 @@ function Dongle:IterateModules()
 end
 
 --[[-------------------------------------------------------------------------
-  Event registration system
+	Event registration system
 ---------------------------------------------------------------------------]]
 
 local function OnEvent(frame, event, ...)
@@ -398,7 +404,7 @@ function Dongle:IsEventRegistered(event)
 end
 
 --[[-------------------------------------------------------------------------
-  Inter-Addon Messaging System
+	Inter-Addon Messaging System
 ---------------------------------------------------------------------------]]
 
 function Dongle:RegisterMessage(msg, func)
@@ -465,7 +471,7 @@ function Dongle:IsMessageRegistered(msg)
 end
 
 --[[-------------------------------------------------------------------------
-  Debug and Print utility functions
+	Debug and Print utility functions
 ---------------------------------------------------------------------------]]
 
 function Dongle:EnableDebug(level, frame)
@@ -581,12 +587,12 @@ function Dongle:DebugF(level, ...)
 end
 
 --[[-------------------------------------------------------------------------
-  Database System
+	Database System
 ---------------------------------------------------------------------------]]
 
 local dbMethods = {
 	"RegisterDefaults", "SetProfile", "GetProfiles", "DeleteProfile", "CopyProfile",
-	"ResetProfile", "ResetDB",
+	"GetCurrentProfile", "ResetProfile", "ResetDB",
 	"RegisterNamespace",
 }
 
@@ -621,6 +627,10 @@ local function copyDefaults(dest, src, force)
 							tbl = copyTable(v)
 							rawset(cache, k, tbl)
 							local mt = getmetatable(tbl)
+							if not mt then
+								mt = {}
+								setmetatable(tbl, mt)
+							end
 							local newindex = function(t,k,v)
 								rawset(parent, parentkey, t)
 								rawset(t, k, v)
@@ -631,6 +641,10 @@ local function copyDefaults(dest, src, force)
 					end,
 				}
 				setmetatable(dest, mt)
+				-- Now need to set the metatable on any child tables
+				for dkey,dval in pairs(dest) do
+					copyDefaults(dval, v)
+				end
 			else
 				-- Values are not tables, so this is just a simple return
 				local mt = {__index = function() return v end}
@@ -661,6 +675,10 @@ local function removeDefaults(db, defaults)
 					-- Something's changed
 					rawset(db, cacheKey, cacheValue)
 				end
+			end
+			-- Now loop through all the actual k,v pairs and remove
+			for key,value in pairs(db) do
+				removeDefaults(value, v)
 			end
 		elseif type(v) == "table" and db[k] then
 			removeDefaults(db[k], v)
@@ -708,6 +726,10 @@ local dbmt = {
 				if new then
 					Dongle:TriggerMessage("DONGLE_PROFILE_CREATED", t, rawget(t, "parent"), rawget(t, "sv_name"), key)
 				end
+			elseif section == "profiles" then
+				local sv = rawget(t, "sv")
+				if not sv.profiles then sv.profiles = {} end
+				rawset(t, "profiles", sv.profiles)
 			elseif section == "global" then
 				local sv = rawget(t, "sv")
 				if not sv.global then sv.global = {} end
@@ -761,6 +783,7 @@ local function initdb(parent, name, defaults, defaultProfile, olddb)
 		["factionrealm"] = factionrealm,
 		["global"] = true,
 		["profile"] = profileKey,
+		["profiles"] = true, -- Don't create until we need
 	}
 
 	-- If we've been passed an old database, clear it out
@@ -829,7 +852,13 @@ function Dongle:ClearDBDefaults()
 			for section,key in pairs(db.keys) do
 				local tbl = rawget(db, section)
 				if tbl and not next(tbl) then
-					sv[section][key] = nil
+					if sv[section] then
+						if type(key) == "string" then
+							sv[section][key] = nil
+						else
+							sv[section] = nil
+						end
+					end
 				end
 			end
 		end
@@ -865,6 +894,11 @@ function Dongle.GetProfiles(db, t)
 		i = i + 1
 	end
 	return t, i - 1
+end
+
+function Dongle.GetCurrentProfile(db)
+	assert(e, databases[db], string.format(L["MUST_CALLFROM_DBOBJECT"], "GetCurrentProfile"))
+	return db.keys.profile
 end
 
 function Dongle.DeleteProfile(db, name)
@@ -914,7 +948,7 @@ end
 
 function Dongle.ResetDB(db, defaultProfile)
 	assert(3, databases[db], string.format(L["MUST_CALLFROM_DBOBJECT"], "ResetDB"))
-    argcheck(defaultProfile, 2, "nil", "string")
+		argcheck(defaultProfile, 2, "nil", "string")
 
 	local sv = db.sv
 	for k,v in pairs(sv) do
@@ -931,7 +965,7 @@ end
 
 function Dongle.RegisterNamespace(db, name, defaults)
 	assert(3, databases[db], string.format(L["MUST_CALLFROM_DBOBJECT"], "RegisterNamespace"))
-    argcheck(name, 2, "string")
+		argcheck(name, 2, "string")
 	argcheck(defaults, 3, "nil", "string")
 
 	local sv = db.sv
@@ -950,7 +984,7 @@ function Dongle.RegisterNamespace(db, name, defaults)
 end
 
 --[[-------------------------------------------------------------------------
-  Slash Command System
+	Slash Command System
 ---------------------------------------------------------------------------]]
 
 local slashCmdMethods = {
@@ -1099,7 +1133,7 @@ function Dongle.InjectDBCommands(cmd, db, ...)
 end
 
 --[[-------------------------------------------------------------------------
-  Internal Message/Event Handlers
+	Internal Message/Event Handlers
 ---------------------------------------------------------------------------]]
 
 local function PLAYER_LOGOUT(event)
@@ -1172,7 +1206,7 @@ local function DONGLE_PROFILE_CHANGED(msg, db, parent, sv_name, profileKey)
 end
 
 --[[-------------------------------------------------------------------------
-  DongleStub required functions and registration
+	DongleStub required functions and registration
 ---------------------------------------------------------------------------]]
 
 function Dongle:GetVersion() return major,minor end
@@ -1188,8 +1222,6 @@ local function Activate(self, old)
 		commands = old.commands or commands
 		messages = old.messages or messages
 		frame = old.frame or CreateFrame("Frame")
-
-		registry[major].obj = self
 	else
 		frame = CreateFrame("Frame")
 		local reg = {obj = self, name = "Dongle"}
@@ -1208,17 +1240,15 @@ local function Activate(self, old)
 	self.messages = messages
 	self.frame = frame
 
-	local reg = self.registry[major]
-	lookup[self] = reg
-	lookup[major] = reg
-
 	frame:SetScript("OnEvent", OnEvent)
 
+	local lib = old or self
+
 	-- Register for events using Dongle itself
-	self:RegisterEvent("ADDON_LOADED", ADDON_LOADED)
-	self:RegisterEvent("PLAYER_LOGIN", PLAYER_LOGIN)
-	self:RegisterEvent("PLAYER_LOGOUT", PLAYER_LOGOUT)
-	self:RegisterMessage("DONGLE_PROFILE_CHANGED", DONGLE_PROFILE_CHANGED)
+	lib:RegisterEvent("ADDON_LOADED", ADDON_LOADED)
+	lib:RegisterEvent("PLAYER_LOGIN", PLAYER_LOGIN)
+	lib:RegisterEvent("PLAYER_LOGOUT", PLAYER_LOGOUT)
+	lib:RegisterMessage("DONGLE_PROFILE_CHANGED", DONGLE_PROFILE_CHANGED)
 
 	-- Convert all the modules handles
 	for name,obj in pairs(registry) do
@@ -1242,9 +1272,4 @@ local function Activate(self, old)
 	end
 end
 
-local function Deactivate(self, new)
-	self:UnregisterAllEvents()
-	lookup[self] = nil
-end
-
-Dongle = DongleStub:Register(Dongle, Activate, Deactivate)
+Dongle = DongleStub:Register(Dongle, Activate)

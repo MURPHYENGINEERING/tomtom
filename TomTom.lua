@@ -76,7 +76,7 @@ function TomTom:CreateCoordWindows()
 		local c,z,x,y = Astrolabe:GetCurrentPlayerPosition()
 		local text
 		if not x or not y then
-			text = "---"
+			self:Hide()
 		else
 			self.Text:SetText(string.format("%.2f, %.2f", x*100, y*100))
 		end
@@ -476,6 +476,14 @@ end
 function TomTom:ZONE_CHANGED_NEW_AREA()
 	-- This could clear the minimap, but I won't.. cause.. I don't like that
 	-- Not sure what to do here
+
+	if profile.show then
+		local c,z,x,y = Astrolabe:GetCurrentPlayerPosition()
+		if c and z and x and y then
+			TomTomFrame:Show()
+		end
+	end
+
 	if true then return end
 end
 
