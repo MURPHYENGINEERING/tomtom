@@ -266,11 +266,11 @@ local function MinimapIcon_OnUpdate(self, elapsed)
 		self.arrow:Show()
 		self.arrow.seqtime = 0
 		self.dot:Hide()
-		icon.edge = true
+		self.edge = true
 	elseif not edge and not dot then
 		self.dot:Show()
 		self.arrow:Hide()
-		icon.edge = false
+		self.edge = false
 	end
 
 	local dist,x,y = Astrolabe:GetDistanceToIcon(self)
@@ -279,7 +279,9 @@ local function MinimapIcon_OnUpdate(self, elapsed)
 		Astrolabe:RemoveIconFromMinimap(self)
 		self.pair:Hide()
 		table.insert(TomTom.worldmapIcons, self.pair)
-		TomTom:PrintF("You have arrived at your location (%s)", self.coord)
+		local msg = (self.label and self.label ~= "") and self.label or "your destination"
+
+		TomTom:PrintF("You have arrived at %s (%s)", msg, self.coord)
 
 		for idx,entry in ipairs(TomTom.w_points) do
 			local w_icon = entry.icon
