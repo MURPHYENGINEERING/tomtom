@@ -6,7 +6,7 @@ local L = setmetatable({
 	TOOLTIP_RIGHTCLICK = "Right-click to toggle the options panel.";
 }, {__index=function(t,k) return k end})
 
-TomTom = DongleStub("Dongle-1.0"):New("TomTom")
+TomTom = {}
 local DongleFrames = DongleStub("DongleFrames-1.0")
 local Astrolabe = DongleStub("Astrolabe-0.4")
 local profile
@@ -274,7 +274,7 @@ local function MinimapIcon_OnUpdate(self, elapsed)
 	end
 
 	local dist,x,y = Astrolabe:GetDistanceToIcon(self)
-	if dist < 11 and profile.clearwaypoints then
+	if dist and dist < 11 and profile.clearwaypoints then
 		-- Clear this waypoint
 		Astrolabe:RemoveIconFromMinimap(self)
 		self.pair:Hide()
@@ -527,26 +527,13 @@ local sortFunc = function(a,b)
 end
 	
 
-function TomTom:AddWaypoint(x,y,desc)
+function TomTom:AddZWaypoint(c,z,x,y,desc)
 	if not self.m_points then self.m_points = {} end
 	if not self.w_points then self.w_points = {} end
-
-	local oc,oz = Astrolabe:GetCurrentPlayerPosition()
-	SetMapToCurrentZone()
-	local c,z = Astrolabe:GetCurrentPlayerPosition()
-	if oc and oz then
-		SetMapZoom(oc,oz)
-	end
-
-	if not c or not z or c < 1 then
-		self:Print("Cannot find a valid zone to place the coordinates")
-		return 
-	end
 
 	local m_icon = self:CreateMinimapIcon(desc, x, y)
 	local w_icon = self:CreateWorldMapIcon(desc, x, y)
 	m_icon.pair = w_icon
-	--local c,z = Astrolabe:GetCurrentPlayerPosition()
 
 	x = x / 100
 	y = y / 100
@@ -571,3 +558,21 @@ function TomTom:AddWaypoint(x,y,desc)
 
 	table.insert(self.w_points, {["c"] = c, ["z"] = z, ["x"] = x, ["y"] = y, ["icon"] = w_icon})
 end
+
+function TomTom:AddWaypoint(x,y,desc)
+	local oc,oz = Astrolabe:GetCurrentPlayerPosition()
+	SetMapToCurrentZone()
+	local c,z = Astrolabe:GetCurrentPlayerPosition()
+	if oc and oz then
+		SetMapZoom(oc,oz)
+	end
+
+	if not c or not z or c < 1 then
+		self:Print("Cannot find a valid zone to place the coordinates")
+		return 
+	end
+
+	self:AddZWaypoint(c,z,x,y,desc)
+end
+
+TomTom = DongleStub("Dongle-1.0"):New("TomTom", TomTom)
