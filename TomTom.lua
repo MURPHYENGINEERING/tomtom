@@ -392,7 +392,7 @@ function TomTom:CreateWorldMapIcon(label, x, y)
 	-- icon.dot is the minimap dot texture
 	-- icon.label will contain the mouseover label
 	-- icon.coord will contain the text of the coordinates
-	icon = CreateFrame("Button", nil, WorldMapDetailFrame)
+	icon = CreateFrame("Button", nil, WorldMapButton)
 	icon:SetHeight(12)
 	icon:SetWidth(12)
 
