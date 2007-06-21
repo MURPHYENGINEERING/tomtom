@@ -251,14 +251,39 @@ local function MinimapIcon_OnClick(self)
 end
 
 local halfpi = math.pi / 2
+
+local constant1,constant2
+local sw,sh = math.floor(GetScreenWidth()), math.floor(GetScreenHeight())
+local ratio = sw / sh
+if ratio > 1.32 and ratio < 1.34 then
+	-- At 1.33 aspect ratio
+	constant1 = 0.04575
+	constant2 = 0.05475
+elseif ratio > 1.59 and ratio < 1.61 then
+	-- At 1.6 aspect ratio
+	constant1 = 0.03875
+	constant2 = 0.04875
+else
+	-- Fallback
+	constant1 = 0.03875
+	constant2 = 0.04875
+end
+
+-- For animating the arrow
+--angle = 0
 local function MinimapIcon_UpdateArrow(self, elapsed)
 	local icon = self.parent
 	local angle = Astrolabe:GetDirectionToIcon(icon)
 
-	local x = .03875* math.cos(angle + halfpi) + 0.04875 
-	local y = .03875* math.sin(angle + halfpi) + 0.04875 
+	local x = constant1 * math.cos(angle + halfpi) + constant2
+	local y = constant1 * math.sin(angle + halfpi) + constant2
 	self:SetPosition(x,y,0)
 	self:SetFacing(angle)	
+
+	--angle = angle + 0.075
+	--if angle > math.pi * 2 then
+	--	angle = 0
+	--end
 end
 
 local function MinimapIcon_OnUpdate(self, elapsed)
