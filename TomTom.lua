@@ -181,6 +181,10 @@ end
 local function DropDown_RemoveWaypoint()
 	local icon = TomTomDropDown.icon
 
+	if icon.mpair then
+		icon = icon.mpair
+	end
+
 	Astrolabe:RemoveIconFromMinimap(icon)
 
 	icon.pair:Hide()
@@ -406,6 +410,8 @@ function TomTom:CreateWorldMapIcon(label, x, y)
 	icon.dot = texture
 	icon:SetScript("OnEnter", WorldMapIcon_OnEnter)
 	icon:SetScript("OnLeave", WorldMapIcon_OnLeave)
+	icon:SetScript("OnClick", MinimapIcon_OnClick)
+	icon:RegisterForClicks("RightButtonUp")
 	return icon
 end
 
@@ -534,6 +540,7 @@ function TomTom:AddZWaypoint(c,z,x,y,desc)
 	local m_icon = self:CreateMinimapIcon(desc, x, y)
 	local w_icon = self:CreateWorldMapIcon(desc, x, y)
 	m_icon.pair = w_icon
+	w_icon.mpair = m_icon
 
 	x = x / 100
 	y = y / 100
