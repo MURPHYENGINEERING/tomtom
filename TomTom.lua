@@ -252,21 +252,28 @@ end
 
 local halfpi = math.pi / 2
 
-local constant1,constant2
-local sw,sh = math.floor(GetScreenWidth()), math.floor(GetScreenHeight())
-local ratio = sw / sh
-if ratio > 1.32 and ratio < 1.34 then
-	-- At 1.33 aspect ratio
-	constant1 = 0.04575
-	constant2 = 0.05475
-elseif ratio > 1.59 and ratio < 1.61 then
-	-- At 1.6 aspect ratio
-	constant1 = 0.03875
-	constant2 = 0.04875
-else
-	-- Fallback
-	constant1 = 0.03875
-	constant2 = 0.04875
+-- The magic number which represents the ratio of model position pixels to
+-- logical screen pixels. I suspect this is really based on some property of the
+-- model itself, but I figured it out through interpolation given 3 ratios
+-- 4:3 5:4 16:10
+local MAGIC_ARROW_NUMBER  = 0.000723339
+
+-- Calculation to determine the actual offset factor for the screen ratio, I dont
+-- know where the 1/3 rationally comes from, but it works, there's probably some
+-- odd logic within the client somewhere.
+--
+-- 70.4 is half the width of the frame so we move to the center
+local ofs = MAGIC_ARROW_NUMBER * (GetScreenHeight()/GetScreenWidth() + 1/3) * 70.4;
+-- The divisor here puts the arrow where the original magic number pair had it
+local radius = ofs / 1.166666666666667;
+
+local function gomove(model,angle)
+    model:SetFacing(angle);
+    -- The 137/140 simply adjusts for the fact that the textured
+    -- border around the minimap isn't exactly centered
+    model:SetPosition(ofs * (137 / 140) - radius * math.sin(angle),
+                      ofs               + radius * math.cos(angle),
+                      0);
 end
 
 -- For animating the arrow
@@ -275,15 +282,7 @@ local function MinimapIcon_UpdateArrow(self, elapsed)
 	local icon = self.parent
 	local angle = Astrolabe:GetDirectionToIcon(icon)
 
-	local x = constant1 * math.cos(angle + halfpi) + constant2
-	local y = constant1 * math.sin(angle + halfpi) + constant2
-	self:SetPosition(x,y,0)
-	self:SetFacing(angle)	
-
-	--angle = angle + 0.075
-	--if angle > math.pi * 2 then
-	--	angle = 0
-	--end
+	gomove(self, angle)
 end
 
 local function MinimapIcon_OnUpdate(self, elapsed)
@@ -362,6 +361,11 @@ function TomTom:CreateMinimapIcon(label, x, y)
 	icon:SetScript("OnUpdate", MinimapIcon_OnUpdate)
 	icon:SetScript("OnClick", MinimapIcon_OnClick)
 
+	-- Golden Arrow Information:
+	-- Facing: 0.50088876485825
+	-- Light: 0,1,0,0,0,1,1,1,1,1,1,1,1
+	-- Position: 0.029919292777777, 0.08267530053854, 0
+
 	local model = CreateFrame("Model", nil, icon)
 	model:SetHeight(140.8)
 	model:SetWidth(140.8)
@@ -373,6 +377,8 @@ function TomTom:CreateMinimapIcon(label, x, y)
 --	model:SetFogNear(0)
 --	model:SetLight(0,1,0,0,0,1,1,1,1,1,1,1,1)
 --	model:SetLight(1, 0, 0, -0.707, -0.707, 0.7, 1.0, 1.0, 1.0, 0.8, 1.0, 1.0, 0.8)
+--  Model:SetLight (enabled[,omni,dirX,dirY,dirZ,ambIntensity[,ambR,ambG,ambB [,dirIntensity[,dirR,dirG,dirB]]]])
+	model:SetLight(0,1,0,0,0,1,1,1,1,1,1,1,1)
 	model:SetModelScale(.600000023841879)
 
 	model.parent = icon
