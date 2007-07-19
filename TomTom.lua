@@ -282,8 +282,10 @@ local function MinimapIcon_UpdateArrow(self, elapsed)
 	local icon = self.parent
 	local angle = Astrolabe:GetDirectionToIcon(icon)
 
-	local cring = MiniMapCompassRing:GetFacing()
-	angle = angle + cring
+	if GetCVar("rotateMinimap") == "1" then
+		local cring = MiniMapCompassRing:GetFacing()
+		angle = angle + cring
+	end
 
 	gomove(self, angle)
 end
