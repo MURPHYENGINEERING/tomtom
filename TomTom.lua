@@ -36,6 +36,26 @@ function TomTom:Initialize()
 	self:RegisterEvent("WORLD_MAP_UPDATE")
 end
 
+function TomTom:Enable()
+	if profile.notes then
+		local cont, zone, x, y, desc
+		for _,wp in pairs(profile.notes) do
+			cont, zone, x, y, desc = wp.c, wp.z, wp.x, wp.y, wp.desc
+			self:AddZWaypoint(cont, zone, x*100, y*100, desc, true)
+		end
+	end
+end
+
+function TomTom:Disable()
+	local notes = {}
+	local cont, zone, x, y, desc, icon
+	for _, wp in pairs(self.w_points) do
+		cont, zone, x, y, icon = wp.c, wp.z, wp.x, wp.y, wp.icon
+		desc = icon.label
+		table.insert(notes, {["c"] = cont, ['z'] = zone, ['x'] = x, ['y'] = y, ['desc'] = desc})
+	end
+end
+
 function TomTom:CreateCoordWindows()
 	-- Create the draggable frame, as well as the world map coords
 	local function OnMouseDown(self,button)
@@ -569,7 +589,7 @@ local sortFunc = function(a,b)
 end
 	
 
-function TomTom:AddZWaypoint(c,z,x,y,desc)
+function TomTom:AddZWaypoint(c,z,x,y,desc,silent)
 	if not self.m_points then self.m_points = {} end
 	if not self.w_points then self.w_points = {} end
 
@@ -590,7 +610,9 @@ function TomTom:AddZWaypoint(c,z,x,y,desc)
 	m_icon.zone = zone
 	w_icon.zone = zone
 
-	self:PrintF("Setting a waypoint at %.2f, %.2f in %s.", x * 100, y * 100, zone)
+	if not silent then
+		self:PrintF("Setting a waypoint at %.2f, %.2f in %s.", x * 100, y * 100, zone)
+	end
 
 	self.m_points[c] = self.m_points[c] or {}
 	self.m_points[c][z] = self.m_points[c][z] or {}
