@@ -54,6 +54,7 @@ function TomTom:Disable()
 		desc = icon.label
 		table.insert(notes, {["c"] = cont, ['z'] = zone, ['x'] = x, ['y'] = y, ['desc'] = desc})
 	end
+	profile.notes = notes
 end
 
 function TomTom:CreateCoordWindows()
