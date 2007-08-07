@@ -655,6 +655,8 @@ function TomTom:AddZWaypoint(c,z,x,y,desc,silent)
 	if not self.m_points then self.m_points = {} end
 	if not self.w_points then self.w_points = {} end
 
+    if desc == '' then desc = nil end
+
 	local m_icon = self:CreateMinimapIcon(desc, x, y)
 	local w_icon = self:CreateWorldMapIcon(desc, x, y)
 	m_icon.pair = w_icon
