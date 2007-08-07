@@ -596,7 +596,7 @@ function TomTom:CreateSlashCommands()
 					end
 				end
 			end
-			self:Print(L["All waypoints have been removed from"]..origZone)
+			self:Print(L["All waypoints have been removed from "]..orig_zone)
 			return
 		else
 			if self.m_points then
@@ -639,8 +639,6 @@ function TomTom:CreateSlashCommands()
 				self:Print(string.format("%s: %0.02f %0.02f %s", z, x*100, y*100, desc or ''))
 			end
 		end
-
-		self:Print("All waypoints have been removed.")
 	end
 
 	self.cmd_way:RegisterSlashHandler("reset [<zone>] - Remove all current waypoints", "^reset%s*(.*)$", Way_Reset)
