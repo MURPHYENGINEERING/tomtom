@@ -10,6 +10,8 @@ TomTom = {}
 local DongleFrames = DongleStub("DongleFrames-1.0")
 local Astrolabe = DongleStub("Astrolabe-0.4")
 local profile
+local zones = {}
+local playerName = UnitName("player")
 
 function TomTom:Initialize()
 	self.defaults = {
@@ -41,6 +43,12 @@ function TomTom:Enable()
 	if not profile.notes then return end
 	for _,wp in pairs(profile.notes) do
 		self:AddZWaypoint(wp.c, wp.z, wp.x*100, wp.y*100, wp.desc, true)
+	end
+	for c in pairs({GetMapContinents()}) do
+		zones[c] = {GetMapZones(c)}
+		for z, name in pairs(zones[c]) do
+			zones[name] = {['c'] = c, ['z'] = z}
+		end
 	end
 end
 
@@ -534,42 +542,110 @@ function TomTom:CreateSlashCommands()
 	-- Waypoint placement slash commands
 	self.cmd_way = self:InitializeSlashCommand("TomTom - Waypoints", "TOMTOM_WAY", "way")
 
-	local Way_Set = function(x,y,desc)
-		self:AddWaypoint(x,y,desc)
+	local Way_Set = function(zone,x,y,desc)
+		if tonumber(zone) then
+			x, y, desc = zone, x, y
+			self:AddWaypoint(x,y,desc)
+		elseif zone == '' then
+			self:AddWaypoint(x,y,desc)
+		else
+			if zones[zone] then
+				local c, z = zones[zone]['c'], zones[zone]['z']
+				self:AddZWaypoint(c, z, x, y, desc)
+			else
+				self:Print(L["Zone not recognized, please check your spelling"])
+			end
+		end
 	end
 
-	local Way_Reset = function()
-		if #self.w_points == 0 then
+	local Way_Reset = function(zone)
+		if not self.w_points or #self.w_points == 0 then
 			self:Print("There are no waypoints to remove.")
 			return
 		end
 
-		if self.m_points then
-			for cont,ztbl in pairs(self.m_points) do
-				for zone,ztbl in pairs(ztbl) do
-					for idx,entry in pairs(ztbl) do
+		if zone then
+			local orig_zone = zone
+			zone = zones[zone]
+			if not zone then
+				self:Print(L["Reset: Zone not recognized, please check your spelling"])
+				return
+			end
+			local c, z = zone['c'], zone['z']
+			if self.m_points then
+				ztbl = self.m_points[c] and self.m_points[c][z]
+				if ztbl then
+					for idx, entry in pairs(ztbl) do
 						Astrolabe:RemoveIconFromMinimap(entry.icon)
 						table.insert(self.minimapIcons, entry.icon)
 						ztbl[idx] = nil
 					end
 				end
 			end
+			if self.w_points then
+				local newpoints = {}
+				for k,wp in ipairs(self.w_points) do
+					local cwp, zwp = wp.c, wp.z
+					if not (cwp == c and zwp == z) then
+						table.insert(newpoints, wp)
+					else
+						local icon = wp.icon
+						icon:Hide()
+						self.w_points[k] = nil
+						table.insert(self.worldmapIcons, icon)
+					end
+				end
+			end
+			self:Print(L["All waypoints have been removed from"]..origZone)
+			return
+		else
+			if self.m_points then
+				for cont,ztbl in pairs(self.m_points) do
+					for zone,ztbl in pairs(ztbl) do
+						for idx,entry in pairs(ztbl) do
+							Astrolabe:RemoveIconFromMinimap(entry.icon)
+							table.insert(self.minimapIcons, entry.icon)
+							ztbl[idx] = nil
+						end
+					end
+				end
+			end
+
+			if self.w_points then
+				for k,v in ipairs(self.w_points) do
+					local icon = v.icon
+					icon:Hide()
+					self.w_points[k] = nil
+					table.insert(self.worldmapIcons, icon)
+				end
+			end
+		end
+		
+		self:Print("All waypoints have been removed.")
+	end
+
+	local Way_List = function()
+		if not self.w_points or #self.w_points == 0 then
+			self:Print("There are no waypoints to list.")
+			return
 		end
 
 		if self.w_points then
+			local c, z, x, y, desc
 			for k,v in ipairs(self.w_points) do
 				local icon = v.icon
-				icon:Hide()
-				self.w_points[k] = nil
-				table.insert(self.worldmapIcons, icon)
+				c, z, x, y, desc = v.c, v.z, v.x, v.y, icon.label
+				z = zones[c][z]
+				self:Print(string.format("%s: %0.02f %0.02f %s", z, x*100, y*100, desc or ''))
 			end
 		end
 
 		self:Print("All waypoints have been removed.")
 	end
 
-	self.cmd_way:RegisterSlashHandler("reset - Remove all current waypoints", "^reset$", Way_Reset)
-	self.cmd_way:RegisterSlashHandler("<xx.xx> <yy.yy> [<desc>] - Add a new waypoint with optional note", "^(%d*%.?%d*)[%s]+(%d*%.?%d*)%s*(.*)", Way_Set)
+	self.cmd_way:RegisterSlashHandler("reset [<zone>] - Remove all current waypoints", "^reset%s*(.*)$", Way_Reset)
+	self.cmd_way:RegisterSlashHandler("list - List all current waypoints", "^list$", Way_List)
+	self.cmd_way:RegisterSlashHandler("[<zone>] <xx[.xx]> <yy[.yy]> [<desc>] - Add a new waypoint with optional note", "^([^%s%d]*)%s*(%d*%.?%d*)[%s]+(%d*%.?%d*)%s*(.*)", Way_Set)
 end
 
 function TomTom:ZONE_CHANGED_NEW_AREA()
@@ -619,25 +695,14 @@ function TomTom:WORLD_MAP_UPDATE()
 	end
 end
 
-local zdata = {}
-for c=1,3 do
-    for z,n in pairs({GetMapZones(c)}) do
-        zdata[n] = {}
-        zdata[n].c = c
-        zdata[n].z = z
-    end
-end
-
-local playerName = UnitName("player")
-
 function TomTom:CHAT_MSG_ADDON(event, prefix, message, distro, sender)
     if prefix ~= "TomTom" then return end
     if sender == playerName then return end
 
     local zone,x,y,desc = strsplit("\031", message)
 
-    local c = tonumber(zdata[zone].c)
-    local z = tonumber(zdata[zone].z)
+    local c = tonumber(zones[zone].c)
+    local z = tonumber(zones[zone].z)
 
     x = tonumber(x)/100
     y = tonumber(y)/100
