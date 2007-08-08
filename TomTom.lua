@@ -448,8 +448,9 @@ end
 local Orig_WorldMapButton_OnClick = WorldMapButton_OnClick
 function WorldMapButton_OnClick(mouseButton, button)
     if IsControlKeyDown() and mouseButton == "RightButton" then
-        local cX, cY = GetCurrentCursorPosition()
-        TomTom:AddWaypoint(cX*100, cY*100)
+		local c,z = GetCurrentMapContinent(), GetCurrentMapZone()
+		local x,y = GetCurrentCursorPosition()
+        TomTom:AddZWaypoint(c,z,x*100, y*100)
     else
         Orig_WorldMapButton_OnClick(mouseButton, button)
     end
