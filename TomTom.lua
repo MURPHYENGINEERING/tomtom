@@ -122,7 +122,7 @@ function TomTom:CreateCoordWindows()
 		local c,z,x,y = Astrolabe:GetCurrentPlayerPosition()
 
 		if not x or not y then
-			self.Player:ZOOM_OUT_BUTTON_TEXTSetText("Player: ---")
+			self.Player:SetText("Player: ---")
 		else
 			self.Player:SetText(string.format("Player: %.2f, %.2f", x*100, y*100))
 		end
