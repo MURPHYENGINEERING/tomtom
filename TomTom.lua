@@ -1,3 +1,8 @@
+--[[---------------------------------------------------------------------------------
+  TomTom by Cladhaire <cladhaire@gmail.com>
+----------------------------------------------------------------------------------]]
+
+-- Simple localisation table for messages
 local L = setmetatable({
 	TOOLTIP_TITLE = "TomTom";
 	TOOLTIP_SUBTITLE = "Zone Coordinates";
@@ -6,8 +11,10 @@ local L = setmetatable({
 	TOOLTIP_RIGHTCLICK = "Right-click to toggle the options panel.";
 }, {__index=function(t,k) return k end})
 
+-- Create the addon object
 TomTom = {}
-local DongleFrames = DongleStub("DongleFrames-1.0")
+
+-- Import Astrolabe to do the map/minimap calculations for us
 local Astrolabe = DongleStub("Astrolabe-0.4")
 local profile
 local zones = {}
@@ -47,6 +54,7 @@ function TomTom:Enable()
 	for c in pairs({GetMapContinents()}) do
 		zones[c] = {GetMapZones(c)}
 		for z, name in pairs(zones[c]) do
+			name = name:lower()
 			zones[name] = {['c'] = c, ['z'] = z}
 		end
 	end
@@ -114,7 +122,7 @@ function TomTom:CreateCoordWindows()
 		if not x or not y then
 			self:Hide()
 		else
-			self.Text:SetText(string.format("%.2f, %.2f", x*100, y*100))
+			self.Text:SetText(string.format("%d/%d/%.2f/%.2f", c, z, x*100, y*100))
 		end
 	end
 
@@ -137,8 +145,19 @@ function TomTom:CreateCoordWindows()
 	end
 
 	-- Create TomTomFrame, which is the coordinate display
-	DongleFrames:Create("n=TomTomFrame#p=UIParent#size=100,32#toplevel#strata=HIGH#mouse#movable#clamp", "CENTER", 0, 0)
-	TomTomFrame.Text = DongleFrames:Create("p=TomTomFrame#t=FontString#inh=GameFontNormal", "CENTER", 0, 0)
+	TomTomFrame = CreateFrame("Frame")
+	TomTomFrame:SetWidth(120)
+	TomTomFrame:SetHeight(32)
+	TomTomFrame:SetToplevel(1)
+	TomTomFrame:SetFrameStrata("HIGH")
+	TomTomFrame:SetMovable(true)
+	TomTomFrame:EnableMouse(true)
+	TomTomFrame:SetClampedToScreen()
+
+	TomTomFrame.Text = TomTomFrame:CreateFontString("OVERLAY", nil, "GameFontNormal")
+	TomTomFrame.Text:SetJustifyH("CENTER")
+	TomTomFrame.Text:SetPoint("CENTER", 0, 0)
+
 	TomTomFrame:SetBackdrop({
 		bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
 		edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -159,9 +178,13 @@ function TomTom:CreateCoordWindows()
 	end
 
 	-- Create TomTomWorldFrame, which is anchored to the center of the WorldMap
-	DongleFrames:Create("n=TomTomWorldFrame#p=WorldMapFrame")
-	TomTomWorldFrame.Player = DongleFrames:Create("p=TomTomWorldFrame#t=FontString#inh=GameFontHighlightSmall", "BOTTOM", WorldMapPositioningGuide, "BOTTOM", -100, 11)
-	TomTomWorldFrame.Cursor = DongleFrames:Create("p=TomTomWorldFrame#t=FontString#inh=GameFontHighlightSmall", "BOTTOM", WorldMapPositioningGuide, "BOTTOM", 100, 11)
+	TomTomWorldFrame = CreateFrame("Frame", nil, WorldMapFrame)
+	TomTomWorldFrame.Player = TomTomWorldFrame:CreateFontString("OVERLAY", nil, "GameFontHighlightSmall")
+	TomTomWorldFrame.Player:SetPoint("BOTTOM", WorldMapPositioningGuide, "BOTTOM", -100, 11)
+
+	TomTomWorldFrame.Cursor = TomTomWorldFrame:CreateFontString("OVERLAY", nil, "GameFontHighlightSmall")
+	TomTomWorldFrame.Cursor:SetPoint("BOTTOM", WorldMapPositioningGuide, "BOTTOM", 100, 11)
+
 	TomTomWorldFrame:SetScript("OnUpdate", WorldMap_OnUpdate)
 
 	if not profile.worldmap then TomTomWorldFrame:Hide() end
@@ -240,7 +263,7 @@ local function DropDown_SendWaypoint()
 
     local label = icon.label
 
-    local data = zone .."\031".. x .."\031".. y .."\031".. label
+    local data = zone .."\031".. x .."\031".. y .."\031".. (label or "") 
 
     local distro = this.value
 
@@ -450,6 +473,11 @@ function WorldMapButton_OnClick(mouseButton, button)
     if IsControlKeyDown() and mouseButton == "RightButton" then
 		local c,z = GetCurrentMapContinent(), GetCurrentMapZone()
 		local x,y = GetCurrentCursorPosition()
+
+		if z == 0 then
+			return
+		end
+
         TomTom:AddZWaypoint(c,z,x*100, y*100)
     else
         Orig_WorldMapButton_OnClick(mouseButton, button)
@@ -543,7 +571,9 @@ function TomTom:CreateSlashCommands()
 	-- Waypoint placement slash commands
 	self.cmd_way = self:InitializeSlashCommand("TomTom - Waypoints", "TOMTOM_WAY", "way")
 
-	local Way_Set = function(zone,x,y,desc)
+	local function Way_Set(zone,x,y,desc)
+		zone = strtrim(zone)
+		zone = zone:lower()
 		if tonumber(zone) then
 			x, y, desc = zone, x, y
 			self:AddWaypoint(x,y,desc)
@@ -559,14 +589,16 @@ function TomTom:CreateSlashCommands()
 		end
 	end
 
-	local Way_Reset = function(zone)
+	local function Way_Reset(zone)
 		if not self.w_points or #self.w_points == 0 then
 			self:Print("There are no waypoints to remove.")
 			return
 		end
 
-		if zone then
+		if zone and zone:match("%S") then
 			local orig_zone = zone
+			zone = zone:lower()
+
 			zone = zones[zone]
 			if not zone then
 				self:Print(L["Reset: Zone not recognized, please check your spelling"])
@@ -620,12 +652,11 @@ function TomTom:CreateSlashCommands()
 					table.insert(self.worldmapIcons, icon)
 				end
 			end
+			self:Print("All waypoints have been removed.")
 		end
-		
-		self:Print("All waypoints have been removed.")
 	end
 
-	local Way_List = function()
+	local function Way_List()
 		if not self.w_points or #self.w_points == 0 then
 			self:Print("There are no waypoints to list.")
 			return
@@ -642,9 +673,27 @@ function TomTom:CreateSlashCommands()
 		end
 	end
 
-	self.cmd_way:RegisterSlashHandler("reset [<zone>] - Remove all current waypoints", "^reset%s*(.*)$", Way_Reset)
-	self.cmd_way:RegisterSlashHandler("list - List all current waypoints", "^list$", Way_List)
-	self.cmd_way:RegisterSlashHandler("[<zone>] <xx[.xx]> <yy[.yy]> [<desc>] - Add a new waypoint with optional note", "^([^%s%d]*)%s*(%d*%.?%d*)[%s]+(%d*%.?%d*)%s*(.*)", Way_Set)
+	local function Way_ZoneList()
+		local temp = {}
+		for zone in pairs(zones) do
+			if type(zone) == "string" then
+				table.insert(temp, zone)
+			end
+		end
+
+		table.sort(temp)
+
+		self:Print("Valid TomTom zone names:")
+
+		for idx,name in ipairs(temp) do
+			self:Echo(name)
+		end
+	end
+
+	self.cmd_way:RegisterSlashHandler("|cffffff00reset [<zone>]|r - Remove all current waypoints", "^reset%s*(.*)$", Way_Reset)
+	self.cmd_way:RegisterSlashHandler("|cffffff00list|r - List all current waypoints", "^list$", Way_List)
+	self.cmd_way:RegisterSlashHandler("|cffffff00zonelist|r - List all valid zone names", "^zonelist$", Way_ZoneList)
+	self.cmd_way:RegisterSlashHandler("|cffffff00[<zone>] <xx[.xx]> <yy[.yy]> [<desc>]|r - Add a new waypoint with optional note", "^([^%d]*)%s*(%d*%.?%d*)[%s]+(%d*%.?%d*)%s*(.*)", Way_Set)
 end
 
 function TomTom:ZONE_CHANGED_NEW_AREA()
@@ -703,8 +752,8 @@ function TomTom:CHAT_MSG_ADDON(event, prefix, message, distro, sender)
     local c = tonumber(zones[zone].c)
     local z = tonumber(zones[zone].z)
 
-    x = tonumber(x)/100
-    y = tonumber(y)/100
+    x = tonumber(x)
+    y = tonumber(y)
 
     TomTom:AddZWaypoint(c, z, x, y, desc, true)
     self:PrintF("Waypoint at %.2f, %.2f in %s recieved from %s.", x*100, y*100, zone, sender)
