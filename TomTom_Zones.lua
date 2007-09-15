@@ -10,6 +10,7 @@ local tokens = {
 	["Bloodmyst Isle"] = "BLOO",
 	["Darkshore"] = "DARK",
 	["Darnassus"] = "DARN",
+	["Desolace"] = "DESO",
 	["Durotar"] = "DURO",
 	["Dustwallow Marsh"] = "DUST",
 	["Felwood"] = "FELW",
@@ -73,7 +74,10 @@ for c in pairs{GetMapContinents()} do
 	zones[c] = {GetMapZones(c)}
 	for idx,zone in ipairs(zones[c]) do
 		local token = tokens[zone]
-		zones[token] = format("%d,%d", c, zone)
+		assert(token, tostring(zone))
+
+		zones[token] = format("%d,%d", c, idx)
+		zones[zones[token]] = zone
 	end
 	zones[c] = nil
 end
@@ -98,5 +102,15 @@ end
 -- Converts a zone name into a continent,zone pair usable by Astrolabe
 function TomTom:GetZoneNumber(name)
 	local token = self:GetZoneToken(name)
-	return strsplit(",", zones[token])
+	local c,z = strsplit(",", zones[token])
+	return tonumber(c),tonumber(z)
+end
+
+-- name = TomTom:GetZoneName(c,z)
+-- c (number) - The continent number
+-- z (number) - The zone number
+--
+-- Converts a c,z, pair into a zone name
+function TomTom:GetZoneName(c,z)
+	return zones[string.format("%d,%d", c, z)]
 end
