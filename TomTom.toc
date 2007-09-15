@@ -7,3 +7,5 @@
 Dongle.lua
 Astrolabe\Load.xml
 TomTom.lua
+TomTom_Waypoints.lua
+TomTom_Zones.lua
