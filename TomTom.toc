@@ -5,6 +5,5 @@
 ## OptionalDeps: Dongle
 
 Dongle.lua
-DongleFrames.lua
 Astrolabe\Load.xml
 TomTom.lua
