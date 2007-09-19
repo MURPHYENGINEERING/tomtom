@@ -251,10 +251,10 @@ do
 				end
 				data.state = newstate
 			end	
-		end
 			
-		-- Update the last distance with the current distance
-		data.lastdist = dist
+			-- Update the last distance with the current distance
+			data.lastdist = dist
+		end
 	end
 
 	local tooltip_count = 0
@@ -272,111 +272,5 @@ do
 			end
 		end
 	end
-end
-
-
-function foo()
-	local twopi = math.pi * 2
-
-	-- Test for waypoints
-	local c,z = TomTom:GetZoneNumber("Shattrath City")
-
-	local OnDistanceArrive,OnDistanceNear
-	local callback = function(...)
-						 for i=1,select("#", ...) do
-							 ChatFrame1:AddMessage(tostring(select(i, ...)))
-						 end
-						 local event = select(1, ...)
-						 if event == "OnDistanceArrive" then
-							 OnDistanceArrive()
-						 elseif event == "OnDistanceNear" then
-							 OnDistanceNear()
-						 end
-					 end
-
-	local point = TomTom:SetWaypoint(c,z,51,44, 100, 50, 15, callback)
-	local dist,x,y =  Astrolabe:GetDistanceToIcon(point.minimap)
-
-	local playerModel
-	local children = { Minimap:GetChildren() }
-	for idx,child in ipairs(children) do
-		if child:IsObjectType("Model") and child:GetModel() == "Interface\\Minimap\\MinimapArrow" then
-			playerModel = child
-			break
-		end
-	end
-
-	local wayframe = CreateFrame("Frame", nil, UIParent)
-	wayframe:SetHeight(56)
-	wayframe:SetWidth(42)
-	wayframe:SetPoint("CENTER", 0, 0)
-	wayframe:EnableMouse(true)
-	wayframe:SetMovable(true)
-
-	local status = wayframe:CreateFontString("OVERLAY", nil, "GameFontNormal")
-	status:SetPoint("TOP", wayframe, "BOTTOM", 0, 0)
-
-	wayframe:SetScript("OnDragStart", function(self, button)
-										  self:StartMoving()
-									  end)
-	wayframe:SetScript("OnDragStop", function(self, button)
-										 self:StopMovingOrSizing()
-									 end)
-	wayframe:RegisterForDrag("LeftButton")
-	local arrow = wayframe:CreateTexture("OVERLAY")
-	arrow:SetTexture("Interface\\Addons\\TomTom\\Arrow")
-	arrow:SetAllPoints()
-
-	local function OnUpdate(self, elapsed)
-		local dist,x,y = Astrolabe:GetDistanceToIcon(point.minimap)
-		local angle = Astrolabe:GetDirectionToIcon(point.minimap)
-		local player = playerModel:GetFacing()
-
-		status:SetText(string.format("%d yards", dist))
-
-		angle = angle - player
-		
-		local cell = floor(angle / twopi * 108 + 0.5) % 108
-		local column = cell % 9
-		local row = floor(cell / 9)
-		
-		local xstart = (column * 56) / 512
-		local ystart = (row * 42) / 512
-		local xend = ((column + 1) * 56) / 512
-		local yend = ((row + 1) * 42) / 512
-		arrow:SetTexCoord(xstart,xend,ystart,yend)
-	end
-
-	local count = 0
-	local function ThereOnUpdate(self, elapsed)
-		count = count + 1
-		if count > 54 then count = 0 end
-
-		local cell = count
-		local column = cell % 9
-		local row = floor(cell / 9)
-		
-		local xstart = (column * 53) / 512
-		local ystart = (row * 70) / 512
-		local xend = ((column + 1) * 53) / 512
-		local yend = ((row + 1) * 70) / 512
-		arrow:SetTexCoord(xstart,xend,ystart,yend)		
-	end
-
-
-	function OnDistanceArrive()
-		arrow:SetHeight(53)
-		arrow:SetWidth(70)
-		arrow:SetTexture("Interface\\Addons\\TomTom\\Arrow-UP")
-		wayframe:SetScript("OnUpdate", ThereOnUpdate)
-	end
-
-	function OnDistanceNear()
-		arrow:SetHeight(56)
-		arrow:SetWidth(42)
-		arrow:SetTexture("Interface\\Addons\\TomTom\\Arrow")
-		wayframe:SetScript("OnUpdate", OnUpdate)
-	end
-
-	wayframe:SetScript("OnUpdate", OnUpdate)
+	tooltip:SetScript("OnUpdate", Tooltip_OnUpdate)
 end
