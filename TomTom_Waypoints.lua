@@ -1,243 +1,382 @@
---[[---------------------------------------------------------------------------------
-  TomTom by Cladhaire <cladhaire@gmail.com>
-----------------------------------------------------------------------------------]]
-
-local Waypoint = {}
-TomTom.Waypoint = Waypoint
+--[[--------------------------------------------------------------------------
+--  TomTom - A navigational assistant for World of Warcraft
+----------------------------------------------------------------------------]]
 
 -- Import Astrolabe for locations
 local Astrolabe = DongleStub("Astrolabe-0.4")
 
--- Create a tooltip for use throughout this section
+-- Create a tooltip to be used when mousing over waypoints
 local tooltip = CreateFrame("GameTooltip", "TomTomTooltip", nil, "GameTooltipTemplate")
 
--- Create a local table used as a pool
+-- Create a local table used as a frame pool
 local pool = {}
 
 -- Local declarations
-local OnEnter,OnLeave,OnClick,OnUpdate,Tooltip_OnUpdate
+local Minimap_OnEnter,Minimap_OnLeave,Minimap_OnUpdate,Minimap_OnClick
+local Arrow_OnUpdate
+local Minimap_OnEvent
+local World_OnEnter,World_OnLeave,World_OnClick
 
--- Local default distance in yards
-local DEFAULT_DISTANCE = 10
-
--- Waypoint:New(c,z,x,y,title,note,distance,callback)
--- c (number) - The continent on which to place the waypoint
--- z (number) - The zone on which to place the waypoint
+-- pointObject = TomTom:SetWaypoint(c,z,x,y,far,near,arrive,callback)
+-- c (number) - The continent number
+-- z (number) - The zone number
 -- x (number) - The x coordinate
 -- y (number) - The y coordinate
--- title (string) - A title for the waypoint
--- note (string) - A description or note for this waypoint
--- distance (number) - Arrival distance (in yards)
--- callback (function) - A function to be called when the player is distance
---   yards from the waypoint.
+-- far (number) - A distance in yards to trigger the OnFar callback
+-- near (number) - A distance in yards to trigger the OnNear callback
+-- arrive (number) - A distance in yards to trigger the OnArrive callback
+-- callback (function) - A function to be called on state changes.  This function
+--   will be passed the frame itself, an event string, the distance to the point
+--   in yards, and any addition arguments that are necessary.
 --
--- Creates a new waypoint object at the given coordinate, with the supplied
--- title and note.  Returns a waypoint object.  When 
-function Waypoint:New(c,z,x,y,title,note,distance,callback)
-	if not self.pool then self.pool = {} end
+-- Creates a waypoint at the given coordinates and registers a callback to handle
+-- the following state changes:
 
+-- OnEdgeChanged - Called when the icon's edge state changes.  Passes a boolean
+--   value onEdge that indicates if the icon is currently on the edge, or not.
+-- OnTooltipShown - Called every 0.2 seconds when the tooltip is visible for the
+--   given icon. Passes the tooltip, the distance to the icon in yards,
+--   and a boolean flag indicating if this is the first frame showing the tooltip
+--   as opposed to an update
+-- OnDistanceFar
+-- OnDistanceNear
+-- OnDistanceArrive
+function TomTom:SetWaypoint(c,z,x,y,far,near,arrive,callback)
 	-- Try to acquire a waypoint from the frame pool
-	local point = table.remove(self.pool)
-
+	local point = table.remove(pool)
+	
 	if not point then
-		point = CreateFrame("Button", nil, Minimap)
-		point:SetHeight(12)
-		point:SetWidth(12)
-		point:RegisterForClicks("RightButtonUp")
+		point = {}
+
+		point.minimap = CreateFrame("Button", nil, Minimap)
+		point.minimap:SetHeight(20)
+		point.minimap:SetWidth(20)
+		point.minimap:SetFrameLevel(4)
+		point.minimap:RegisterForClicks("RightButtonUp")
 
 		-- Create the actual texture attached for the minimap icon
-		point.icon = point:CreateTexture()
-		point.icon:SetTexture("Interface\\Minimap\\ObjectIcons")
-		point.icon:SetTexCoord(0.5, 0.75, 0, 0.25)
-		point.icon:SetAllPoints()
+		point.minimap.icon = point.minimap:CreateTexture("BACKGROUND")
+		point.minimap.icon:SetTexture("Interface\\Minimap\\ObjectIcons")
+		point.minimap.icon:SetTexCoord(0.5, 0.75, 0, 0.25)
+		point.minimap.icon:SetPoint("CENTER", 0, 0)
+		point.minimap.icon:SetHeight(12)
+		point.minimap.icon:SetWidth(12)
+
+		point.minimap.arrowout = point.minimap:CreateTexture("ARTWORK")
+		point.minimap.arrowout:SetTexture("Interface\\AddOns\\TomTom\\MinimapArrow-Outer")
+		point.minimap.arrowout:SetPoint("CENTER", 0, 0)
+		point.minimap.arrowout:SetHeight(40)
+		point.minimap.arrowout:SetWidth(40)
+		point.minimap.arrowout:SetVertexColor(1, 1, 1)
+		point.minimap.arrowout:Hide()
+
+		point.minimap.arrowin = point.minimap:CreateTexture("ARTWORK")
+		point.minimap.arrowin:SetTexture("Interface\\AddOns\\TomTom\\MinimapArrow-Inner")
+		point.minimap.arrowin:SetPoint("CENTER", 0, 0)
+		point.minimap.arrowin:SetHeight(40)
+		point.minimap.arrowin:SetWidth(40)
+		point.minimap.arrowin:SetGradient("VERTICAL", 0.2, 1.0, 0.2, 0.5, 0.5, 0.5)
+		point.minimap.arrowin:Hide()
 
 		-- Create the world map point, and associated texture
 		point.world = CreateFrame("Button", nil, WorldMapButton)
 		point.world:SetHeight(12)
 		point.world:SetWidth(12)
 		point.world:RegisterForClicks("RightButtonUp")
-		point.world:SetNormalTexture("Interface\\Minimap\\ObjectIcons")
-		point.world:GetNormalTexture():SetTexCoord(0.5, 0.75, 0, 0.25)
-
-		-- Create the minimap model
-		point.arrow = CreateFrame("Model", nil, point)
-		point.arrow:SetHeight(140.8)
-		point.arrow:SetWidth(140.8)
-		point.arrow:SetPoint("CENTER", Minimap, "CENTER", 0, 0)
-		point.arrow:SetModel("Interface\\Minimap\\Rotating-MinimapArrow.mdx")
-		point.arrow:SetModelScale(.600000023841879)
-		point.arrow:Hide()
+		point.world.icon = point.world:CreateTexture()
+		point.world.icon:SetAllPoints()
+ 		point.world.icon:SetTexture("Interface\\Minimap\\ObjectIcons")
+		point.world.icon:SetTexCoord(0.5, 0.75, 0, 0.25)
 
 		-- Add the behavior scripts 
-		point:SetScript("OnEnter", OnEnter)
-		point:SetScript("OnLeave", OnLeave)
-		point:SetScript("OnUpdate", OnUpdate)
-		point:SetScript("OnClick", OnClick)
+		point.minimap:SetScript("OnEnter", Minimap_OnEnter)
+		point.minimap:SetScript("OnLeave", Minimap_OnLeave)
+		point.minimap:SetScript("OnUpdate", Minimap_OnUpdate)
+		point.minimap:SetScript("OnClick", Minimap_OnClick)
 
-		point.world:SetScript("OnEnter", OnEnter)
-		point.world:SetScript("OnLeave", OnLeave)
-		point.world:SetScript("OnClick", OnClick)
+		point.world:SetScript("OnEnter", World_OnEnter)
+		point.world:SetScript("OnLeave", World_OnLeave)
+		point.world:SetScript("OnClick", World_OnClick)
 
-		-- Copy all methods into the table
-		for k,v in pairs(Waypoint) do
-			point[k] = v
-		end
+		-- Point from the icons/arrow into the data
+		point.minimap.data = point
+		point.world.data = point
 	end
 
-	-- Set the data for this waypoint
+	-- Set the relevant data in the point object
 	point.c = c
 	point.z = z
 	point.x = x
 	point.y = y
-	point.title = title
-	point.note = note
-	point.distance = distance or DEFAULT_DISTANCE
+	point.far = far
+	point.near = near
+	point.arrive = arrive
 	point.callback = callback
 
-	-- Set the data for this waypoint
-	point.world.c = c
-	point.world.z = z
-	point.world.x = x
-	point.world.y = y
-	point.world.title = title
-	point.world.note = note
-	point.world.distance = distance or DEFAULT_DISTANCE
-	point.world.callback = callback
-	
 	-- Use Astrolabe to place the waypoint
-	-- TODO: Place the waypoint via astrolabe
-
-	x,y = x/100,y/100
-	Astrolabe:PlaceIconOnMinimap(point, c, z, x, y)
+	local x = x/100
+	local y = y/100
+	Astrolabe:PlaceIconOnMinimap(point.minimap, c, z, x, y)
 	Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, point.world, c, z, x, y)
 
 	return point
 end
 
--- Waypoint:Clear()
--- 
--- Clears and releases a waypoint without notification.
-function Waypoint:Clear()
-	self.c = nil
-	self.z = nil
-	self.x = nil
-	self.y = nil
-	self.title = nil
-	self.note = nil
-	self.distance = nil
-	self.callback = nil
-
-	self.icon:Hide()
-	self.arrow:Hide()
-	self.world:Hide()
-
-	self:Hide()
-	Astrolabe:RemoveIconFromMinimap(self)
-	
-	-- Add the waypoint back into the frame pool
-	table.insert(pool, self)
-end
-
 do
-	-- Local variable declarations
-	local tooltip_icon
+	local tooltip_icon,tooltip_callback
 
-	function OnEnter(self, motion)
-		tooltip:SetOwner(self, "ANCHOR_CURSOR")
-
-		-- Display the title, and add the note if it exists
-		tooltip:SetText(title or "TomTom Waypoint")
-		tooltip:AddLine(self.note or "No note for this waypoint", 1, 1, 1)
-
-		local dist,x,y = Astrolabe:GetDistanceToIcon(self)
-
-		tooltip:AddLine(format("\n%.2f, %.2f", self.x, self.y), 1, 1, 1)
-		if dist then
-			tooltip:AddLine(("%s yards away"):format(math.floor(dist)), 1, 1 ,1)
-		end
-		tooltip:AddLine(TomTom:GetZoneName(self.c, self.z), 0.7, 0.7, 0.7)
-		tooltip:Show()
-		tooltip:SetScript("OnUpdate", Tooltip_OnUpdate)
+	function Minimap_OnEnter(self, motion)
 		tooltip_icon = self
+		tooltip_callback = self.data.callback
+
+		if tooltip_callback then
+			local dist,x,y = Astrolabe:GetDistanceToIcon(self)
+			tooltip:SetOwner(self, "ANCHOR_CURSOR")
+		
+			-- Callback: OnTooltipShown
+			-- arg1: The tooltip object
+			-- arg2: The distance to the icon in yards
+			-- arg3: Boolean value indicating the tooltip was just shown
+			tooltip_callback("OnTooltipShown", tooltip, dist, true)
+			tooltip:Show()
+		end
 	end
 
-	function OnLeave(self, motion)
+	function Minimap_OnLeave(self, motion)
+		tooltip_icon,tooltip_callback = nil,nil
 		tooltip:Hide()
 	end
 
-	function OnClick(self, button, down)
-		--TODO: Implement dropdown
-	end
-	
-	local halfpi = math.pi / 2
-	
-	-- The magic number which represents the ratio of model position pixels to
-	-- logical screen pixels. I suspect this is really based on some property of the
-	-- model itself, but I figured it out through interpolation given 3 ratios
-	-- 4:3 5:4 16:10
-	local MAGIC_ARROW_NUMBER  = 0.000723339
-	
-	-- Calculation to determine the actual offset factor for the screen ratio, I dont
-	-- know where the 1/3 rationally comes from, but it works, there's probably some
-	-- odd logic within the client somewhere.
-	--
-	-- 70.4 is half the width of the frame so we move to the center
-	local ofs = MAGIC_ARROW_NUMBER * (GetScreenHeight()/GetScreenWidth() + 1/3) * 70.4;
-	-- The divisor here puts the arrow where the original magic number pair had it
-	local radius = ofs / 1.166666666666667;
-	
-	local function gomove(model,angle)
-			model:SetFacing(angle);
-		-- The 137/140 simply adjusts for the fact that the textured
-		-- border around the minimap isn't exactly centered
-		model:SetPosition(ofs * (137 / 140) - radius * math.sin(angle),
-						  ofs + radius * math.cos(angle), 0);
-	end
+	local states = {
+		[1] = "OnDistanceArrive",
+		[2] = "OnDistanceNear",
+		[3] = "OnDistanceFar",
+	}
 
-	function OnUpdate(self, elapsed)
+	local square_half = math.sqrt(0.5)
+	local rad_135 = math.rad(135)
+	local minimap_count = 0
+	function Minimap_OnUpdate(self, elapsed)
+		minimap_count = minimap_count + elapsed
+		
+		-- Only take action every 0.2 seconds
+		if minimap_count < 0.2 then return end
+
+		-- Reset the counter
+		minimap_count = 0
+
 		local edge = Astrolabe:IsIconOnEdge(self)
+		local data = self.data
+		local callback = data.callback
 
 		if edge then
-			if not self.arrow:IsShown() then
-				self.arrow:Show()
+			-- Check to see if this is a transition
+			if not data.edge then
 				self.icon:Hide()
-				self.edge = true
+				self.arrowin:Show()
+				self.arrowout:Show()
+				data.edge = true
+				
+				if callback then
+					-- Callback: OnEdgeChanged
+					-- arg1: The point object of the icon crossing the edge
+					-- arg2: Boolean value indicating if the icon is on the edge
+					callback("OnEdgeChanged", data, true)
+				end
 			end
 
+			-- Rotate the icon, as required
 			local angle = Astrolabe:GetDirectionToIcon(self)
-			
+			angle = angle + rad_135
+
 			if GetCVar("rotateMinimap") == "1" then
 				local cring = MiniMapCompassRing:GetFacing()
 				angle = angle + cring
 			end
-			
-			gomove(self.arrow, angle)
-		else
-			if not self.icon:IsShown() then					
-				self.icon:Show()
-				self.arrow:Hide()
-				self.edge = false
+
+			local sin,cos = math.sin(angle) * square_half, math.cos(angle) * square_half
+			self.arrowin:SetTexCoord(0.5-sin, 0.5+cos, 0.5+cos, 0.5+sin, 0.5-cos, 0.5-sin, 0.5+sin, 0.5-cos)
+			self.arrowout:SetTexCoord(0.5-sin, 0.5+cos, 0.5+cos, 0.5+sin, 0.5-cos, 0.5-sin, 0.5+sin, 0.5-cos)
+
+		elseif data.edge then
+			self.icon:Show()
+			self.arrowin:Hide()
+			self.arrowout:Hide()
+			data.edge = nil
+
+			if callback then
+				-- Callback: OnEdgeChanged
+				-- arg1: The point object of the icon crossing the edge
+				-- arg2: Boolean value indicating if the icon is on the edge
+				callback("OnEdgeChanged", data, true)
 			end
 		end
-	
-		local dist,x,y = Astrolabe:GetDistanceToIcon(self)
-		
-		if dist <= self.distance then
-			if self.callback then
-				self.callback(self)
+
+		if callback then
+
+			-- Handle the logic/callbacks for arrival
+			local dist,x,y = Astrolabe:GetDistanceToIcon(self)
+			local near,far,arrive = data.near,data.far,data.arrive
+			local state = data.state
+			
+			if not state then
+				if arrive and dist <= arrive then
+					state = 1
+				elseif near and dist <= near then
+					state = 2
+				elseif far and dist <= far then
+					state = 3
+				else
+					state = 4
+				end
+				
+				data.state = state
 			end
-			self:Clear()
+			
+			local newstate
+			if arrive and dist <= arrive then
+				newstate = 1
+			elseif near and dist <= near then
+				newstate = 2
+			elseif far and dist <= far then
+				newstate = 3
+			else
+				state = 4
+			end
+			
+			if state ~= newstate then
+				local event = states[newstate]
+				if event then
+					callback(event, data, dist, data.lastdist)
+				end
+				data.state = newstate
+			end	
+		end
+			
+		-- Update the last distance with the current distance
+		data.lastdist = dist
+	end
+
+	local tooltip_count = 0
+	function Tooltip_OnUpdate(self, elapsed)
+		tooltip_count = tooltip_count + elapsed
+		if count >= 0.2 then
+			if tooltip_callback then
+				local dist,x,y = Astrolabe:GetDistanceToIcon(tooltip_icon)
+
+				-- Callback: OnTooltipShown
+				-- arg1: The tooltip object
+				-- arg2: The distance to the icon in yards
+				-- arg3: Boolean value indicating the tooltip was just shown
+				tooltip_callback("OnTooltipShown", tooltip, dist, true)
+			end
+		end
+	end
+end
+
+
+function foo()
+	local twopi = math.pi * 2
+
+	-- Test for waypoints
+	local c,z = TomTom:GetZoneNumber("Shattrath City")
+
+	local OnDistanceArrive,OnDistanceNear
+	local callback = function(...)
+						 for i=1,select("#", ...) do
+							 ChatFrame1:AddMessage(tostring(select(i, ...)))
+						 end
+						 local event = select(1, ...)
+						 if event == "OnDistanceArrive" then
+							 OnDistanceArrive()
+						 elseif event == "OnDistanceNear" then
+							 OnDistanceNear()
+						 end
+					 end
+
+	local point = TomTom:SetWaypoint(c,z,51,44, 100, 50, 15, callback)
+	local dist,x,y =  Astrolabe:GetDistanceToIcon(point.minimap)
+
+	local playerModel
+	local children = { Minimap:GetChildren() }
+	for idx,child in ipairs(children) do
+		if child:IsObjectType("Model") and child:GetModel() == "Interface\\Minimap\\MinimapArrow" then
+			playerModel = child
+			break
 		end
 	end
 
-	local count = 0
-	function Tooltip_OnUpdate(self, elapsed)
-		count = count + elapsed
-		if count >= 0.2 then
-			local dist,x,y = Astrolabe:GetDistanceToIcon(tooltip_icon)
-			if dist then
-				TomTomTooltipTextLeft4:SetText(("%s yards away"):format(math.floor(dist)), 1, 1, 1)
-			end
-		end
+	local wayframe = CreateFrame("Frame", nil, UIParent)
+	wayframe:SetHeight(56)
+	wayframe:SetWidth(42)
+	wayframe:SetPoint("CENTER", 0, 0)
+	wayframe:EnableMouse(true)
+	wayframe:SetMovable(true)
+
+	local status = wayframe:CreateFontString("OVERLAY", nil, "GameFontNormal")
+	status:SetPoint("TOP", wayframe, "BOTTOM", 0, 0)
+
+	wayframe:SetScript("OnDragStart", function(self, button)
+										  self:StartMoving()
+									  end)
+	wayframe:SetScript("OnDragStop", function(self, button)
+										 self:StopMovingOrSizing()
+									 end)
+	wayframe:RegisterForDrag("LeftButton")
+	local arrow = wayframe:CreateTexture("OVERLAY")
+	arrow:SetTexture("Interface\\Addons\\TomTom\\Arrow")
+	arrow:SetAllPoints()
+
+	local function OnUpdate(self, elapsed)
+		local dist,x,y = Astrolabe:GetDistanceToIcon(point.minimap)
+		local angle = Astrolabe:GetDirectionToIcon(point.minimap)
+		local player = playerModel:GetFacing()
+
+		status:SetText(string.format("%d yards", dist))
+
+		angle = angle - player
+		
+		local cell = floor(angle / twopi * 108 + 0.5) % 108
+		local column = cell % 9
+		local row = floor(cell / 9)
+		
+		local xstart = (column * 56) / 512
+		local ystart = (row * 42) / 512
+		local xend = ((column + 1) * 56) / 512
+		local yend = ((row + 1) * 42) / 512
+		arrow:SetTexCoord(xstart,xend,ystart,yend)
 	end
+
+	local count = 0
+	local function ThereOnUpdate(self, elapsed)
+		count = count + 1
+		if count > 54 then count = 0 end
+
+		local cell = count
+		local column = cell % 9
+		local row = floor(cell / 9)
+		
+		local xstart = (column * 53) / 512
+		local ystart = (row * 70) / 512
+		local xend = ((column + 1) * 53) / 512
+		local yend = ((row + 1) * 70) / 512
+		arrow:SetTexCoord(xstart,xend,ystart,yend)		
+	end
+
+
+	function OnDistanceArrive()
+		arrow:SetHeight(53)
+		arrow:SetWidth(70)
+		arrow:SetTexture("Interface\\Addons\\TomTom\\Arrow-UP")
+		wayframe:SetScript("OnUpdate", ThereOnUpdate)
+	end
+
+	function OnDistanceNear()
+		arrow:SetHeight(56)
+		arrow:SetWidth(42)
+		arrow:SetTexture("Interface\\Addons\\TomTom\\Arrow")
+		wayframe:SetScript("OnUpdate", OnUpdate)
+	end
+
+	wayframe:SetScript("OnUpdate", OnUpdate)
 end

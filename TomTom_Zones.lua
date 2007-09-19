@@ -68,7 +68,9 @@ local tokens = {
 	["Zangarmarsh"] = "ZANG",
 }
 
--- Generate a lookup table from token to continent zone
+-- token -> number
+-- number -> name
+-- name -> token
 local zones = {}
 for c in pairs{GetMapContinents()} do
 	zones[c] = {GetMapZones(c)}
@@ -76,41 +78,65 @@ for c in pairs{GetMapContinents()} do
 		local token = tokens[zone]
 		assert(token, tostring(zone))
 
-		zones[token] = format("%d,%d", c, idx)
-		zones[zones[token]] = zone
+		local key = c * 100 + idx
+		zones[token] = key
+		zones[key] = zone
 	end
 	zones[c] = nil
 end
 
--- TomTom:GetZoneToken(name)
--- name (string) - The name of a zone as returned from GetMapZones()
--- 
--- Converts a zone name into a locale-independent token.  Inspiration from 
--- Gatherer_ZoneTokens.
-function TomTom:GetZoneToken(name)
-	local token = tokens[name]
-	if not token then
-		error(format("Could not find token for zone name '%s'.", name))
+-- TomTom:GetZoneToken(name or continent [, zone])
+-- name (string) - The name of a map zone as returned by GetMapZones()
+-- continent (number) - The continent number
+-- zone (number) - The zone number
+--
+-- Converts a zone name or continent/zone pair to a locale-independent token
+function TomTom:GetZoneToken(arg1, arg2)
+	local targ1,targ2 = type(arg1), type(arg2)
+
+	if targ1 == "number" and targ2 == "number" then
+		-- c,z pair as arguments
+		local key = arg1 * 100 + arg2
+		local name = zones[key]
+		return name and tokens[name]
+	elseif targ1 == "string" and targ2 == "nil" then
+		-- zone name as argument
+		local token = tokens[arg1]
+		return tokens[arg1]
 	end
-
-	return tokens[name]
 end
 
--- c,z = TomTom:GetZoneNumbers(name)
--- name (string) - The name of an in-game zone
+-- TomTom:GetZoneName(token or continent [, zone])
+-- token (string) - The locale independent token for the zone
+-- continent (number) - The continent number
+-- zone (number) - The zone number
 --
--- Converts a zone name into a continent,zone pair usable by Astrolabe
-function TomTom:GetZoneNumber(name)
-	local token = self:GetZoneToken(name)
-	local c,z = strsplit(",", zones[token])
-	return tonumber(c),tonumber(z)
+-- Converts a zone token or continent/zone pair into a zone name
+function TomTom:GetZoneName(arg1, arg2)
+	local targ1,targ2 = type(arg1), type(arg2)
+
+	if targ1 == "number" and targ2 == "number" then
+		-- c,z pair as arguments
+		local key = arg1 * 100 + arg2
+		return zones[key]
+	elseif targ1 == "string" and targ2 == "nil" then
+		-- token as argument
+		local num = zones[arg1]
+		return num and zones[num]
+	end
 end
 
--- name = TomTom:GetZoneName(c,z)
--- c (number) - The continent number
--- z (number) - The zone number
+-- TomTom:GetZoneNumber(token or name)
+-- token (string) - The locale independent token for the zone
+-- name (string) - The name of the zone
 --
--- Converts a c,z, pair into a zone name
-function TomTom:GetZoneName(c,z)
-	return zones[string.format("%d,%d", c, z)]
+-- Converts a zone token or name into a continent/zone pair
+function TomTom:GetZoneNumber(arg1)
+	-- convert from name to token first, if possible
+	local token = tokens[arg1] or arg1
+	local key = token and zones[token]
+
+	if key then
+		return math.floor(key / 100), key % 100
+	end
 end

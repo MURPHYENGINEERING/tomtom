@@ -1,31 +1,7 @@
 --[[--------------------------------------------------------------------------
-  TomTom by Cladhaire <cladhaire@gmail.com>
+--  TomTom by Cladhaire <cladhaire@gmail.com>
 ----------------------------------------------------------------------------]]
-
--- Create the addon object
-TomTom = {}
-
-function TomTom:Initialize()
-end
-
-function TomTom:Enable()
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
--- Simple localisation table for messages
+-- Simple localization table for messages
 local L = setmetatable({
 	TOOLTIP_TITLE = "TomTom";
 	TOOLTIP_SUBTITLE = "Zone Coordinates";
@@ -37,37 +13,39 @@ local L = setmetatable({
 -- Create the addon object
 TomTom = {}
 
--- Import Astrolabe to do the map/minimap calculations for us
-local Astrolabe = DongleStub("Astrolabe-0.4")
-local profile
-local zones = {}
-local playerName = UnitName("player")
-
 function TomTom:Initialize()
 	self.defaults = {
 		profile = {
-			clearwaypoints = true,
-			show = true,
+			cleardistance = 10,
 			lock = false,
-			worldmap = true,
-			cursor = true,
-			tooltip = true,
-			alpha = 1,
-			notes = {
+			coords_worldmap = true,
+			coords_cursor = true,
+			coords_frame = true,
+			clearzone = false,
+			waypoints = {
 			},
 		}
 	}
 
 	self.db = self:InitializeDB("TomTomDB", self.defaults)
-	profile = self.db.profile
-	self:CreateSlashCommands()
-	self:CreateCoordWindows()
 	self:RegisterEvent("PLAYER_LEAVING_WORLD")
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
 	self:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 	self:RegisterEvent("WORLD_MAP_UPDATE")
 	self:RegisterEvent("CHAT_MSG_ADDON")
 end
+
+TomTom = DongleStub("Dongle-1.0"):New("TomTom", TomTom)
+
+--[====[------------------------------------------------
+-- Create the addon object
+TomTom = {}
+
+-- Import Astrolabe to do the map/minimap calculations for us
+local Astrolabe = DongleStub("Astrolabe-0.4")
+local profile
+local zones = {}
+local playerName = UnitName("player")
 
 function TomTom:Enable()
 	if not profile.notes then return end
@@ -841,3 +819,5 @@ function TomTom:AddWaypoint(x,y,desc)
 end
 
 TomTom = DongleStub("Dongle-1.0"):New("TomTom", TomTom)
+
+--]====]
