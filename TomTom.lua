@@ -1,17 +1,20 @@
 --[[--------------------------------------------------------------------------
 --  TomTom by Cladhaire <cladhaire@gmail.com>
 ----------------------------------------------------------------------------]]
+
 -- Simple localization table for messages
-local L = setmetatable({
-	TOOLTIP_TITLE = "TomTom";
-	TOOLTIP_SUBTITLE = "Zone Coordinates";
-	TOOLTIP_LOCKED = "This window is locked in place.";
-	TOOLTIP_LEFTCLICK = "Left-click and drag to move this window.";
-	TOOLTIP_RIGHTCLICK = "Right-click to toggle the options panel.";
-}, {__index=function(t,k) return k end})
+local L = setmetatable({}, {__index=function(t,k) return k end})
+
+local Astrolabe = DongleStub("Astrolabe-0.4")
 
 -- Create the addon object
 TomTom = {}
+
+-- Local definitions
+local GetCurrentCursorPosition
+local WorldMap_OnUpdate
+local Block_OnClick,Block_OnUpdate,BlockOnEnter,BlockOnLeave
+local Block_OnDragStart,Block_OnDragStop
 
 function TomTom:Initialize()
 	self.defaults = {
@@ -20,454 +23,114 @@ function TomTom:Initialize()
 			lock = false,
 			coords_worldmap = true,
 			coords_cursor = true,
-			coords_frame = true,
+			coords_block = true,
 			clearzone = false,
 			waypoints = {
 			},
-		}
+			positions = {
+				["*"] = {},
+			},
+		},
 	}
 
 	self.db = self:InitializeDB("TomTomDB", self.defaults)
+
 	self:RegisterEvent("PLAYER_LEAVING_WORLD")
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
 	self:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 	self:RegisterEvent("WORLD_MAP_UPDATE")
 	self:RegisterEvent("CHAT_MSG_ADDON")
+
+	self:ShowHideWorldCoords()
+	self:ShowHideBlockCoords()
 end
 
-TomTom = DongleStub("Dongle-1.0"):New("TomTom", TomTom)
-
---[====[------------------------------------------------
--- Create the addon object
-TomTom = {}
-
--- Import Astrolabe to do the map/minimap calculations for us
-local Astrolabe = DongleStub("Astrolabe-0.4")
-local profile
-local zones = {}
-local playerName = UnitName("player")
-
-function TomTom:Enable()
-	if not profile.notes then return end
-	for _,wp in pairs(profile.notes) do
-		self:AddZWaypoint(wp.c, wp.z, wp.x*100, wp.y*100, wp.desc, true)
-	end
-	for c in pairs({GetMapContinents()}) do
-		zones[c] = {GetMapZones(c)}
-		for z, name in pairs(zones[c]) do
-			name = name:lower()
-			zones[name] = {['c'] = c, ['z'] = z}
+function TomTom:ShowHideWorldCoords()
+	-- Bail out if we're not supposed to be showing this frame
+	if self.db.profile.coords_worldmap then
+		-- Create the frame if it doesn't exist
+		if not TomTomWorldFrame then
+			TomTomWorldFrame = CreateFrame("Frame", nil, WorldMapFrame)
+			TomTomWorldFrame.Player = TomTomWorldFrame:CreateFontString("OVERLAY", nil, "GameFontHighlightSmall")
+			TomTomWorldFrame.Player:SetPoint("BOTTOM", WorldMapPositioningGuide, "BOTTOM", -100, 11)
+			
+			TomTomWorldFrame.Cursor = TomTomWorldFrame:CreateFontString("OVERLAY", nil, "GameFontHighlightSmall")
+			TomTomWorldFrame.Cursor:SetPoint("BOTTOM", WorldMapPositioningGuide, "BOTTOM", 100, 11)
+			
+			TomTomWorldFrame:SetScript("OnUpdate", WorldMap_OnUpdate)
 		end
+		-- Show the frame
+		TomTomWorldFrame:Show()
+	elseif TomTomWorldFrame then
+		TomTomWorldFrame:Hide()
 	end
 end
 
-function TomTom:Disable()
-	local notes = {}
-	for _, wp in pairs(self.w_points) do
-		table.insert(notes, {["c"] = wp.c, ['z'] = wp.z, ['x'] = wp.x, ['y'] = wp.y, ['desc'] = wp.icon.label})
+function TomTom:ShowHideBlockCoords()
+	-- Bail out if we're not supposed to be showing this frame
+	if self.db.profile.coords_block then
+		-- Create the frame if it doesn't exist
+		if not TomTomBlock then
+			-- Create the coordinate display
+			TomTomBlock = CreateFrame("Button", "TomTomBlock", UIParent)
+			TomTomBlock:SetWidth(120)
+			TomTomBlock:SetHeight(32)
+			TomTomBlock:SetToplevel(1)
+			TomTomBlock:SetFrameStrata("LOW")
+			TomTomBlock:SetMovable(true)
+			TomTomBlock:EnableMouse(true)
+			TomTomBlock:SetClampedToScreen()
+			TomTomBlock:RegisterForDrag("LeftButton")
+			TomTomBlock:RegisterForClicks("RightButtonUp")
+			TomTomBlock:SetPoint("TOP", Minimap, "BOTTOM", 0, -10)
+
+			TomTomBlock.Text = TomTomBlock:CreateFontString("OVERLAY", nil, "GameFontNormal")
+			TomTomBlock.Text:SetJustifyH("CENTER")
+			TomTomBlock.Text:SetPoint("CENTER", 0, 0)
+
+			TomTomBlock:SetBackdrop({
+										bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+										edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+										edgeSize = 16,
+										insets = {left = 4, right = 4, top = 4, bottom = 4},
+									})
+			TomTomBlock:SetBackdropColor(0,0,0,0.4)
+			TomTomBlock:SetBackdropBorderColor(1,0.8,0,0.8)
+
+			-- Set behavior scripts
+			TomTomBlock:SetScript("OnUpdate", Block_OnUpdate)
+			TomTomBlock:SetScript("OnClick", Block_OnClick)
+			TomTomBlock:SetScript("OnEnter", Block_OnEnter)
+			TomTomBlock:SetScript("OnLeave", Block_OnLeave)
+			TomTomBlock:SetScript("OnDragStop", Block_OnDragStop)
+			TomTomBlock:SetScript("OnDragStart", Block_OnDragStart)
+		end
+		-- Show the frame
+		TomTomBlock:Show()
+	elseif TomTomBlock then
+		TomTomBlock:Hide()
 	end
-	profile.notes = notes
 end
 
-local function GetCurrentCursorPosition()
-    -- Coordinate calculation code taken from CT_MapMod
-	local cX, cY = GetCursorPosition()
-	local ceX, ceY = WorldMapFrame:GetCenter()
-	local wmfw, wmfh = WorldMapButton:GetWidth(), WorldMapButton:GetHeight()
-
-	cX = ( ( ( cX / WorldMapFrame:GetScale() ) - ( ceX - wmfw / 2 ) ) / wmfw + 22/10000 )
-	cY = ( ( ( ( ceY + wmfh / 2 ) - ( cY / WorldMapFrame:GetScale() ) ) / wmfh ) - 262/10000 )
-
-	return cX, cY
-end
-
-function TomTom:CreateCoordWindows()
-	-- Create the draggable frame, as well as the world map coords
-	local function OnMouseDown(self,button)
-		if button == "LeftButton" and not profile.lock then
-			self:StartMoving()
-			self.isMoving = true
-		end
-	end
-
-	local function OnMouseUp(self,button)
-		if self.isMoving then
-			self:StopMovingOrSizing()
-			self.isMoving = false
-		end
-	end
-
-	local function OnEnter(self)
-		if profile.tooltip then
-			GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
-			GameTooltip:SetText(L["TOOLTIP_TITLE"])
-			GameTooltip:AddLine(L["TOOLTIP_SUBTITLE"])
-			if profile.lock then
-				GameTooltip:AddLine(L["TOOLTIP_LOCKED"])
-			else
-				GameTooltip:AddLine(L["TOOLTIP_LEFTCLICK"])
-			end
-			GameTooltipTextLeft1:SetTextColor(1,1,1);
-			GameTooltipTextLeft2:SetTextColor(1,1,1);
-			GameTooltip:Show()
-		end
-	end
-
-	local function OnLeave(self)
-		GameTooltip:Hide();
-	end
-
-	local function CoordFrame_OnUpdate(self, elapsed)
-		local c,z,x,y = Astrolabe:GetCurrentPlayerPosition()
-		local text
-		if not x or not y then
-			self:Hide()
-		else
-			self.Text:SetText(string.format("%d/%d/%.2f/%.2f", c, z, x*100, y*100))
-		end
-	end
-
-	local function WorldMap_OnUpdate(self, elapsed)
-		local c,z,x,y = Astrolabe:GetCurrentPlayerPosition()
-
-		if not x or not y then
-			self.Player:SetText("Player: ---")
-		else
-			self.Player:SetText(string.format("Player: %.2f, %.2f", x*100, y*100))
+-- Hook the WorldMap OnClick
+local Orig_WorldMapButton_OnClick = WorldMapButton_OnClick
+function WorldMapButton_OnClick(...)
+	local mouseButton, button = ...
+    if IsControlKeyDown() and mouseButton == "RightButton" then
+		local c,z = GetCurrentMapContinent(), GetCurrentMapZone()
+		local x,y = GetCurrentCursorPosition()
+		
+		if z == 0 then
+			return
 		end
 
-        local cX, cY = GetCurrentCursorPosition()
-
-		if not cX or not cY then
-			self.Cursor:SetText("Cursor: ---")
-		else
-			self.Cursor:SetText(string.format("Cursor: %.2f, %.2f", cX*100, cY*100))
-		end
-	end
-
-	-- Create TomTomFrame, which is the coordinate display
-	TomTomFrame = CreateFrame("Frame")
-	TomTomFrame:SetWidth(120)
-	TomTomFrame:SetHeight(32)
-	TomTomFrame:SetToplevel(1)
-	TomTomFrame:SetFrameStrata("HIGH")
-	TomTomFrame:SetMovable(true)
-	TomTomFrame:EnableMouse(true)
-	TomTomFrame:SetClampedToScreen()
-
-	TomTomFrame.Text = TomTomFrame:CreateFontString("OVERLAY", nil, "GameFontNormal")
-	TomTomFrame.Text:SetJustifyH("CENTER")
-	TomTomFrame.Text:SetPoint("CENTER", 0, 0)
-
-	TomTomFrame:SetBackdrop({
-		bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
-		edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-		edgeSize = 16,
-		insets = {left = 4, right = 4, top = 4, bottom = 4},
-	})
-	TomTomFrame:SetBackdropColor(0,0,0,0.4)
-	TomTomFrame:SetBackdropBorderColor(1,0.8,0,0.8)
-	TomTomFrame:SetScript("OnMouseDown", OnMouseDown)
-	TomTomFrame:SetScript("OnMouseUp", OnMouseUp)
-	TomTomFrame:SetScript("OnHide", OnMouseUp)
-	TomTomFrame:SetScript("OnEnter", OnEnter)
-	TomTomFrame:SetScript("OnLeave", OnLeave)
-	TomTomFrame:SetScript("OnUpdate", CoordFrame_OnUpdate)
-
-	if not profile.show then
-		TomTomFrame:Hide()
-	end
-
-	-- Create TomTomWorldFrame, which is anchored to the center of the WorldMap
-	TomTomWorldFrame = CreateFrame("Frame", nil, WorldMapFrame)
-	TomTomWorldFrame.Player = TomTomWorldFrame:CreateFontString("OVERLAY", nil, "GameFontHighlightSmall")
-	TomTomWorldFrame.Player:SetPoint("BOTTOM", WorldMapPositioningGuide, "BOTTOM", -100, 11)
-
-	TomTomWorldFrame.Cursor = TomTomWorldFrame:CreateFontString("OVERLAY", nil, "GameFontHighlightSmall")
-	TomTomWorldFrame.Cursor:SetPoint("BOTTOM", WorldMapPositioningGuide, "BOTTOM", 100, 11)
-
-	TomTomWorldFrame:SetScript("OnUpdate", WorldMap_OnUpdate)
-
-	if not profile.worldmap then TomTomWorldFrame:Hide() end
-
-	self.frame = CreateFrame("Frame")
-
+		TomTom:SetWaypoint(c,z,x*100,y*100)
+    else
+        return Orig_WorldMapButton_OnClick(...)
+    end
 end
 
-local count = 0
-local tooltip_icon
-local function Tooltip_OnUpdate(self, elapsed)
-	count = count + elapsed
-	if count >= 0.1 then
-		local tooltip = TomTom.tooltip
-		local dist,x,y = Astrolabe:GetDistanceToIcon(tooltip_icon)
-		TomTomTooltipTextLeft3:SetText(("%s yards away"):format(math.floor(dist)), 1, 1 ,1)
-	end
-end
-
-local function MinimapIcon_OnEnter(self)
-	local tooltip = TomTom.tooltip
-	tooltip:SetScale(UIParent:GetEffectiveScale())
-	tooltip:SetOwner(self, "ANCHOR_CURSOR")
-	tooltip_icon = self
-	if self.label then
-		tooltip:SetText("TomTom: " .. self.label .. "\n")
-	else
-		tooltip:SetText("TomTom Waypoint\n")
-	end
-
-	local dist,x,y = Astrolabe:GetDistanceToIcon(self)
-
-	tooltip:AddLine(self.coord, 1, 1, 1)
-	tooltip:AddLine(("%s yards away"):format(math.floor(dist)), 1, 1 ,1)
-	tooltip:AddLine(self.zone, 0.7, 0.7, 0.7)
-	tooltip:Show()
-	tooltip:SetScript("OnUpdate", Tooltip_OnUpdate)
-end
-
-local function MinimapIcon_OnLeave(self)
-	local tooltip = TomTom.tooltip
-	tooltip_icon = nil
-	tooltip:Hide()
-	tooltip:SetScript("OnUpdate", nil)
-end
-
-local function DropDown_RemoveWaypoint()
-	local icon = TomTomDropDown.icon
-
-	if icon.mpair then
-		icon = icon.mpair
-	end
-
-	Astrolabe:RemoveIconFromMinimap(icon)
-
-	icon.pair:Hide()
-	table.insert(TomTom.worldmapIcons, icon.pair)
-
-	for idx,entry in ipairs(TomTom.w_points) do
-		local w_icon = entry.icon
-		if icon.pair == w_icon then
-			table.remove(TomTom.w_points, idx)
-			break
-		end
-	end
-end
-
-local function DropDown_SendWaypoint()
-    local icon = TomTomDropDown.icon
-
-    local zone = icon.zone
-
-    local s = icon.coord:find(",")
-    local x = icon.coord:sub(1,s-1)
-    local y = icon.coord:sub(s+2)
-
-    local label = icon.label
-
-    local data = zone .."\031".. x .."\031".. y .."\031".. (label or "") 
-
-    local distro = this.value
-
-    SendAddonMessage("TomTom", data, distro)
-end
-
-local function DropDown_Init()
-	local dropdown = TomTomDropDown
-	local label = dropdown.icon.label
-
-	if not label then
-		label = "TomTom Waypoint"
-	end
-
-    local inGroup = GetNumPartyMembers() > 0 or GetNumRaidMembers() > 0
-    local inGuild = IsInGuild()
-
-	UIDropDownMenu_AddButton{
-		text = label,
-		isTitle = 1,
-	}
-
-	UIDropDownMenu_AddButton{
-		text = "Remove waypoint",
-		value = "remove",
-		func = DropDown_RemoveWaypoint,
-	}
-	UIDropDownMenu_AddButton{
-		text = "Send to group",
-		value = "RAID",
-		func = DropDown_SendWaypoint,
-		textR = not inGroup and 0.6,
-		textG = not inGroup and 0.6,
-		textB = not inGroup and 0.6,
-	}
-	UIDropDownMenu_AddButton{
-		text = "Send to guild",
-		value = "GUILD",
-		func = DropDown_SendWaypoint,
-		textR = not inGuild and 0.6,
-		textG = not inGuild and 0.6,
-		textB = not inGuild and 0.6,
-	}
-end
-
-local function MinimapIcon_OnClick(self)
-	local dropdown = TomTom.dropdown
-	if not dropdown then
-		TomTom.dropdown = CreateFrame("Frame", "TomTomDropDown", UIParent, "UIDropDownMenuTemplate")
-		dropdown = TomTom.dropdown
-		--UIDropDownMenu_SetButtonWidth(50, dropdown)
-		--UIDropDownMenu_SetWidth(50, dropdown)
-	end
-
-	dropdown:SetParent(self)
-	dropdown.icon = self
-	UIDropDownMenu_Initialize(dropdown, DropDown_Init, "MENU")
-	ToggleDropDownMenu(1, nil, dropdown, "cursor", 0, 0);
-end
-
-local halfpi = math.pi / 2
-
--- The magic number which represents the ratio of model position pixels to
--- logical screen pixels. I suspect this is really based on some property of the
--- model itself, but I figured it out through interpolation given 3 ratios
--- 4:3 5:4 16:10
-local MAGIC_ARROW_NUMBER  = 0.000723339
-
--- Calculation to determine the actual offset factor for the screen ratio, I dont
--- know where the 1/3 rationally comes from, but it works, there's probably some
--- odd logic within the client somewhere.
---
--- 70.4 is half the width of the frame so we move to the center
-local ofs = MAGIC_ARROW_NUMBER * (GetScreenHeight()/GetScreenWidth() + 1/3) * 70.4;
--- The divisor here puts the arrow where the original magic number pair had it
-local radius = ofs / 1.166666666666667;
-
-local function gomove(model,angle)
-    model:SetFacing(angle);
-    -- The 137/140 simply adjusts for the fact that the textured
-    -- border around the minimap isn't exactly centered
-    model:SetPosition(ofs * (137 / 140) - radius * math.sin(angle),
-                      ofs               + radius * math.cos(angle),
-                      0);
-end
-
--- For animating the arrow
---angle = 0
-local function MinimapIcon_UpdateArrow(self, elapsed)
-	local icon = self.parent
-	local angle = Astrolabe:GetDirectionToIcon(icon)
-
-	if GetCVar("rotateMinimap") == "1" then
-		local cring = MiniMapCompassRing:GetFacing()
-		angle = angle + cring
-	end
-
-	gomove(self, angle)
-end
-
-local function MinimapIcon_OnUpdate(self, elapsed)
-	local edge = Astrolabe:IsIconOnEdge(self)
-	local dot = self.dot:IsShown()
-	local arrow = self.arrow:IsShown()
-
-	if edge and not arrow then
-		self.arrow:Show()
-		self.arrow.seqtime = 0
-		self.dot:Hide()
-		self.edge = true
-	elseif not edge and not dot then
-		self.dot:Show()
-		self.arrow:Hide()
-		self.edge = false
-	end
-
-	local dist,x,y = Astrolabe:GetDistanceToIcon(self)
-	if dist and dist < 11 and profile.clearwaypoints then
-		-- Clear this waypoint
-		Astrolabe:RemoveIconFromMinimap(self)
-		self.pair:Hide()
-		table.insert(TomTom.worldmapIcons, self.pair)
-		local msg = (self.label and self.label ~= "") and self.label or "your destination"
-
-		TomTom:PrintF("You have arrived at %s (%s)", msg, self.coord)
-
-		for idx,entry in ipairs(TomTom.w_points) do
-			local w_icon = entry.icon
-			if self.pair == w_icon then
-				table.remove(TomTom.w_points, idx)
-				break
-			end
-		end
-	end
-end
-
-function TomTom:CreateMinimapIcon(label, x, y)
-	if not self.minimapIcons then
-		self.minimapIcons = {}
-	end
-
-	if not self.tooltip then
-		self.tooltip = CreateFrame("GameTooltip", "TomTomTooltip", nil, "GameTooltipTemplate")
-	end
-
-	-- Return one from the frame pool, if possible
-	local icon = table.remove(self.minimapIcons)
-	if icon then
-		icon.label = label
-		icon.coord = string.format("%5.2f, %5.2f", x, y)
-		return icon
-	end
-
-	-- Create a new icon with arrow
-	-- icon.dot is the minimap dot texture
-	-- icon.arrow is the model used on the edge of the map
-	-- icon.label will contain the mouseover label
-	-- icon.coord will contain the text of the coordinates
-	icon = CreateFrame("Button", nil, Minimap)
-	icon:SetHeight(12)
-	icon:SetWidth(12)
-	icon:RegisterForClicks("RightButtonUp")
-
-	icon.label = label
-	icon.coord = string.format("%5.2f, %5.2f", x, y)
-
-	local texture = icon:CreateTexture()
-	texture:SetTexture("Interface\\Minimap\\ObjectIcons")
-	texture:SetTexCoord(0.5, 0.75, 0, 0.25)
-	texture:SetAllPoints()
-	icon.dot = texture
-	icon:SetScript("OnEnter", MinimapIcon_OnEnter)
-	icon:SetScript("OnLeave", MinimapIcon_OnLeave)
-	icon:SetScript("OnUpdate", MinimapIcon_OnUpdate)
-	icon:SetScript("OnClick", MinimapIcon_OnClick)
-
-	-- Golden Arrow Information:
-	-- Facing: 0.50088876485825
-	-- Light: 0,1,0,0,0,1,1,1,1,1,1,1,1
-	-- Position: 0.029919292777777, 0.08267530053854, 0
-
-	local model = CreateFrame("Model", nil, icon)
-	model:SetHeight(140.8)
-	model:SetWidth(140.8)
-	model:SetPoint("CENTER", Minimap, "CENTER", 0, 0)
-	model:SetModel("Interface\\Minimap\\Rotating-MinimapArrow.mdx")
---	model:SetFogColor(0.9999977946281433,0.9999977946281433,0.9999977946281433,0.9999977946281433)
---	model:SetFogColor(math.random(), math.random(), math.random(), math.random())
---	model:SetFogFar(1)
---	model:SetFogNear(0)
---	model:SetLight(0,1,0,0,0,1,1,1,1,1,1,1,1)
---	model:SetLight(1, 0, 0, -0.707, -0.707, 0.7, 1.0, 1.0, 1.0, 0.8, 1.0, 1.0, 0.8)
---  Model:SetLight (enabled[,omni,dirX,dirY,dirZ,ambIntensity[,ambR,ambG,ambB [,dirIntensity[,dirR,dirG,dirB]]]])
-	model:SetLight(0,1,0,0,0,1,1,1,1,1,1,1,1)
-	model:SetModelScale(.600000023841879)
-
-	model.parent = icon
-	icon.arrow = model
-	model:SetScript("OnUpdate", MinimapIcon_UpdateArrow)
-	model:Hide()
-
-	return icon
-end
+--[[
 
 local Orig_WorldMapButton_OnClick = WorldMapButton_OnClick
 function WorldMapButton_OnClick(mouseButton, button)
@@ -487,224 +150,11 @@ end
 
 WorldMapMagnifyingGlassButton:SetText(ZOOM_OUT_BUTTON_TEXT .. "\nCtrl+Right Click To Add a Waypoint")
 
-local function WorldMapIcon_OnEnter(self)
-	local tooltip = TomTom.tooltip
-	tooltip:SetScale(UIParent:GetEffectiveScale())
-	tooltip:SetOwner(self, "ANCHOR_CURSOR")
-	tooltip_icon = self
-	if self.label then
-		tooltip:SetText("TomTom: " .. self.label .. "\n")
-	else
-		tooltip:SetText("TomTom Waypoint\n")
-	end
-
-	tooltip:AddLine(self.coord, 1, 1, 1)
-	tooltip:AddLine(self.zone, 0.7, 0.7, 0.7)
-	tooltip:Show()
-end
-
-local function WorldMapIcon_OnLeave(self)
-	local tooltip = TomTom.tooltip
-	tooltip:Hide()
-end
-
-function TomTom:CreateWorldMapIcon(label, x, y)
-	if not self.worldmapIcons then
-		self.worldmapIcons = {}
-	end
-
-	-- Return one from the frame pool, if possible
-	local icon = table.remove(self.worldmapIcons)
-	if icon then
-		icon.label = label
-		icon.coord = string.format("%5.2f, %5.2f", x, y)
-		return icon
-	end
-
-	-- Create a new icon with arrow
-	-- icon.dot is the minimap dot texture
-	-- icon.label will contain the mouseover label
-	-- icon.coord will contain the text of the coordinates
-	icon = CreateFrame("Button", nil, WorldMapButton)
-	icon:SetHeight(12)
-	icon:SetWidth(12)
-
-	icon.label = label
-	icon.coord = string.format("%5.2f, %5.2f", x, y)
-
-	local texture = icon:CreateTexture()
-	texture:SetTexture("Interface\\Minimap\\ObjectIcons")
-	texture:SetTexCoord(0.5, 0.75, 0, 0.25)
-	texture:SetAllPoints()
-	icon.dot = texture
-	icon:SetScript("OnEnter", WorldMapIcon_OnEnter)
-	icon:SetScript("OnLeave", WorldMapIcon_OnLeave)
-	icon:SetScript("OnClick", MinimapIcon_OnClick)
-	icon:RegisterForClicks("RightButtonUp")
-	return icon
-end
-
-function TomTom:CreateSlashCommands()
-	-- Options slash commands
-	self.cmd = self:InitializeSlashCommand("TomTom Slash Command", "TOMTOM", "tomtom")
-
-	local ToggleDisplay = function(origin)
-		if origin == "coord" and TomTomFrame then
-			profile.show = not profile.show
-			TomTomFrame[profile.show and "Show" or "Hide"](TomTomFrame)
-			self:PrintF("The coordinate display has been %s.", profile.show and "shown" or "hidden")
-		elseif origin == "mapcoord" and TomTomWorldFrame then
-			profile.worldmap = not profile.worldmap
-			TomTomWorldFrame[profile.worldmap and "Show" or "Hide"](TomTomWorldFrame)
-			self:PrintF("The world map coordinate display has been %s.", profile.worldmap and "shown" or "hidden")
-		end
-	end
-
-	local LockDisplay = function()
-		profile.lock = not profile.lock
-		self:PrintF("The coordinate display has been %s.", profile.lock and "locked" or "unlocked")
-	end
-
-	self.cmd:RegisterSlashHandler("|cffffff00coord|r - Show/Hide the coordinate display", "^(coord)$", ToggleDisplay)
-	self.cmd:RegisterSlashHandler("|cffffff00mapcoord|r - Show/Hide the world map coordinate display", "^(mapcoord)$", ToggleDisplay)
-	self.cmd:RegisterSlashHandler("|cffffff00lock|r - Lock/Unlock the coordinate display", "^lock$", LockDisplay)
-
-	-- Waypoint placement slash commands
-	self.cmd_way = self:InitializeSlashCommand("TomTom - Waypoints", "TOMTOM_WAY", "way")
-
-	local function Way_Set(zone,x,y,desc)
-		zone = strtrim(zone)
-		zone = zone:lower()
-		if tonumber(zone) then
-			x, y, desc = zone, x, y
-			self:AddWaypoint(x,y,desc)
-		elseif zone == '' then
-			self:AddWaypoint(x,y,desc)
-		else
-			if zones[zone] then
-				local c, z = zones[zone]['c'], zones[zone]['z']
-				self:AddZWaypoint(c, z, x, y, desc)
-			else
-				self:Print(L["Zone not recognized, please check your spelling"])
-			end
-		end
-	end
-
-	local function Way_Reset(zone)
-		if not self.w_points or #self.w_points == 0 then
-			self:Print("There are no waypoints to remove.")
-			return
-		end
-
-		if zone and zone:match("%S") then
-			local orig_zone = zone
-			zone = zone:lower()
-
-			zone = zones[zone]
-			if not zone then
-				self:Print(L["Reset: Zone not recognized, please check your spelling"])
-				return
-			end
-			local c, z = zone['c'], zone['z']
-			if self.m_points then
-				ztbl = self.m_points[c] and self.m_points[c][z]
-				if ztbl then
-					for idx, entry in pairs(ztbl) do
-						Astrolabe:RemoveIconFromMinimap(entry.icon)
-						table.insert(self.minimapIcons, entry.icon)
-						ztbl[idx] = nil
-					end
-				end
-			end
-			if self.w_points then
-				local newpoints = {}
-				for k,wp in ipairs(self.w_points) do
-					local cwp, zwp = wp.c, wp.z
-					if not (cwp == c and zwp == z) then
-						table.insert(newpoints, wp)
-					else
-						local icon = wp.icon
-						icon:Hide()
-						self.w_points[k] = nil
-						table.insert(self.worldmapIcons, icon)
-					end
-				end
-			end
-			self:Print(L["All waypoints have been removed from "]..orig_zone)
-			return
-		else
-			if self.m_points then
-				for cont,ztbl in pairs(self.m_points) do
-					for zone,ztbl in pairs(ztbl) do
-						for idx,entry in pairs(ztbl) do
-							Astrolabe:RemoveIconFromMinimap(entry.icon)
-							table.insert(self.minimapIcons, entry.icon)
-							ztbl[idx] = nil
-						end
-					end
-				end
-			end
-
-			if self.w_points then
-				for k,v in ipairs(self.w_points) do
-					local icon = v.icon
-					icon:Hide()
-					self.w_points[k] = nil
-					table.insert(self.worldmapIcons, icon)
-				end
-			end
-			self:Print("All waypoints have been removed.")
-		end
-	end
-
-	local function Way_List()
-		if not self.w_points or #self.w_points == 0 then
-			self:Print("There are no waypoints to list.")
-			return
-		end
-
-		if self.w_points then
-			local c, z, x, y, desc
-			for k,v in ipairs(self.w_points) do
-				local icon = v.icon
-				c, z, x, y, desc = v.c, v.z, v.x, v.y, icon.label
-				z = zones[c][z]
-				self:Print(string.format("%s: %0.02f %0.02f %s", z, x*100, y*100, desc or ''))
-			end
-		end
-	end
-
-	local function Way_ZoneList()
-		local temp = {}
-		for zone in pairs(zones) do
-			if type(zone) == "string" then
-				table.insert(temp, zone)
-			end
-		end
-
-		table.sort(temp)
-
-		self:Print("Valid TomTom zone names:")
-
-		for idx,name in ipairs(temp) do
-			self:Echo(name)
-		end
-	end
-
-	self.cmd_way:RegisterSlashHandler("|cffffff00reset [<zone>]|r - Remove all current waypoints", "^reset%s*(.*)$", Way_Reset)
-	self.cmd_way:RegisterSlashHandler("|cffffff00list|r - List all current waypoints", "^list$", Way_List)
-	self.cmd_way:RegisterSlashHandler("|cffffff00zonelist|r - List all valid zone names", "^zonelist$", Way_ZoneList)
-	self.cmd_way:RegisterSlashHandler("|cffffff00[<zone>] <xx[.xx]> <yy[.yy]> [<desc>]|r - Add a new waypoint with optional note", "^([^%d]*)%s*(%d*%.?%d*)[%s]+(%d*%.?%d*)%s*(.*)", Way_Set)
-end
-
 function TomTom:ZONE_CHANGED_NEW_AREA()
-	-- This could clear the minimap, but I won't.. cause.. I don't like that
-	-- Not sure what to do here
-
-	if profile.show then
+	if profile.coords_block then
 		local c,z,x,y = Astrolabe:GetCurrentPlayerPosition()
 		if c and z and x and y then
-			TomTomFrame:Show()
+			TomTomBlock:Show()
 		end
 	end
 
@@ -743,27 +193,6 @@ function TomTom:WORLD_MAP_UPDATE()
 		end
 	end
 end
-
-function TomTom:CHAT_MSG_ADDON(event, prefix, message, distro, sender)
-    if prefix ~= "TomTom" then return end
-    if sender == playerName then return end
-
-    local zone,x,y,desc = strsplit("\031", message)
-
-    local c = tonumber(zones[zone].c)
-    local z = tonumber(zones[zone].z)
-
-    x = tonumber(x)
-    y = tonumber(y)
-
-    TomTom:AddZWaypoint(c, z, x, y, desc, true)
-    self:PrintF("Waypoint at %.2f, %.2f in %s recieved from %s.", x*100, y*100, zone, sender)
-end
-
-local sortFunc = function(a,b)
-	if a.x == b.x then return a.y < b.y else return a.x < b.x end
-end
-
 
 function TomTom:AddZWaypoint(c,z,x,y,desc,silent)
 	if not self.m_points then self.m_points = {} end
@@ -818,6 +247,60 @@ function TomTom:AddWaypoint(x,y,desc)
 	self:AddZWaypoint(c,z,x,y,desc)
 end
 
+--]]
+
 TomTom = DongleStub("Dongle-1.0"):New("TomTom", TomTom)
 
---]====]
+do
+	function GetCurrentCursorPosition()
+		-- Coordinate calculation code taken from CT_MapMod
+		local cX, cY = GetCursorPosition()
+		local ceX, ceY = WorldMapFrame:GetCenter()
+		local wmfw, wmfh = WorldMapButton:GetWidth(), WorldMapButton:GetHeight()
+
+		cX = ( ( ( cX / WorldMapFrame:GetScale() ) - ( ceX - wmfw / 2 ) ) / wmfw + 22/10000 )
+		cY = ( ( ( ( ceY + wmfh / 2 ) - ( cY / WorldMapFrame:GetScale() ) ) / wmfh ) - 262/10000 )
+
+		return cX, cY
+	end
+
+	function WorldMap_OnUpdate(self, elapsed)
+		local c,z,x,y = Astrolabe:GetCurrentPlayerPosition()
+
+		if not x or not y then
+			self.Player:SetText("Player: ---")
+		else
+			self.Player:SetText(string.format("Player: %.2f, %.2f", x*100, y*100))
+		end
+
+		local cX, cY = GetCurrentCursorPosition()
+
+		if not cX or not cY then
+			self.Cursor:SetText("Cursor: ---")
+		else
+			self.Cursor:SetText(string.format("Cursor: %.2f, %.2f", cX*100, cY*100))
+		end
+	end
+end
+
+do 
+	function Block_OnUpdate(self, elapsed)
+		local c,z,x,y = Astrolabe:GetCurrentPlayerPosition()
+		if not x or not y then
+			-- Hide the frame when we have no coordinates
+			self:Hide()
+		else
+			self.Text:SetText(string.format("%.2f, %.2f", x*100, y*100))
+		end
+	end
+
+	function Block_OnDragStart(self, button, down)
+		if not TomTom.db.profile.lock then
+			self:StartMoving()
+		end
+	end
+
+	function Block_OnDragStop(self, button, down)
+		self:StopMovingOrSizing()
+	end
+end

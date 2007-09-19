@@ -62,21 +62,13 @@ function TomTom:SetWaypoint(c,z,x,y,far,near,arrive,callback)
 		point.minimap.icon:SetHeight(12)
 		point.minimap.icon:SetWidth(12)
 
-		point.minimap.arrowout = point.minimap:CreateTexture("ARTWORK")
+		point.minimap.arrowout = point.minimap:CreateTexture("BACKGROUND")
 		point.minimap.arrowout:SetTexture("Interface\\AddOns\\TomTom\\MinimapArrow-Outer")
 		point.minimap.arrowout:SetPoint("CENTER", 0, 0)
 		point.minimap.arrowout:SetHeight(40)
 		point.minimap.arrowout:SetWidth(40)
 		point.minimap.arrowout:SetVertexColor(1, 1, 1)
 		point.minimap.arrowout:Hide()
-
-		point.minimap.arrowin = point.minimap:CreateTexture("ARTWORK")
-		point.minimap.arrowin:SetTexture("Interface\\AddOns\\TomTom\\MinimapArrow-Inner")
-		point.minimap.arrowin:SetPoint("CENTER", 0, 0)
-		point.minimap.arrowin:SetHeight(40)
-		point.minimap.arrowin:SetWidth(40)
-		point.minimap.arrowin:SetGradient("VERTICAL", 0.2, 1.0, 0.2, 0.5, 0.5, 0.5)
-		point.minimap.arrowin:Hide()
 
 		-- Create the world map point, and associated texture
 		point.world = CreateFrame("Button", nil, WorldMapButton)
@@ -173,7 +165,6 @@ do
 			-- Check to see if this is a transition
 			if not data.edge then
 				self.icon:Hide()
-				self.arrowin:Show()
 				self.arrowout:Show()
 				data.edge = true
 				
@@ -195,12 +186,10 @@ do
 			end
 
 			local sin,cos = math.sin(angle) * square_half, math.cos(angle) * square_half
-			self.arrowin:SetTexCoord(0.5-sin, 0.5+cos, 0.5+cos, 0.5+sin, 0.5-cos, 0.5-sin, 0.5+sin, 0.5-cos)
 			self.arrowout:SetTexCoord(0.5-sin, 0.5+cos, 0.5+cos, 0.5+sin, 0.5-cos, 0.5-sin, 0.5+sin, 0.5-cos)
 
 		elseif data.edge then
 			self.icon:Show()
-			self.arrowin:Hide()
 			self.arrowout:Hide()
 			data.edge = nil
 
