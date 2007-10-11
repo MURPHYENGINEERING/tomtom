@@ -15,7 +15,7 @@ local pool = {}
 local Minimap_OnEnter,Minimap_OnLeave,Minimap_OnUpdate,Minimap_OnClick
 local Arrow_OnUpdate
 local Minimap_OnEvent
-local World_OnEnter,World_OnLeave,World_OnClick
+local World_OnEnter,World_OnLeave,World_OnClick,World_OnEvent
 
 -- pointObject = TomTom:SetWaypoint(c,z,x,y,far,near,arrive,callback)
 -- c (number) - The continent number
@@ -86,9 +86,11 @@ function TomTom:SetWaypoint(c,z,x,y,far,near,arrive,callback)
 		point.minimap:SetScript("OnUpdate", Minimap_OnUpdate)
 		point.minimap:SetScript("OnClick", Minimap_OnClick)
 
+		point.world:RegisterEvent("WORLD_MAP_UPDATE")
 		point.world:SetScript("OnEnter", World_OnEnter)
 		point.world:SetScript("OnLeave", World_OnLeave)
 		point.world:SetScript("OnClick", World_OnClick)
+		point.world:SetScript("OnEvent", World_OnEvent)
 
 		-- Point from the icons/arrow into the data
 		point.minimap.data = point
@@ -262,4 +264,16 @@ do
 		end
 	end
 	tooltip:SetScript("OnUpdate", Tooltip_OnUpdate)
+
+	function World_OnEvent(self, event, ...)
+		if event == "WORLD_MAP_UPDATE" then
+			local data = self.data
+			local x,y = Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, self, data.c, data.z, data.x/100, data.y/100)
+			if (x and y and (0 < x and x <= 1) and (0 < y and y <= 1)) then
+				self:Show()
+			else
+				self:Hide()
+			end
+		end
+	end
 end
