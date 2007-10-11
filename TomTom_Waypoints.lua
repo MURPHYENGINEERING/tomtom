@@ -118,6 +118,21 @@ function TomTom:SetWaypoint(c,z,x,y,far,near,arrive,callback)
 	return point
 end
 
+function TomTom:ClearWaypoint(point)
+	point.c = nil
+	point.z = nil
+	point.x = nil
+	point.y = nil
+	point.far = nil
+	point.near = nil
+	point.arrive = nil
+	point.callback = nil
+	
+	Astrolabe:RemoveIconFromMinimap(point.minimap)
+	point.world:Hide()
+	table.insert(pool, point)
+end
+
 do
 	local tooltip_icon,tooltip_callback
 
@@ -206,7 +221,6 @@ do
 		end
 
 		if callback then
-
 			-- Handle the logic/callbacks for arrival
 			local dist,x,y = Astrolabe:GetDistanceToIcon(self)
 			local near,far,arrive = data.near,data.far,data.arrive
@@ -234,7 +248,7 @@ do
 			elseif far and dist <= far then
 				newstate = 3
 			else
-				state = 4
+				newstate = 4
 			end
 			
 			if state ~= newstate then

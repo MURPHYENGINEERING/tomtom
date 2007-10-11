@@ -130,6 +130,13 @@ function WorldMapButton_OnClick(...)
     end
 end
 
+local function WaypointCallback(event, data, dist, lastdist)
+	TomTom:Print(event, data, dist, lastdist)
+	if event == "OnDistanceArrive" then
+		TomTom:ClearWaypoint(data)
+	end
+end
+
 -- TODO: Make this now suck
 function TomTom:AddWaypoint(x,y,desc)
 	local oc,oz = Astrolabe:GetCurrentPlayerPosition()
@@ -144,7 +151,7 @@ function TomTom:AddWaypoint(x,y,desc)
 		return
 	end
 
-	local point = self:SetWaypoint(c,z,x,y)
+	local point = self:SetWaypoint(c, z, x, y, nil, nil, 10, WaypointCallback)
 	self:SetCrazyArrow(point, 15)
 end
 --[[
