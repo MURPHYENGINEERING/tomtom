@@ -63,7 +63,7 @@ function TomTom:SetWaypoint(c,z,x,y,far,near,arrive,callback)
 		point.minimap.icon:SetWidth(12)
 
 		point.minimap.arrowout = point.minimap:CreateTexture("BACKGROUND")
-		point.minimap.arrowout:SetTexture("Interface\\AddOns\\TomTom\\MinimapArrow-Outer")
+		point.minimap.arrowout:SetTexture("Interface\\AddOns\\TomTom\\Images\\MinimapArrow-Green")
 		point.minimap.arrowout:SetPoint("CENTER", 0, 0)
 		point.minimap.arrowout:SetHeight(40)
 		point.minimap.arrowout:SetWidth(40)

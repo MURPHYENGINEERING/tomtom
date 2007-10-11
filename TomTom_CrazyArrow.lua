@@ -43,7 +43,7 @@ wayframe:SetScript("OnDragStop", OnDragStop)
 wayframe:RegisterForDrag("LeftButton")
 
 wayframe.arrow = wayframe:CreateTexture("OVERLAY")
-wayframe.arrow:SetTexture("Interface\\Addons\\TomTom\\Arrow")
+wayframe.arrow:SetTexture("Interface\\Addons\\TomTom\\Images\\Arrow")
 wayframe.arrow:SetAllPoints()
 
 local active_point, arrive_distance, showDownArrow
@@ -66,7 +66,7 @@ local function OnUpdate(self, elapsed)
 		if not showDownArrow then
 			arrow:SetHeight(70)
 			arrow:SetWidth(53)
-			arrow:SetTexture("Interface\\AddOns\\TomTom\\Arrow-UP")
+			arrow:SetTexture("Interface\\AddOns\\TomTom\\Images\\Arrow-UP")
 			showDownArrow = true
 		end
 
@@ -88,7 +88,7 @@ local function OnUpdate(self, elapsed)
 		if showDownArrow then
 			arrow:SetHeight(56)
 			arrow:SetWidth(42)
-			arrow:SetTexture("Interface\\AddOns\\TomTom\\Arrow")
+			arrow:SetTexture("Interface\\AddOns\\TomTom\\Images\\Arrow")
 			showDownArrow = false
 		end
 			

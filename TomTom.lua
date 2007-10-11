@@ -130,6 +130,23 @@ function WorldMapButton_OnClick(...)
     end
 end
 
+-- TODO: Make this now suck
+function TomTom:AddWaypoint(x,y,desc)
+	local oc,oz = Astrolabe:GetCurrentPlayerPosition()
+	SetMapToCurrentZone()
+	local c,z = Astrolabe:GetCurrentPlayerPosition()
+	if oc and oz then
+		SetMapZoom(oc,oz)
+	end
+
+	if not c or not z or c < 1 then
+		self:Print("Cannot find a valid zone to place the coordinates")
+		return
+	end
+
+	local point = self:SetWaypoint(c,z,x,y)
+	self:SetCrazyArrow(point, 15)
+end
 --[[
 
 local Orig_WorldMapButton_OnClick = WorldMapButton_OnClick
