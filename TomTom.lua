@@ -131,7 +131,6 @@ function WorldMapButton_OnClick(...)
 end
 
 local function WaypointCallback(event, data, dist, lastdist)
-	TomTom:Print(event, data, dist, lastdist)
 	if event == "OnDistanceArrive" then
 		TomTom:ClearWaypoint(data)
 	end
@@ -154,6 +153,12 @@ function TomTom:AddWaypoint(x,y,desc)
 	local point = self:SetWaypoint(c, z, x, y, nil, nil, 10, WaypointCallback)
 	self:SetCrazyArrow(point, 15)
 end
+
+function TomTom:AddZWaypoint(c,z,x,y,desc)
+	local point = self:SetWaypoint(c,z,x,y,nil,nil,10,WaypointCallback)
+	self:SetCrazyArrow(point, 15)
+end
+
 --[[
 
 local Orig_WorldMapButton_OnClick = WorldMapButton_OnClick

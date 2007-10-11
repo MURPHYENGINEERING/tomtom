@@ -168,6 +168,12 @@ do
 	local rad_135 = math.rad(135)
 	local minimap_count = 0
 	function Minimap_OnUpdate(self, elapsed)
+		local dist,x,y = Astrolabe:GetDistanceToIcon(self)
+		if not dist then
+			self:Hide()
+			return
+		end
+
 		minimap_count = minimap_count + elapsed
 		
 		-- Only take action every 0.2 seconds
@@ -222,7 +228,6 @@ do
 
 		if callback then
 			-- Handle the logic/callbacks for arrival
-			local dist,x,y = Astrolabe:GetDistanceToIcon(self)
 			local near,far,arrive = data.near,data.far,data.arrive
 			local state = data.state
 			
