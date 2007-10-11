@@ -12,7 +12,7 @@ local tooltip = CreateFrame("GameTooltip", "TomTomTooltip", nil, "GameTooltipTem
 local pool = {}
 
 -- Local declarations
-local Minimap_OnEnter,Minimap_OnLeave,Minimap_OnUpdate,Minimap_OnClick
+local Minimap_OnEnter,Minimap_OnLeave,Minimap_OnUpdate,Minimap_OnClick,Minimap_OnEvent
 local Arrow_OnUpdate
 local Minimap_OnEvent
 local World_OnEnter,World_OnLeave,World_OnClick,World_OnEvent
@@ -85,7 +85,9 @@ function TomTom:SetWaypoint(c,z,x,y,far,near,arrive,callback)
 		point.minimap:SetScript("OnLeave", Minimap_OnLeave)
 		point.minimap:SetScript("OnUpdate", Minimap_OnUpdate)
 		point.minimap:SetScript("OnClick", Minimap_OnClick)
-
+		point.minimap:RegisterEvent("PLAYER_ENTERING_WORLD")
+		point.minimap:SetScript("OnEvent", Minimap_OnEvent)
+		
 		point.world:RegisterEvent("WORLD_MAP_UPDATE")
 		point.world:SetScript("OnEnter", World_OnEnter)
 		point.world:SetScript("OnLeave", World_OnLeave)
@@ -274,6 +276,13 @@ do
 			else
 				self:Hide()
 			end
+		end
+	end
+
+	function Minimap_OnEvent(self, event, ...)
+		if event == "PLAYER_ENTERING_WORLD" then
+			local data = self.data
+			Astrolabe:PlaceIconOnMinimap(self, data.c, data.z, data.x/100, data.y/100)
 		end
 	end
 end
