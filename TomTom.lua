@@ -124,7 +124,8 @@ function WorldMapButton_OnClick(...)
 			return
 		end
 
-		TomTom:SetWaypoint(c,z,x*100,y*100)
+		local point = TomTom:SetWaypoint(c,z,x*100,y*100)
+		TomTom:SetCrazyArrow(point, 15)
     else
         return Orig_WorldMapButton_OnClick(...)
     end
@@ -278,7 +279,7 @@ end
 
 --]]
 
-TomTom = DongleStub("Dongle-1.0"):New("TomTom", TomTom)
+TomTom = DongleStub("Dongle-1.1"):New("TomTom", TomTom)
 
 do
 	function GetCurrentCursorPosition()
