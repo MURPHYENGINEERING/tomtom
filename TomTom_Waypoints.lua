@@ -56,8 +56,7 @@ function TomTom:SetWaypoint(c,z,x,y,far,near,arrive,callback)
 
 		-- Create the actual texture attached for the minimap icon
 		point.minimap.icon = point.minimap:CreateTexture("BACKGROUND")
-		point.minimap.icon:SetTexture("Interface\\Minimap\\ObjectIcons")
-		point.minimap.icon:SetTexCoord(0.5, 0.75, 0, 0.25)
+		point.minimap.icon:SetTexture("Interface\\AddOns\\TomTom\\Images\\GoldGreenDot")
 		point.minimap.icon:SetPoint("CENTER", 0, 0)
 		point.minimap.icon:SetHeight(12)
 		point.minimap.icon:SetWidth(12)
@@ -77,8 +76,7 @@ function TomTom:SetWaypoint(c,z,x,y,far,near,arrive,callback)
 		point.world:RegisterForClicks("RightButtonUp")
 		point.world.icon = point.world:CreateTexture()
 		point.world.icon:SetAllPoints()
- 		point.world.icon:SetTexture("Interface\\Minimap\\ObjectIcons")
-		point.world.icon:SetTexCoord(0.5, 0.75, 0, 0.25)
+ 		point.world.icon:SetTexture("Interface\\AddOns\\TomTom\\Images\\MinimapArrow-Green")
 
 		-- Add the behavior scripts 
 		point.minimap:SetScript("OnEnter", Minimap_OnEnter)
