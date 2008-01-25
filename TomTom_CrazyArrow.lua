@@ -8,16 +8,28 @@
 
 local Astrolabe = DongleStub("Astrolabe-0.4")
 
-local twopi = math.pi * 2
-
-local playerModel
-local children = { Minimap:GetChildren() }
-for idx,child in ipairs(children) do
-	if child:IsObjectType("Model") and child:GetModel() == "Interface\\Minimap\\MinimapArrow" then
-		playerModel = child
-		break
+local GetPlayerBearing
+function GetPlayerBearing()
+	local obj; -- Remains an upvalue
+	do
+		local t = {Minimap:GetChildren()}; -- Becomes garbage
+		for k, v in pairs(t) do
+			if v:IsObjectType("Model") and not v:GetName() then
+				local model = v:GetModel():lower()
+				if model:match("interface\\minimap\\minimaparrow") then 
+					obj = v; break;
+				end
+			end
+		end
 	end
+	if not obj then return; end
+
+	-- If we've found what we were looking for, rewrite function to skip the search next time.
+	GetPlayerBearing = function() return (1-obj:GetFacing()/math.pi/2)*360; end
+	return GetPlayerBearing();
 end
+
+local twopi = math.pi * 2
 
 local wayframe = CreateFrame("Frame", "TomTomCrazyArrow", UIParent)
 wayframe:SetHeight(56)
@@ -106,7 +118,7 @@ local function OnUpdate(self, elapsed)
 		end
 			
 		local angle = Astrolabe:GetDirectionToIcon(active_point)
-		local player = playerModel:GetFacing()
+		local player = GetPlayerBearing()
 		
 		angle = angle - player
 		
