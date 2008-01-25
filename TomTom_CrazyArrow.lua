@@ -25,7 +25,7 @@ function GetPlayerBearing()
 	if not obj then return; end
 
 	-- If we've found what we were looking for, rewrite function to skip the search next time.
-	GetPlayerBearing = function() return (1-obj:GetFacing()/math.pi/2)*360; end
+	GetPlayerBearing = function() return (obj:GetFacing()); end
 	return GetPlayerBearing();
 end
 
