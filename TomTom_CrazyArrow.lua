@@ -7,7 +7,7 @@
 ----------------------------------------------------------------------------]]
 
 local Astrolabe = DongleStub("Astrolabe-0.4")
-
+local sformat = string.format
 local GetPlayerBearing
 function GetPlayerBearing()
 	local obj; -- Remains an upvalue
@@ -40,7 +40,10 @@ wayframe:SetMovable(true)
 wayframe:Hide()
 
 wayframe.status = wayframe:CreateFontString("OVERLAY", nil, "GameFontNormalSmall")
+wayframe.tta	= wayframe:CreateFontString("OVERLAY", nil, "GameFontNormalSmall")
 wayframe.status:SetPoint("TOP", wayframe, "BOTTOM", 0, 0)
+wayframe.tta:SetPoint("TOP", wayframe.status, "BOTTOM", 0, 0)
+
 
 local function OnDragStart(self, button)
 	self:StartMoving()
@@ -75,8 +78,12 @@ function TomTom:SetCrazyArrow(point, dist)
 end
 
 local status = wayframe.status
+local tta = wayframe.tta
 local arrow = wayframe.arrow
 local count = 0
+local time = 0
+local distance = 0
+local delta = 0
 local function OnUpdate(self, elapsed)
 	local dist,x,y = Astrolabe:GetDistanceToIcon(active_point)
 	if not dist then
@@ -84,7 +91,9 @@ local function OnUpdate(self, elapsed)
 		return
 	end
 
-	status:SetText(string.format("%d yards", dist))
+	status:SetText(sformat("%d yards", dist))
+	
+	local cell
 
 	-- Showing the arrival arrow?
 	if dist <= arrive_distance then
@@ -100,7 +109,7 @@ local function OnUpdate(self, elapsed)
 			count = 0
 		end
 
-		local cell = count
+		cell = count
 		local column = cell % 9
 		local row = floor(cell / 9)
 		
@@ -116,13 +125,14 @@ local function OnUpdate(self, elapsed)
 			arrow:SetTexture("Interface\\AddOns\\TomTom\\Images\\Arrow")
 			showDownArrow = false
 		end
-			
+
+
 		local angle = Astrolabe:GetDirectionToIcon(active_point)
 		local player = GetPlayerBearing()
 		
 		angle = angle - player
 		
-		local cell = floor(angle / twopi * 108 + 0.5) % 108
+		cell = floor(angle / twopi * 108 + 0.5) % 108
 		local column = cell % 9
 		local row = floor(cell / 9)
 		
@@ -131,7 +141,34 @@ local function OnUpdate(self, elapsed)
 		local xend = ((column + 1) * 56) / 512
 		local yend = ((row + 1) * 42) / 512
 		arrow:SetTexCoord(xstart,xend,ystart,yend)
-	end
+		end
+		
+		-- Give time til arrival only if facing towards destination
+		time = time + elapsed
+		
+		if time >= 1 then
+			if cell <= 27 or cell >= 81 or showDownArrow then
+
+				delta = distance - dist 
+				
+				if delta > 0 then
+					local eta = dist/(delta/time)
+					if eta > 60 then
+						tta:SetText(sformat("%d minutes and %d seconds", eta / 60, eta % 60))
+					else 
+						tta:SetText(sformat("%d seconds", eta))
+					end
+				else
+					tta:SetText("***")
+				end 
+				time = 0
+				distance = dist
+			else
+				tta:SetText("***")
+				distance = dist
+				time = 0
+			end
+		end
 end
 
 wayframe:SetScript("OnUpdate", OnUpdate)
