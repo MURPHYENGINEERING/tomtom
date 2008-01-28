@@ -70,7 +70,7 @@ function TomTom:SetWaypoint(c,z,x,y,far,near,arrive,callback)
 		point.minimap.arrowout:Hide()
 
 		-- Create the world map point, and associated texture
-		point.world = CreateFrame("Button", nil, WorldMapButton)
+		point.world = CreateFrame("Button", nil, WorldMapDetailFrame)
 		point.world:SetHeight(12)
 		point.world:SetWidth(12)
 		point.world:RegisterForClicks("RightButtonUp")
