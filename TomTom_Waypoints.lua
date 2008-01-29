@@ -76,7 +76,7 @@ function TomTom:SetWaypoint(c,z,x,y,far,near,arrive,callback)
 		point.world:RegisterForClicks("RightButtonUp")
 		point.world.icon = point.world:CreateTexture()
 		point.world.icon:SetAllPoints()
- 		point.world.icon:SetTexture("Interface\\AddOns\\TomTom\\Images\\MinimapArrow-Green")
+ 		point.world.icon:SetTexture("Interface\\AddOns\\TomTom\\Images\\GoldGreenDot")
 
 		-- Add the behavior scripts 
 		point.minimap:SetScript("OnEnter", Minimap_OnEnter)
