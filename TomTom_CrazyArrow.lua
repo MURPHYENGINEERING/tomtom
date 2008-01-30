@@ -153,7 +153,7 @@ local function OnUpdate(self, elapsed)
 				
 				if delta > 0 then
 					local eta = dist/(delta/time)
-					tta:SetText(sformat("%d:%02d", eta / 60, eta % 60))
+					tta:SetText(sformat("%01d:%02d", eta / 60, eta % 60))
 				else
 					tta:SetText("***")
 				end 
