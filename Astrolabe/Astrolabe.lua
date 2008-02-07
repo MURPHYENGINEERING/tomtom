@@ -1,7 +1,7 @@
 --[[
 Name: Astrolabe
-Revision: $Rev: 56 $
-$Date: 2008-02-04 21:59:11 +0000 (Mon, 04 Feb 2008) $
+Revision: $Rev: 58 $
+$Date: 2008-02-07 17:16:11 +0000 (Thu, 07 Feb 2008) $
 Author(s): Esamynn (esamynn@wowinterface.com)
 Inspired By: Gatherer by Norganna
              MapLibrary by Kristofer Karlsson (krka@kth.se)
@@ -41,7 +41,7 @@ Note:
 -- DO NOT MAKE CHANGES TO THIS LIBRARY WITHOUT FIRST CHANGING THE LIBRARY_VERSION_MAJOR
 -- STRING (to something unique) OR ELSE YOU MAY BREAK OTHER ADDONS THAT USE THIS LIBRARY!!!
 local LIBRARY_VERSION_MAJOR = "Astrolabe-0.4"
-local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 56 $", "(%d+)") or 1)
+local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 58 $", "(%d+)") or 1)
 
 if not DongleStub then error(LIBRARY_VERSION_MAJOR .. " requires DongleStub.") end
 if not DongleStub:IsNewerVersion(LIBRARY_VERSION_MAJOR, LIBRARY_VERSION_MINOR) then return end
@@ -256,7 +256,7 @@ end
 function Astrolabe:GetUnitPosition( unit, noMapChange )
 	local x, y = GetPlayerMapPosition(unit);
 	if ( x <= 0 and y <= 0 ) then
-		if ( notMapChange ) then
+		if ( noMapChange ) then
 			-- no valid position on the current map, and we aren't allowed
 			-- to change map zoom, so return
 			return;
