@@ -287,6 +287,14 @@ do
 	function World_OnEvent(self, event, ...)
 		if event == "WORLD_MAP_UPDATE" then
 			local data = self.data
+			-- It seems that data.x and data.y are occasionally not valid
+			-- perhaps when the waypoint is removed.  Guard this for now
+			-- TODO: Fix permanently
+			if not data.x or not data.y then
+				self:Hide()
+				return
+			end
+
 			local x,y = Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, self, data.c, data.z, data.x/100, data.y/100)
 			if (x and y and (0 < x and x <= 1) and (0 < y and y <= 1)) then
 				self:Show()

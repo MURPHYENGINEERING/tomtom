@@ -5,8 +5,16 @@
 ## OptionalDeps: Dongle
 
 Dongle.lua
-Astrolabe\Load.xml
+
+libs\Astrolabe\Load.xml
+libs\LibStub\LibStub.lua
+libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
+libs\AceGUI-3.0\AceGUI-3.0.xml
+libs\AceConfig-3.0\AceConfig-3.0.xml
+
 TomTom.lua
 TomTom_Waypoints.lua
 TomTom_Zones.lua
 TomTom_CrazyArrow.lua
+
+Config.lua
