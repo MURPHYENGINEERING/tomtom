@@ -19,16 +19,44 @@ local Block_OnDragStart,Block_OnDragStop
 function TomTom:Initialize()
 	self.defaults = {
 		profile = {
-			cleardistance = 10,
-			lock = false,
-			coords_worldmap = true,
-			coords_cursor = true,
-			coords_block = true,
-			clearzone = false,
-			waypoints = {
+			block = {
+				enable = true,
+				accuracy = 2,
+				bordercolor = {1, 0.8, 0, 0.8},
+				bgcolor = {0, 0, 0, 0.4},
+				lock = false,
+				height = 30,
+				width = 100,
+				fontsize = 12,
 			},
-			positions = {
-				["*"] = {},
+			mapcoords = {
+				playerenable = true,
+				playeraccuracy = 2,
+				cursorenable = true,
+				cursoraccuracy = 2,
+			},
+			arrow = {
+				enable = true,
+				goodcolor = {0, 1, 0, 1},
+				badcolor = {1, 0, 0, 1},
+			},
+			minimap = {
+				enable = true,
+				otherzone = true,
+				tooltip = true,
+			},
+			worldmap = {
+				enable = true,
+				otherzone = true,
+				tooltip = true,
+				clickcreate = true,
+			},
+			comm = {
+				enable = true,
+				prompt = false,
+			},
+			persistence = {
+				savewaypoints = true,
 			},
 		},
 	}
@@ -47,7 +75,7 @@ end
 
 function TomTom:ShowHideWorldCoords()
 	-- Bail out if we're not supposed to be showing this frame
-	if self.db.profile.coords_worldmap then
+	if self.db.profile.mapcoords.playerenable or self.db.profile.mapcoords.cursorenable then
 		-- Create the frame if it doesn't exist
 		if not TomTomWorldFrame then
 			TomTomWorldFrame = CreateFrame("Frame", nil, WorldMapFrame)
@@ -59,6 +87,18 @@ function TomTom:ShowHideWorldCoords()
 			
 			TomTomWorldFrame:SetScript("OnUpdate", WorldMap_OnUpdate)
 		end
+
+		TomTomWorldFrame.Player:Hide()
+		TomTomWorldFrame.Cursor:Hide()
+
+		if self.db.profile.mapcoords.playerenable then
+			TomTomWorldFrame.Player:Show()
+		end
+
+		if self.db.profile.mapcoords.cursorenable then
+			TomTomWorldFrame.Cursor:Show()
+		end
+
 		-- Show the frame
 		TomTomWorldFrame:Show()
 	elseif TomTomWorldFrame then
@@ -68,7 +108,7 @@ end
 
 function TomTom:ShowHideBlockCoords()
 	-- Bail out if we're not supposed to be showing this frame
-	if self.db.profile.coords_block then
+	if self.db.profile.block.enable then
 		-- Create the frame if it doesn't exist
 		if not TomTomBlock then
 			-- Create the coordinate display
@@ -107,6 +147,21 @@ function TomTom:ShowHideBlockCoords()
 		end
 		-- Show the frame
 		TomTomBlock:Show()
+
+		local opt = self.db.profile.block
+
+		-- Update the backdrop color, and border color
+		TomTomBlock:SetBackdropColor(unpack(opt.bgcolor))
+		TomTomBlock:SetBackdropBorderColor(unpack(opt.bordercolor))
+
+		-- Update the height and width
+		TomTomBlock:SetHeight(opt.height)
+		TomTomBlock:SetWidth(opt.width)
+
+		-- Update the font size
+		local font,height = TomTomBlock.Text:GetFont()
+		TomTomBlock.Text:SetFont(font, opt.fontsize, select(3, TomTomBlock.Text:GetFont()))
+
 	elseif TomTomBlock then
 		TomTomBlock:Hide()
 	end
@@ -137,7 +192,7 @@ local function WaypointCallback(event, data, dist, lastdist)
 	end
 end
 
--- TODO: Make this now suck
+-- TODO: Make this not suck
 function TomTom:AddWaypoint(x,y,desc)
 	local oc,oz = Astrolabe:GetCurrentPlayerPosition()
 	SetMapToCurrentZone()
@@ -294,13 +349,20 @@ do
 		return cX, cY
 	end
 
+	local coord_fmt = "%%.%df, %%.%df"
+	function RoundCoords(x,y,prec)
+		local fmt = coord_fmt:format(prec, prec)
+		return fmt:format(x*100, y*100)
+	end
+
 	function WorldMap_OnUpdate(self, elapsed)
 		local c,z,x,y = Astrolabe:GetCurrentPlayerPosition()
+		local opt = TomTom.db.profile
 
 		if not x or not y then
 			self.Player:SetText("Player: ---")
 		else
-			self.Player:SetText(string.format("Player: %.2f, %.2f", x*100, y*100))
+			self.Player:SetFormattedText("Player: %s", RoundCoords(x, y, opt.mapcoords.playeraccuracy))
 		end
 
 		local cX, cY = GetCurrentCursorPosition()
@@ -308,7 +370,7 @@ do
 		if not cX or not cY then
 			self.Cursor:SetText("Cursor: ---")
 		else
-			self.Cursor:SetText(string.format("Cursor: %.2f, %.2f", cX*100, cY*100))
+			self.Cursor:SetFormattedText("Cursor: %s", RoundCoords(cX, cY, opt.mapcoords.cursoraccuracy))
 		end
 	end
 end
@@ -316,16 +378,18 @@ end
 do 
 	function Block_OnUpdate(self, elapsed)
 		local c,z,x,y = Astrolabe:GetCurrentPlayerPosition()
+		local opt = TomTom.db.profile
+
 		if not x or not y then
 			-- Hide the frame when we have no coordinates
 			self:Hide()
 		else
-			self.Text:SetText(string.format("%.2f, %.2f", x*100, y*100))
+			self.Text:SetFormattedText("%s", RoundCoords(x, y, opt.block.accuracy))
 		end
 	end
 
 	function Block_OnDragStart(self, button, down)
-		if not TomTom.db.profile.lock then
+		if not TomTom.db.profile.block.lock then
 			self:StartMoving()
 		end
 	end
