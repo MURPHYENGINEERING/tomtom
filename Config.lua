@@ -177,6 +177,28 @@ options.args.crazytaxi = {
          width = "double",
 		 arg = "arrow.enable",
       },
+	  heredistance = {
+		  order = 3,
+		  type = "range",
+		  name = L["\"Arrival Distance\""],
+		  desc = L["This setting will control the distance at which the waypoint arrow switches to a downwards arrow, indicating you have arrived at your destination"],
+		  min = 0, max = 150, step = 5,
+		  arg = "arrow.arrival",
+	  },
+	  lock = {
+		  order = 4,
+		  type = "toggle",
+		  name = L["Lock arrow"],
+		  desc = L["Locks the waypoint arrow, so it can't be moved accidentally"],
+		  arg = "arrow.lock",
+	  },
+	  arrival = {
+		  order = 5,
+		  type = "toggle",
+		  name = L["Show time to arrival"],
+		  desc = L["Shows an estimate of how long it will take you to reach the waypoint at your current speed"],
+		  arg = "arrow.showtta",
+	  },
       color = {
          type = "group",
          name = L["Arrow colors"],
@@ -265,7 +287,7 @@ options.args.worldmap = {
       },
 	  createclick = {
 		  type = "toggle",
-		  name = L["Allow control-clicking on map to create new waypoint"],
+		  name = L["Allow control-right clicking on map to create new waypoint"],
 		  width = "double",
 		  arg = "worldmap.clickcreate",
 	  },
@@ -303,6 +325,7 @@ options.args.general = {
 }
 
 LibStub("AceConfig-3.0"):RegisterOptionsTable("TomTom", options)
+LibStub("AceConfigDialog-3.0"):SetDefaultSize("TomTom", 600, 400)
 
 SLASH_TOMTOM1 = "/tomtom"
 SlashCmdList["TOMTOM"] = function(msg)

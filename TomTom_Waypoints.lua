@@ -7,6 +7,18 @@ local Astrolabe = DongleStub("Astrolabe-0.4")
 
 -- Create a tooltip to be used when mousing over waypoints
 local tooltip = CreateFrame("GameTooltip", "TomTomTooltip", nil, "GameTooltipTemplate")
+do
+	-- Set the the tooltip's lines
+	local i = 1
+	tooltip.lines = {}
+	repeat
+		local line = getglobal("TomTomTooltipTextLeft"..i)
+		if line then
+			tooltip.lines[i] = line
+		end
+		i = i + 1
+	until not line
+end
 
 -- Create a local table used as a frame pool
 local pool = {}
@@ -16,6 +28,32 @@ local Minimap_OnEnter,Minimap_OnLeave,Minimap_OnUpdate,Minimap_OnClick,Minimap_O
 local Arrow_OnUpdate
 local Minimap_OnEvent
 local World_OnEnter,World_OnLeave,World_OnClick,World_OnEvent
+
+-- Unique identifier for each of the waypoints
+
+local uidmap = {}
+local getuid
+do
+	local uid = 0
+	function getuid()
+		uid = uid + 1
+		return uid
+	end
+end
+
+function TomTom:GetDistanceToWaypoint(uid)
+	local point = uidmap[uid]
+	if point then
+		return Astrolabe:GetDistanceToIcon(point.minimap)
+	end
+end
+
+function TomTom:GetDirectionToWaypoint(uid)
+	local point = uidmap[uid]
+	if point then
+		return Astrolabe:GetDirectionToIcon(point.minimap)
+	end
+end
 
 -- pointObject = TomTom:SetWaypoint(c,z,x,y,far,near,arrive,callback)
 -- c (number) - The continent number
@@ -92,20 +130,27 @@ function TomTom:SetWaypoint(c,z,x,y,far,near,arrive,callback)
 		point.world:SetScript("OnClick", World_OnClick)
 		point.world:SetScript("OnEvent", World_OnEvent)
 
+		point.data = {}
+
 		-- Point from the icons/arrow into the data
-		point.minimap.data = point
-		point.world.data = point
+		point.minimap.data = point.data
+		point.world.data = point.data
 	end
 
 	-- Set the relevant data in the point object
-	point.c = c
-	point.z = z
-	point.x = x
-	point.y = y
-	point.far = far
-	point.near = near
-	point.arrive = arrive
-	point.callback = callback
+	point.data.c = c
+	point.data.z = z
+	point.data.x = x
+	point.data.y = y
+	point.data.far = far
+	point.data.near = near
+	point.data.arrive = arrive
+	point.data.callback = callback
+
+	local uid = getuid()
+	point.data.uid = uid
+	uidmap[uid] = point
+
 
 	-- Use Astrolabe to place the waypoint
 	local x = x/100
@@ -113,22 +158,21 @@ function TomTom:SetWaypoint(c,z,x,y,far,near,arrive,callback)
 	Astrolabe:PlaceIconOnMinimap(point.minimap, c, z, x, y)
 	Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, point.world, c, z, x, y)
 
-	return point
+	return uid
 end
 
-function TomTom:ClearWaypoint(point)
-	point.c = nil
-	point.z = nil
-	point.x = nil
-	point.y = nil
-	point.far = nil
-	point.near = nil
-	point.arrive = nil
-	point.callback = nil
+function TomTom:ClearWaypoint(uid)
+	local point = uidmap[uid]
+	if point then
+		point.data = {}
+		point.minimap.data = point.data
+		point.world.data = point.data
 	
-	Astrolabe:RemoveIconFromMinimap(point.minimap)
-	point.world:Hide()
-	table.insert(pool, point)
+		Astrolabe:RemoveIconFromMinimap(point.minimap)
+		point.world:Hide()
+		table.insert(pool, point)
+		uidmap[uid] = nil
+	end
 end
 
 do
@@ -270,7 +314,7 @@ do
 	local tooltip_count = 0
 	function Tooltip_OnUpdate(self, elapsed)
 		tooltip_count = tooltip_count + elapsed
-		if count >= 0.2 then
+		if tooltip_count >= 0.2 then
 			if tooltip_callback then
 				local dist,x,y = Astrolabe:GetDistanceToIcon(tooltip_icon)
 
@@ -278,7 +322,8 @@ do
 				-- arg1: The tooltip object
 				-- arg2: The distance to the icon in yards
 				-- arg3: Boolean value indicating the tooltip was just shown
-				tooltip_callback("OnTooltipShown", tooltip, dist, true)
+				tooltip_callback("OnTooltipShown", tooltip, dist, false)
+				tooltip_count = 0
 			end
 		end
 	end
