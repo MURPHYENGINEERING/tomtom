@@ -21,157 +21,127 @@ do
 end
 
 -- Create a local table used as a frame pool
-local pool = {}
+local pool = {
+	minimap = {},
+	worldmap = {},
+}
 
 -- Local declarations
 local Minimap_OnEnter,Minimap_OnLeave,Minimap_OnUpdate,Minimap_OnClick,Minimap_OnEvent
 local Arrow_OnUpdate
-local Minimap_OnEvent
 local World_OnEnter,World_OnLeave,World_OnClick,World_OnEvent
 
--- Unique identifier for each of the waypoints
+local WaypointClass = {}
 
-local uidmap = {}
-local getuid
-do
-	local uid = 0
-	function getuid()
-		uid = uid + 1
-		return uid
+function WaypointClass:Show(minimap, worldmap)
+	local x = self.x / 100
+	local y = self.y / 100
+
+	if minimap then
+		Astrolabe:PlaceIconOnMinimap(self.minimap, self.c, self.z, x, y) 
+	end
+
+	if worldmap then
+		local x, y = Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, self.worldmap, self.c, self.z, x, y)
+		self.worldmap:Show()
 	end
 end
 
-function TomTom:GetDistanceToWaypoint(uid)
-	local point = uidmap[uid]
-	if point then
-		return Astrolabe:GetDistanceToIcon(point.minimap)
+function WaypointClass:Hide(minimap, worldmap)
+	if minimap then
+		Astrolabe:RemoveIconFromMinimap(self.minimap)
+	end
+
+	if worldmap then
+		Astrolabe:Hide()
 	end
 end
 
-function TomTom:GetDirectionToWaypoint(uid)
-	local point = uidmap[uid]
-	if point then
-		return Astrolabe:GetDirectionToIcon(point.minimap)
-	end
+function WaypointClass:GetDistanceToWaypoint()
+	return Astrolabe:GetDistanceToIcon(self.minimap)
 end
 
--- pointObject = TomTom:SetWaypoint(c,z,x,y,far,near,arrive,callback)
--- c (number) - The continent number
--- z (number) - The zone number
--- x (number) - The x coordinate
--- y (number) - The y coordinate
--- far (number) - A distance in yards to trigger the OnFar callback
--- near (number) - A distance in yards to trigger the OnNear callback
--- arrive (number) - A distance in yards to trigger the OnArrive callback
--- callback (function) - A function to be called on state changes.  This function
---   will be passed the frame itself, an event string, the distance to the point
---   in yards, and any addition arguments that are necessary.
---
--- Creates a waypoint at the given coordinates and registers a callback to handle
--- the following state changes:
+function WaypointClass:GetDirectionToWaypoint()
+	return Astrolabe:GetDirectionToIcon(self.minimap)
+end
 
--- OnEdgeChanged - Called when the icon's edge state changes.  Passes a boolean
---   value onEdge that indicates if the icon is currently on the edge, or not.
--- OnTooltipShown - Called every 0.2 seconds when the tooltip is visible for the
---   given icon. Passes the tooltip, the distance to the icon in yards,
---   and a boolean flag indicating if this is the first frame showing the tooltip
---   as opposed to an update
--- OnDistanceFar
--- OnDistanceNear
--- OnDistanceArrive
-function TomTom:SetWaypoint(c,z,x,y,far,near,arrive,callback)
+
+function TomTom:SetWaypoint(c, z, x, y, distances)
 	-- Try to acquire a waypoint from the frame pool
-	local point = table.remove(pool)
-	
-	if not point then
-		point = {}
+	local minimap = table.remove(pool.minimap)
+	local worldmap = table.remove(pool.worldmap)
 
-		point.minimap = CreateFrame("Button", nil, Minimap)
-		point.minimap:SetHeight(20)
-		point.minimap:SetWidth(20)
-		point.minimap:SetFrameLevel(4)
-		point.minimap:RegisterForClicks("RightButtonUp")
+	if not minimap then
+		minimap = CreateFrame("Button", nil, Minimap)
+		minimap:SetHeight(20)
+		minimap:SetWidth(20)
+		minimap:RegisterForClicks("RightButtonUp")
 
-		-- Create the actual texture attached for the minimap icon
-		point.minimap.icon = point.minimap:CreateTexture("BACKGROUND")
-		point.minimap.icon:SetTexture("Interface\\AddOns\\TomTom\\Images\\GoldGreenDot")
-		point.minimap.icon:SetPoint("CENTER", 0, 0)
-		point.minimap.icon:SetHeight(12)
-		point.minimap.icon:SetWidth(12)
+		minimap.icon = minimap:CreateTexture("BACKGROUND")
+		minimap.icon:SetTexture("Interface\\AddOns\\TomTom\\Images\\GoldGreenDot")
+		minimap.icon:SetPoint("CENTER", 0, 0)
+		minimap.icon:SetHeight(12)
+		minimap.icon:SetWidth(12)
 
-		point.minimap.arrowout = point.minimap:CreateTexture("BACKGROUND")
-		point.minimap.arrowout:SetTexture("Interface\\AddOns\\TomTom\\Images\\MinimapArrow-Green")
-		point.minimap.arrowout:SetPoint("CENTER", 0, 0)
-		point.minimap.arrowout:SetHeight(40)
-		point.minimap.arrowout:SetWidth(40)
-		point.minimap.arrowout:SetVertexColor(1, 1, 1)
-		point.minimap.arrowout:Hide()
-
-		-- Create the world map point, and associated texture
-		point.world = CreateFrame("Button", nil, WorldMapDetailFrame)
-		point.world:SetHeight(12)
-		point.world:SetWidth(12)
-		point.world:RegisterForClicks("RightButtonUp")
-		point.world.icon = point.world:CreateTexture()
-		point.world.icon:SetAllPoints()
- 		point.world.icon:SetTexture("Interface\\AddOns\\TomTom\\Images\\GoldGreenDot")
+		minimap.arrow = minimap:CreateTexture("BACKGROUND")
+		minimap.arrow:SetTexture("Interface\\AddOns\\TomTom\\Images\\MinimapArrow-Green")
+		minimap.arrow:SetPoint("CENTER", 0 ,0)
+		minimap.arrow:SetHeight(40)
+		minimap.arrow:SetWidth(40)
+		minimap.arrow:Hide()
 
 		-- Add the behavior scripts 
-		point.minimap:SetScript("OnEnter", Minimap_OnEnter)
-		point.minimap:SetScript("OnLeave", Minimap_OnLeave)
-		point.minimap:SetScript("OnUpdate", Minimap_OnUpdate)
-		point.minimap:SetScript("OnClick", Minimap_OnClick)
-		point.minimap:RegisterEvent("PLAYER_ENTERING_WORLD")
-		point.minimap:SetScript("OnEvent", Minimap_OnEvent)
-		
-		point.world:RegisterEvent("WORLD_MAP_UPDATE")
-		point.world:SetScript("OnEnter", World_OnEnter)
-		point.world:SetScript("OnLeave", World_OnLeave)
-		point.world:SetScript("OnClick", World_OnClick)
-		point.world:SetScript("OnEvent", World_OnEvent)
-
-		point.data = {}
-
-		-- Point from the icons/arrow into the data
-		point.minimap.data = point.data
-		point.world.data = point.data
+		minimap:SetScript("OnEnter", Minimap_OnEnter)
+		minimap:SetScript("OnLeave", Minimap_OnLeave)
+		minimap:SetScript("OnUpdate", Minimap_OnUpdate)
+		minimap:SetScript("OnClick", Minimap_OnClick)
+		minimap:RegisterEvent("PLAYER_ENTERING_WORLD")
+		minimap:SetScript("OnEvent", Minimap_OnEvent)
 	end
 
-	-- Set the relevant data in the point object
-	point.data.c = c
-	point.data.z = z
-	point.data.x = x
-	point.data.y = y
-	point.data.far = far
-	point.data.near = near
-	point.data.arrive = arrive
-	point.data.callback = callback
+	if not worldmap then
+		worldmap = CreateFrame("Button", nil, WorldMapDetailFrame)
+		worldmap:SetHeight(12)
+		worldmap:SetWidth(12)
+		worldmap:RegisterForClicks("RightButtonUp")
+		worldmap.icon = worldmap:CreateTexture("ARTWORK")
+		worldmap.icon:SetAllPoints()
+		worldmap.icon:SetTexture("Interface\\AddOns\\TomTom\\Images\\GoldGreenDot")
 
-	local uid = getuid()
-	point.data.uid = uid
-	uidmap[uid] = point
+		worldmap:RegisterEvent("WORLD_MAP_UPDATE")
+		worldmap:SetScript("OnEnter", World_OnEnter)
+		worldmap:SetScript("OnLeave", World_OnLeave)
+		worldmap:SetScript("OnClick", World_OnClick)
+		worldmap:SetScript("OnEvent", World_OnEvent)
+	end
 
+	-- Create a new waypoint object which wraps 	
+	local point = setmetatable({}, {__index=WaypointClass})
+	point.c = c
+	point.z = z
+	point.x = x
+	point.y = y
+	point.distances = distances
+	point.minimap = minimap
+	point.worldmap = worldmap
 
-	-- Use Astrolabe to place the waypoint
-	local x = x/100
-	local y = y/100
-	Astrolabe:PlaceIconOnMinimap(point.minimap, c, z, x, y)
-	Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, point.world, c, z, x, y)
+	-- Link the actual frames back to the waypoint object
+	minimap.point = point
+	worldmap.point = point
 
-	return uid
+	-- Place the waypoints
+	point:Show(true, true)
+
+	return point
 end
 
-function TomTom:ClearWaypoint(uid)
-	local point = uidmap[uid]
+function TomTom:ClearWaypoint(point)
 	if point then
-		point.data = {}
-		point.minimap.data = point.data
-		point.world.data = point.data
-	
-		Astrolabe:RemoveIconFromMinimap(point.minimap)
-		point.world:Hide()
-		table.insert(pool, point)
-		uidmap[uid] = nil
+		point:Hide(true, true)
+		table.insert(pool.minimap, point.minimap)
+		table.insert(pool.worldmap, point.worldmap)
+		point.minimap = nil
+		point.worldmap = nil
 	end
 end
 
@@ -179,8 +149,10 @@ do
 	local tooltip_icon,tooltip_callback
 
 	function Minimap_OnEnter(self, motion)
+		local data = self
+
 		tooltip_icon = self
-		tooltip_callback = self.data.callback
+		tooltip_callback = data.callback
 
 		if tooltip_callback then
 			local dist,x,y = Astrolabe:GetDistanceToIcon(self)
@@ -225,14 +197,14 @@ do
 		minimap_count = 0
 
 		local edge = Astrolabe:IsIconOnEdge(self)
-		local data = self.data
+		local data = self.point
 		local callback = data.callback
 
 		if edge then
 			-- Check to see if this is a transition
 			if not data.edge then
 				self.icon:Hide()
-				self.arrowout:Show()
+				self.arrow:Show()
 				data.edge = true
 				
 				if callback then
@@ -253,11 +225,11 @@ do
 			end
 
 			local sin,cos = math.sin(angle) * square_half, math.cos(angle) * square_half
-			self.arrowout:SetTexCoord(0.5-sin, 0.5+cos, 0.5+cos, 0.5+sin, 0.5-cos, 0.5-sin, 0.5+sin, 0.5-cos)
+			self.arrow:SetTexCoord(0.5-sin, 0.5+cos, 0.5+cos, 0.5+sin, 0.5-cos, 0.5-sin, 0.5+sin, 0.5-cos)
 
 		elseif data.edge then
 			self.icon:Show()
-			self.arrowout:Hide()
+			self.arrow:Hide()
 			data.edge = nil
 
 			if callback then
@@ -331,7 +303,7 @@ do
 
 	function World_OnEvent(self, event, ...)
 		if event == "WORLD_MAP_UPDATE" then
-			local data = self.data
+			local data = self.point
 			-- It seems that data.x and data.y are occasionally not valid
 			-- perhaps when the waypoint is removed.  Guard this for now
 			-- TODO: Fix permanently

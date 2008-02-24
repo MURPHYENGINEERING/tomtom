@@ -111,7 +111,7 @@ local time = 0
 local distance = 0
 local delta = 0
 local function OnUpdate(self, elapsed)
-	local dist,x,y = TomTom:GetDistanceToWaypoint(active_point)
+	local dist,x,y = active_point:GetDistanceToWaypoint()
 	if not dist then
 		self:Hide()
 		return
@@ -152,7 +152,7 @@ local function OnUpdate(self, elapsed)
 			showDownArrow = false
 		end
 
-		local angle = TomTom:GetDirectionToWaypoint(active_point)
+		local angle = active_point:GetDirectionToWaypoint()
 		local player = GetPlayerBearing()
 		
 		angle = angle - player
