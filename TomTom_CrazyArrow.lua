@@ -113,6 +113,7 @@ local delta = 0
 local function OnUpdate(self, elapsed)
 	if not active_point then
 		self:Hide()
+		return
 	end
 	
 	local dist,x,y = active_point:GetDistanceToWaypoint()
