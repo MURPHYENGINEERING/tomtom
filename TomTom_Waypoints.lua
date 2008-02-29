@@ -65,7 +65,6 @@ function WaypointClass:GetDirectionToWaypoint()
 	return Astrolabe:GetDirectionToIcon(self.minimap)
 end
 
-
 function TomTom:SetWaypoint(c, z, x, y, distances)
 	-- Try to acquire a waypoint from the frame pool
 	local minimap = table.remove(pool.minimap)

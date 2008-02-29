@@ -37,8 +37,9 @@ function TomTom:Initialize()
 			},
 			arrow = {
 				enable = true,
-				goodcolor = {0, 1, 0, 1},
-				badcolor = {1, 0, 0, 1},
+				goodcolor = {0, 1, 0},
+				badcolor = {1, 0, 0},
+				middlecolor = {1, 1, 0},
 				arrival = 15,
 				lock = false,
 				showtta = true,

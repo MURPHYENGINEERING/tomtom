@@ -111,6 +111,10 @@ local time = 0
 local distance = 0
 local delta = 0
 local function OnUpdate(self, elapsed)
+	if not active_point then
+		self:Hide()
+	end
+	
 	local dist,x,y = active_point:GetDistanceToWaypoint()
 	if not dist then
 		self:Hide()
@@ -127,6 +131,7 @@ local function OnUpdate(self, elapsed)
 			arrow:SetHeight(70)
 			arrow:SetWidth(53)
 			arrow:SetTexture("Interface\\AddOns\\TomTom\\Images\\Arrow-UP")
+			arrow:SetVertexColor(unpack(TomTom.db.profile.arrow.goodcolor))
 			showDownArrow = true
 		end
 
@@ -159,7 +164,10 @@ local function OnUpdate(self, elapsed)
 		
 		local perc = math.abs((math.pi - math.abs(angle)) / math.pi)
 
-		local r,g,b = ColorGradient(perc, 1,0,0, 1,1,0, 0,1,0)		
+		local gr,gg,gb = unpack(TomTom.db.profile.arrow.goodcolor)
+		local mr,mg,mb = unpack(TomTom.db.profile.arrow.middlecolor)
+		local br,bg,bb = unpack(TomTom.db.profile.arrow.badcolor)
+		local r,g,b = ColorGradient(perc, br, bg, bb, mr, mg, mb, gr, gg, gb)		
 		arrow:SetVertexColor(r,g,b)
 		
 		cell = floor(angle / twopi * 108 + 0.5) % 108
