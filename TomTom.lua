@@ -185,8 +185,7 @@ function WorldMapButton_OnClick(...)
 			return
 		end
 
-		local point = TomTom:SetWaypoint(c,z,x*100,y*100)
-		TomTom:SetCrazyArrow(point, 15)
+		local uid = TomTom:AddWaypoint(c,z,x*100,y*100)
     else
         return Orig_WorldMapButton_OnClick(...)
     end
@@ -209,6 +208,17 @@ local function WaypointCallback(event, arg1, arg2, arg3)
 	end
 end
 
+callbackTbl = {
+	tooltip_show = function(event, tooltip, uid, dist)
+		tooltip:SetText("TomTom waypoint")
+		tooltip:AddLine(string.format("%s yards away", math.floor(dist)), 1, 1, 1)
+		tooltip:Show()
+	end,
+	tooltip_update = function(event, tooltip, uid, dist)
+		tooltip.lines[2]:SetFormattedText("%s yards away", math.floor(dist), 1, 1, 1)
+	end,
+}
+
 -- TODO: Make this not suck
 function TomTom:AddWaypoint(x,y,desc)
 	local oc,oz = Astrolabe:GetCurrentPlayerPosition()
@@ -223,12 +233,12 @@ function TomTom:AddWaypoint(x,y,desc)
 		return
 	end
 
-	local point = self:SetWaypoint(c, z, x, y, nil, nil, 10, WaypointCallback)
+	local point = self:SetWaypoint(c, z, x, y, callbackTbl)
 	self:SetCrazyArrow(point, self.db.profile.arrow.arrival)
 end
 
 function TomTom:AddZWaypoint(c,z,x,y,desc)
-	local point = self:SetWaypoint(c,z,x,y,nil,nil,10,WaypointCallback)
+	local point = self:SetWaypoint(c,z,x,y, callbackTbl)
 	self:SetCrazyArrow(point, self.db.profile.arrow.arrival)
 end
 

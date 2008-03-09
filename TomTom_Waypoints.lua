@@ -21,57 +21,54 @@ do
 end
 
 -- Create a local table used as a frame pool
-local pool = {
-	minimap = {},
-	worldmap = {},
-}
+local pool = {}
+
+-- Create a mapping from uniqueID to waypoint
+local getuid,resolveuid
+do
+	local uidmap = {}
+	local uid = 0
+	function getuid(obj)
+		-- Ensure the object doesn't already have a uid mapping
+		for k,v in pairs(uidmap) do
+			if obj == v then
+				error("Attempt to re-use an object without clearing identifier")
+			end
+		end
+
+		-- Establish the new mapping
+		uid = uid + 1
+
+		uidmap[uid] = obj
+
+		return uid
+	end
+
+	function resolveuid(uid, remove)
+		-- Return the object that corresponds to the UID
+		local obj = uidmap[uid]
+		assert(obj, "Attempt to use out-of-date identifier")
+		if remove then
+			uidmap[uid] = nil
+		end
+
+		return obj
+	end
+end
 
 -- Local declarations
 local Minimap_OnEnter,Minimap_OnLeave,Minimap_OnUpdate,Minimap_OnClick,Minimap_OnEvent
 local Arrow_OnUpdate
 local World_OnEnter,World_OnLeave,World_OnClick,World_OnEvent
 
-local WaypointClass = {}
-
-function WaypointClass:Show(minimap, worldmap)
-	local x = self.x / 100
-	local y = self.y / 100
-
-	if minimap then
-		Astrolabe:PlaceIconOnMinimap(self.minimap, self.c, self.z, x, y) 
-	end
-
-	if worldmap then
-		local x, y = Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, self.worldmap, self.c, self.z, x, y)
-		self.worldmap:Show()
-	end
-end
-
-function WaypointClass:Hide(minimap, worldmap)
-	if minimap then
-		Astrolabe:RemoveIconFromMinimap(self.minimap)
-	end
-
-	if worldmap then
-		Astrolabe:Hide()
-	end
-end
-
-function WaypointClass:GetDistanceToWaypoint()
-	return Astrolabe:GetDistanceToIcon(self.minimap)
-end
-
-function WaypointClass:GetDirectionToWaypoint()
-	return Astrolabe:GetDirectionToIcon(self.minimap)
-end
-
-function TomTom:SetWaypoint(c, z, x, y, distances)
+function TomTom:SetWaypoint(c, z, x, y, callbacks)
 	-- Try to acquire a waypoint from the frame pool
-	local minimap = table.remove(pool.minimap)
-	local worldmap = table.remove(pool.worldmap)
+	local point = table.remove(pool)
 
-	if not minimap then
-		minimap = CreateFrame("Button", nil, Minimap)
+	if not point then
+		point = {}
+
+		local minimap = CreateFrame("Button", nil, Minimap)
 		minimap:SetHeight(20)
 		minimap:SetWidth(20)
 		minimap:RegisterForClicks("RightButtonUp")
@@ -96,10 +93,8 @@ function TomTom:SetWaypoint(c, z, x, y, distances)
 		minimap:SetScript("OnClick", Minimap_OnClick)
 		minimap:RegisterEvent("PLAYER_ENTERING_WORLD")
 		minimap:SetScript("OnEvent", Minimap_OnEvent)
-	end
 
-	if not worldmap then
-		worldmap = CreateFrame("Button", nil, WorldMapDetailFrame)
+		local worldmap = CreateFrame("Button", nil, WorldMapDetailFrame)
 		worldmap:SetHeight(12)
 		worldmap:SetWidth(12)
 		worldmap:RegisterForClicks("RightButtonUp")
@@ -112,57 +107,79 @@ function TomTom:SetWaypoint(c, z, x, y, distances)
 		worldmap:SetScript("OnLeave", World_OnLeave)
 		worldmap:SetScript("OnClick", World_OnClick)
 		worldmap:SetScript("OnEvent", World_OnEvent)
+
+		point.worldmap = worldmap
+		point.minimap = minimap
 	end
 
-	-- Create a new waypoint object which wraps 	
-	local point = setmetatable({}, {__index=WaypointClass})
 	point.c = c
 	point.z = z
 	point.x = x
 	point.y = y
-	point.distances = distances
-	point.minimap = minimap
-	point.worldmap = worldmap
+	point.callbacks = callbacks
 
 	-- Link the actual frames back to the waypoint object
-	minimap.point = point
-	worldmap.point = point
+	point.minimap.point = point
+	point.worldmap.point = point
 
-	-- Place the waypoints
-	point:Show(true, true)
+	-- Place the waypoint
+	local x,y = x/100,y/100
+	Astrolabe:PlaceIconOnMinimap(point.minimap, c, z, x, y)
+	Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, point.worldmap, c, z, x, y)
 
-	return point
+	point.uid = getuid(point)
+	return point.uid
 end
 
-function TomTom:ClearWaypoint(point)
-	if point then
-		point:Hide(true, true)
-		table.insert(pool.minimap, point.minimap)
-		table.insert(pool.worldmap, point.worldmap)
-		point.minimap = nil
-		point.worldmap = nil
-	end
+function TomTom:RemoveWaypoint(uid)
+	local point = resolveuid(uid, true)
+	Astrolabe:RemoveIconFromMinimap(point.minimap)
+	point.minimap:Hide()
+	point.worldmap:Hide()
+	table.insert(pool, point)
+end
+
+function TomTom:GetDistanceToWaypoint(uid)
+	local point = resolveuid(uid)
+	return Astrolabe:GetDistanceToIcon(point.minimap)
+end
+
+function TomTom:GetDirectionToWaypoint(uid)
+	local point = resolveuid(uid)
+	return Astrolabe:GetDirectionToIcon(point.minimap)
 end
 
 do
-	local tooltip_icon,tooltip_callback
+	local tooltip_uid,tooltip_callbacks
+
+	local function tooltip_onupdate(self, elapsed)
+		if tooltip_callbacks and tooltip_callbacks.tooltip_update then
+			local dist,x,y = TomTom:GetDistanceToWaypoint(tooltip_uid)
+			tooltip_callbacks.tooltip_update("tooltip_update", tooltip, tooltip_uid, dist)
+		end
+	end
 
 	function Minimap_OnEnter(self, motion)
-		local data = self
+		local data = self.point.callbacks
 
-		tooltip_icon = self
-		tooltip_callback = data.callback
+		if data and data.tooltip_show then
+			local uid = self.point.uid
+			local dist,x,y = TomTom:GetDistanceToWaypoint(uid)
 
-		if tooltip_callback then
-			local dist,x,y = Astrolabe:GetDistanceToIcon(self)
+			tooltip_uid = uid
+			tooltip_callbacks = data
+
 			tooltip:SetOwner(self, "ANCHOR_CURSOR")
-		
-			-- Callback: OnTooltipShown
-			-- arg1: The tooltip object
-			-- arg2: The distance to the icon in yards
-			-- arg3: Boolean value indicating the tooltip was just shown
-			tooltip_callback("OnTooltipShown", tooltip, dist, true)
+
+			data.tooltip_show("tooltip_show", tooltip, uid, dist)
 			tooltip:Show()
+
+			-- Set the update script if there is one
+			if data.tooltip_update then
+				tooltip:SetScript("OnUpdate", tooltip_onupdate)
+			else
+				tooltip:SetScript("OnUpdate", nil)
+			end
 		end
 	end
 
