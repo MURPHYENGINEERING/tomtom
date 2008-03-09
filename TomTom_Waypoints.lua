@@ -47,7 +47,7 @@ do
 	function resolveuid(uid, remove)
 		-- Return the object that corresponds to the UID
 		local obj = uidmap[uid]
-		assert(obj, "Attempt to use out-of-date identifier")
+
 		if remove then
 			uidmap[uid] = nil
 		end
@@ -118,6 +118,18 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks)
 	point.y = y
 	point.callbacks = callbacks
 
+	-- Process the callbacks table to put distances in a consumable format
+	if callbacks and callbacks.distance then
+		local list = {}
+
+		for k,v in pairs(callbacks.distance) do
+			table.insert(list, k)
+		end
+
+		table.sort(list)
+		callbacks.distance.__list = list
+	end
+
 	-- Link the actual frames back to the waypoint object
 	point.minimap.point = point
 	point.worldmap.point = point
@@ -141,12 +153,12 @@ end
 
 function TomTom:GetDistanceToWaypoint(uid)
 	local point = resolveuid(uid)
-	return Astrolabe:GetDistanceToIcon(point.minimap)
+	return point and Astrolabe:GetDistanceToIcon(point.minimap)
 end
 
 function TomTom:GetDirectionToWaypoint(uid)
 	local point = resolveuid(uid)
-	return Astrolabe:GetDirectionToIcon(point.minimap)
+	return point and Astrolabe:GetDirectionToIcon(point.minimap)
 end
 
 do
@@ -188,12 +200,6 @@ do
 		tooltip:Hide()
 	end
 
-	local states = {
-		[1] = "OnDistanceArrive",
-		[2] = "OnDistanceNear",
-		[3] = "OnDistanceFar",
-	}
-
 	local square_half = math.sqrt(0.5)
 	local rad_135 = math.rad(135)
 	local minimap_count = 0
@@ -207,14 +213,14 @@ do
 		minimap_count = minimap_count + elapsed
 		
 		-- Only take action every 0.2 seconds
-		if minimap_count < 0.2 then return end
+		if minimap_count < 0.1 then return end
 
 		-- Reset the counter
 		minimap_count = 0
 
 		local edge = Astrolabe:IsIconOnEdge(self)
 		local data = self.point
-		local callback = data.callback
+		local callbacks = data.callbacks
 
 		if edge then
 			-- Check to see if this is a transition
@@ -222,13 +228,6 @@ do
 				self.icon:Hide()
 				self.arrow:Show()
 				data.edge = true
-				
-				if callback then
-					-- Callback: OnEdgeChanged
-					-- arg1: The point object of the icon crossing the edge
-					-- arg2: Boolean value indicating if the icon is on the edge
-					callback("OnEdgeChanged", data, true)
-				end
 			end
 
 			-- Rotate the icon, as required
@@ -247,49 +246,50 @@ do
 			self.icon:Show()
 			self.arrow:Hide()
 			data.edge = nil
-
-			if callback then
-				-- Callback: OnEdgeChanged
-				-- arg1: The point object of the icon crossing the edge
-				-- arg2: Boolean value indicating if the icon is on the edge
-				callback("OnEdgeChanged", data, true)
-			end
 		end
 
-		if callback then
-			-- Handle the logic/callbacks for arrival
-			local near,far,arrive = data.near,data.far,data.arrive
+		if callbacks and callbacks.distance then
+			local list = callbacks.distance.__list
+
 			local state = data.state
-			
-			if not state then
-				if arrive and dist <= arrive then
-					state = 1
-				elseif near and dist <= near then
-					state = 2
-				elseif far and dist <= far then
-					state = 3
-				else
-					state = 4
-				end
-				
-				data.state = state
-			end
-			
 			local newstate
-			if arrive and dist <= arrive then
-				newstate = 1
-			elseif near and dist <= near then
-				newstate = 2
-			elseif far and dist <= far then
-				newstate = 3
+
+			-- Calculate the initial state
+			if not state then
+				for i=1,#list do
+					if dist <= list[i] then
+						state = i
+						break
+					end
+				end
+
+				-- Handle the case where we're outside the largest circle
+				if not state then state = #list end
+
+				data.state = state
 			else
-				newstate = 4
+				-- Calculate the new state
+				for i=1,#list do
+					if dist <= list[i] then
+						newstate = i
+						break
+					end
+				end
+
+				-- Handle the case where we're outside the largest circle
+				if not newstate then newstate = #list end
 			end
-			
+
+			-- If newstate is set, then this is a transition
+			-- If only state is set, this is the initial state
+
 			if state ~= newstate then
-				local event = states[newstate]
-				if event then
-					callback(event, data, dist, data.lastdist)
+				-- Handle the initial state
+				newstate = newstate or state
+				local distance = list[newstate]
+				local callback = callbacks.distance[distance]
+				if callback then
+					callback("distance", self.point.uid, distance, dist, data.lastdist)
 				end
 				data.state = newstate
 			end	

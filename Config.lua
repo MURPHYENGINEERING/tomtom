@@ -329,6 +329,13 @@ options.args.general = {
          width = "double",
 		 arg = "persistence.savewaypoints",
       },
+	  cleardistance = {
+		  type = "range",
+		  name = L["Clear waypoint distance"],
+		  desc = L["Waypoints can be automatically cleared when you reach them.  This slider allows you to customize the distance in yards that signals your \"arrival\" at the waypoint.  A setting of 0 turns off the auto-clearing feature\n\nChanging this setting only takes effect after reloading your interface."],  
+		  min = 0, max = 150, step = 1,
+		  arg = "persistence.cleardistance",
+	  },
    },
 }
 

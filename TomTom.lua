@@ -15,6 +15,7 @@ local GetCurrentCursorPosition
 local WorldMap_OnUpdate
 local Block_OnClick,Block_OnUpdate,BlockOnEnter,BlockOnLeave
 local Block_OnDragStart,Block_OnDragStop
+local callbackTbl
 
 function TomTom:Initialize()
 	self.defaults = {
@@ -60,6 +61,7 @@ function TomTom:Initialize()
 				prompt = false,
 			},
 			persistence = {
+				cleardistance = 10,
 				savewaypoints = true,
 			},
 		},
@@ -74,6 +76,15 @@ function TomTom:Initialize()
 	self:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 	self:RegisterEvent("WORLD_MAP_UPDATE")
 	self:RegisterEvent("CHAT_MSG_ADDON")
+
+	-- Push the arrival distance into the callback table
+	local cleardistance = self.db.profile.persistence.cleardistance
+	if cleardistance > 0 then
+		callbackTbl.distance[cleardistance] = function(event, uid)
+			TomTom:RemoveWaypoint(uid)
+		end
+		callbackTbl.distance[cleardistance+1] = function() end
+	end
 
 	self:ShowHideWorldCoords()
 	self:ShowHideBlockCoords()
@@ -217,6 +228,8 @@ callbackTbl = {
 	tooltip_update = function(event, tooltip, uid, dist)
 		tooltip.lines[2]:SetFormattedText("%s yards away", math.floor(dist), 1, 1, 1)
 	end,
+	distance = {
+	},
 }
 
 -- TODO: Make this not suck
