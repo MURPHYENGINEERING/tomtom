@@ -3,7 +3,7 @@
 ----------------------------------------------------------------------------]]
 
 -- Simple localization table for messages
-local L = setmetatable({}, {__index=function(t,k) return k end})
+local L = TomTomLocals
 
 local Astrolabe = DongleStub("Astrolabe-0.4")
 

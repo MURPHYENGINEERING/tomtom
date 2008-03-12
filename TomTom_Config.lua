@@ -1,7 +1,7 @@
 local options = {}
 local db = {}
 
-local L = setmetatable({}, {__index = function(t,k) return k end})
+local L = TomTomLocals
 
 options.type = "group"
 options.name = "TomTom"
