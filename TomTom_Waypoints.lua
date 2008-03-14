@@ -127,7 +127,7 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks)
 		end
 
 		table.sort(list)
-		callbacks.distance.__list = list
+		callbacks.__distances = list
 	end
 
 	-- Link the actual frames back to the waypoint object
@@ -135,7 +135,6 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks)
 	point.worldmap.point = point
 
 	-- Place the waypoint
-	local x,y = x/100,y/100
 	Astrolabe:PlaceIconOnMinimap(point.minimap, c, z, x, y)
 	Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, point.worldmap, c, z, x, y)
 
@@ -149,6 +148,7 @@ function TomTom:RemoveWaypoint(uid)
 	point.minimap:Hide()
 	point.worldmap:Hide()
 	table.insert(pool, point)
+	point.uid = nil
 end
 
 function TomTom:GetDistanceToWaypoint(uid)
@@ -171,6 +171,14 @@ do
 		end
 	end
 
+	function Minimap_OnClick(self, button)
+		local data = self.point.callbacks
+
+		if data.onclick then
+			data.onclick("onclick", self.point.uid, self, button)
+		end
+	end
+
 	function Minimap_OnEnter(self, motion)
 		local data = self.point.callbacks
 
@@ -181,7 +189,7 @@ do
 			tooltip_uid = uid
 			tooltip_callbacks = data
 
-			tooltip:SetOwner(self, "ANCHOR_CURSOR")
+			tooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT")
 
 			data.tooltip_show("tooltip_show", tooltip, uid, dist)
 			tooltip:Show()
@@ -196,9 +204,13 @@ do
 	end
 
 	function Minimap_OnLeave(self, motion)
-		tooltip_icon,tooltip_callback = nil,nil
+		tooltip_uid,tooltip_callbacks = nil,nil
 		tooltip:Hide()
 	end
+
+	World_OnEnter = Minimap_OnEnter
+	World_OnLeave = Minimap_OnLeave
+	World_OnClick = Minimap_OnClick
 
 	local square_half = math.sqrt(0.5)
 	local rad_135 = math.rad(135)
@@ -211,7 +223,7 @@ do
 		end
 
 		minimap_count = minimap_count + elapsed
-		
+
 		-- Only take action every 0.2 seconds
 		if minimap_count < 0.1 then return end
 
@@ -249,7 +261,7 @@ do
 		end
 
 		if callbacks and callbacks.distance then
-			local list = callbacks.distance.__list
+			local list = callbacks.__distances
 
 			local state = data.state
 			local newstate
@@ -293,32 +305,18 @@ do
 				end
 				data.state = newstate
 			end	
-			
+
 			-- Update the last distance with the current distance
 			data.lastdist = dist
 		end
 	end
 
-	local tooltip_count = 0
-	function Tooltip_OnUpdate(self, elapsed)
-		tooltip_count = tooltip_count + elapsed
-		if tooltip_count >= 0.2 then
-			if tooltip_callback then
-				local dist,x,y = Astrolabe:GetDistanceToIcon(tooltip_icon)
-
-				-- Callback: OnTooltipShown
-				-- arg1: The tooltip object
-				-- arg2: The distance to the icon in yards
-				-- arg3: Boolean value indicating the tooltip was just shown
-				tooltip_callback("OnTooltipShown", tooltip, dist, false)
-				tooltip_count = 0
-			end
-		end
-	end
-	tooltip:SetScript("OnUpdate", Tooltip_OnUpdate)
-
 	function World_OnEvent(self, event, ...)
 		if event == "WORLD_MAP_UPDATE" then
+			if not self.point.uid then
+				return
+			end
+
 			local data = self.point
 			-- It seems that data.x and data.y are occasionally not valid
 			-- perhaps when the waypoint is removed.  Guard this for now
@@ -328,7 +326,7 @@ do
 				return
 			end
 
-			local x,y = Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, self, data.c, data.z, data.x/100, data.y/100)
+			local x,y = Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, self, data.c, data.z, data.x, data.y)
 			if (x and y and (0 < x and x <= 1) and (0 < y and y <= 1)) then
 				self:Show()
 			else
@@ -340,7 +338,7 @@ do
 	function Minimap_OnEvent(self, event, ...)
 		if event == "PLAYER_ENTERING_WORLD" then
 			local data = self.data
-			Astrolabe:PlaceIconOnMinimap(self, data.c, data.z, data.x/100, data.y/100)
+			Astrolabe:PlaceIconOnMinimap(self, data.c, data.z, data.x, data.y)
 		end
 	end
 end

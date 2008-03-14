@@ -24,4 +24,4 @@ for idx,match in ipairs(work) do
 	print(string.format("\t[\"%s\"] = \"%s\",", match, val))
 end
 print("}\n")
-print("setmetatable(TomTomLocals, {__index=function(t,k) rawset(t, k, k) end})")
+print("setmetatable(TomTomLocals, {__index=function(t,k) rawset(t, k, k); return k; end})")

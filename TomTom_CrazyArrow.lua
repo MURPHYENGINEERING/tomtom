@@ -107,15 +107,16 @@ local status = wayframe.status
 local tta = wayframe.tta
 local arrow = wayframe.arrow
 local count = 0
-local time = 0
-local distance = 0
-local delta = 0
+local last_distance = 0
+local tta_throttle = 0
+local speed = 0
+local speed_count = 0
 local function OnUpdate(self, elapsed)
 	if not active_point then
 		self:Hide()
 		return
 	end
-	
+
 	local dist,x,y = TomTom:GetDistanceToWaypoint(active_point)
 	if not dist then
 		self:Hide()
@@ -123,7 +124,7 @@ local function OnUpdate(self, elapsed)
 	end
 
 	status:SetText(sformat("%d yards", dist))
-	
+
 	local cell
 
 	-- Showing the arrival arrow?
@@ -144,7 +145,7 @@ local function OnUpdate(self, elapsed)
 		cell = count
 		local column = cell % 9
 		local row = floor(cell / 9)
-		
+
 		local xstart = (column * 53) / 512
 		local ystart = (row * 70) / 512
 		local xend = ((column + 1) * 53) / 512
@@ -160,9 +161,9 @@ local function OnUpdate(self, elapsed)
 
 		local angle = TomTom:GetDirectionToWaypoint(active_point)
 		local player = GetPlayerBearing()
-		
+
 		angle = angle - player
-		
+
 		local perc = math.abs((math.pi - math.abs(angle)) / math.pi)
 
 		local gr,gg,gb = unpack(TomTom.db.profile.arrow.goodcolor)
@@ -170,40 +171,48 @@ local function OnUpdate(self, elapsed)
 		local br,bg,bb = unpack(TomTom.db.profile.arrow.badcolor)
 		local r,g,b = ColorGradient(perc, br, bg, bb, mr, mg, mb, gr, gg, gb)		
 		arrow:SetVertexColor(r,g,b)
-		
+
 		cell = floor(angle / twopi * 108 + 0.5) % 108
 		local column = cell % 9
 		local row = floor(cell / 9)
-		
+
 		local xstart = (column * 56) / 512
 		local ystart = (row * 42) / 512
 		local xend = ((column + 1) * 56) / 512
 		local yend = ((row + 1) * 42) / 512
 		arrow:SetTexCoord(xstart,xend,ystart,yend)
-		end
-		
-		-- Give time til arrival only if facing towards destination
-		time = time + elapsed
-		
-		if time >= 1 then
-			if cell <= 27 or cell >= 81 or showDownArrow then
+	end
 
-				delta = distance - dist 
-				
-				if delta > 0 then
-					local eta = dist/(delta/time)
-					tta:SetText(sformat("%01d:%02d", eta / 60, eta % 60))
-				else
-					tta:SetText("***")
-				end 
-				time = 0
-				distance = dist
-			else
-				tta:SetText("***")
-				distance = dist
-				time = 0
-			end
+	-- Calculate the TTA every second  (%01d:%02d)
+
+	tta_throttle = tta_throttle + elapsed
+
+	if tta_throttle >= 1.0 then
+		-- Calculate the speed in yards per sec at which we're moving
+		local current_speed = (last_distance - dist) / tta_throttle
+
+		if last_distance == 0 then
+			current_speed = 0
 		end
+
+		if speed_count < 2 then
+			speed = (speed + current_speed) / 2
+			speed_count = speed_count + 1
+		else
+			speed_count = 0
+			speed = current_speed
+		end
+
+		if speed > 0 then
+			local eta = math.abs(dist / speed)
+			tta:SetFormattedText("%01d:%02d", eta / 60, eta % 60) 
+		else
+			tta:SetText("***")
+		end
+		
+		last_distance = dist
+		tta_throttle = 0
+	end
 end
 
 wayframe:SetScript("OnUpdate", OnUpdate)

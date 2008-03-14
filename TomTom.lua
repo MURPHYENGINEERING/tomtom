@@ -4,7 +4,6 @@
 
 -- Simple localization table for messages
 local L = TomTomLocals
-
 local Astrolabe = DongleStub("Astrolabe-0.4")
 
 -- Create the addon object
@@ -16,6 +15,9 @@ local WorldMap_OnUpdate
 local Block_OnClick,Block_OnUpdate,BlockOnEnter,BlockOnLeave
 local Block_OnDragStart,Block_OnDragStop
 local callbackTbl
+local RoundCoords
+
+local waypoints = {}
 
 function TomTom:Initialize()
 	self.defaults = {
@@ -70,6 +72,7 @@ function TomTom:Initialize()
 	self.db = self:InitializeDB("TomTomDB", self.defaults)
 
 	self.tooltip = CreateFrame("GameTooltip", "TomTomTooltip", nil, "GameTooltipTemplate")
+	self.dropdown = CreateFrame("Frame", "TomTomDropdown", nil, "UIDropDownMenuTemplate")
 
 	self:RegisterEvent("PLAYER_LEAVING_WORLD")
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -98,10 +101,10 @@ function TomTom:ShowHideWorldCoords()
 			TomTomWorldFrame = CreateFrame("Frame", nil, WorldMapFrame)
 			TomTomWorldFrame.Player = TomTomWorldFrame:CreateFontString("OVERLAY", nil, "GameFontHighlightSmall")
 			TomTomWorldFrame.Player:SetPoint("BOTTOM", WorldMapPositioningGuide, "BOTTOM", -100, 11)
-			
+
 			TomTomWorldFrame.Cursor = TomTomWorldFrame:CreateFontString("OVERLAY", nil, "GameFontHighlightSmall")
 			TomTomWorldFrame.Cursor:SetPoint("BOTTOM", WorldMapPositioningGuide, "BOTTOM", 100, 11)
-			
+
 			TomTomWorldFrame:SetScript("OnUpdate", WorldMap_OnUpdate)
 		end
 
@@ -146,11 +149,11 @@ function TomTom:ShowHideBlockCoords()
 			TomTomBlock.Text:SetPoint("CENTER", 0, 0)
 
 			TomTomBlock:SetBackdrop({
-										bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
-										edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-										edgeSize = 16,
-										insets = {left = 4, right = 4, top = 4, bottom = 4},
-									})
+				bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+				edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+				edgeSize = 16,
+				insets = {left = 4, right = 4, top = 4, bottom = 4},
+			})
 			TomTomBlock:SetBackdropColor(0,0,0,0.4)
 			TomTomBlock:SetBackdropBorderColor(1,0.8,0,0.8)
 
@@ -188,18 +191,18 @@ end
 local Orig_WorldMapButton_OnClick = WorldMapButton_OnClick
 function WorldMapButton_OnClick(...)
 	local mouseButton, button = ...
-    if IsControlKeyDown() and mouseButton == "RightButton" then
+	if IsControlKeyDown() and mouseButton == "RightButton" then
 		local c,z = GetCurrentMapContinent(), GetCurrentMapZone()
 		local x,y = GetCurrentCursorPosition()
-		
+
 		if z == 0 then
 			return
 		end
 
-		local uid = TomTom:AddWaypoint(c,z,x*100,y*100)
-    else
-        return Orig_WorldMapButton_OnClick(...)
-    end
+		local uid = TomTom:AddZWaypoint(c,z,x*100,y*100)
+	else
+		return Orig_WorldMapButton_OnClick(...)
+	end
 end
 
 WorldMapMagnifyingGlassButton:SetText(ZOOM_OUT_BUTTON_TEXT .. "\nCtrl+Right Click To Add a Waypoint")
@@ -219,10 +222,61 @@ local function WaypointCallback(event, arg1, arg2, arg3)
 	end
 end
 
+--[[-------------------------------------------------------------------
+--  Dropdown menu code
+-------------------------------------------------------------------]]--
+
+local dropdown_info = {
+	-- Define level one elements here
+	[1] = {
+		{ -- Title
+			text = L["Waypoint Options"],
+			isTitle = 1,
+		},
+		{ -- Remove waypoint
+			text = L["Remove waypoint"],
+			func = function()
+				local uid = TomTom.dropdown.uid
+				local data = waypoints[uid]
+				TomTom:RemoveWaypoint(uid)
+				TomTom:PrintF("Removing waypoint %0.2f, %0.2f in %s", data.x, data.y, data.zone) 
+			end,
+		},
+	}
+}
+
+local function init_dropdown(level)
+	-- Make sure level is set to 1, if not supplied
+	level = level or 1
+
+	-- Get the current level from the info table
+	local info = dropdown_info[level]
+
+	-- If a value has been set, try to find it at the current level
+	if level > 1 and UIDROPDOWNMENU_MENU_VALUE then
+		if info[UIDROPDOWNMENU_MENU_VALUE] then
+			info = info[UIDROPDOWNMENU_MENU_VALUE]
+		end
+	end
+
+	-- Add the buttons to the menu
+	for idx,entry in ipairs(info) do
+		UIDropDownMenu_AddButton(entry, level)
+	end
+end
+
 callbackTbl = {
+	onclick = function(event, uid, self, button)
+		TomTom.dropdown.uid = uid
+		UIDropDownMenu_Initialize(TomTom.dropdown, init_dropdown)
+		ToggleDropDownMenu(1, nil, TomTom.dropdown, "cursor", 0, 0)
+	end,
 	tooltip_show = function(event, tooltip, uid, dist)
-		tooltip:SetText("TomTom waypoint")
+		local data = waypoints[uid]
+
+		tooltip:SetText(data.title or "TomTom waypoint")
 		tooltip:AddLine(string.format("%s yards away", math.floor(dist)), 1, 1, 1)
+		tooltip:AddLine(string.format("%s (%.2f, %.2f)", data.zone, data.x, data.y), 0.7, 0.7, 0.7)
 		tooltip:Show()
 	end,
 	tooltip_update = function(event, tooltip, uid, dist)
@@ -246,13 +300,68 @@ function TomTom:AddWaypoint(x,y,desc)
 		return
 	end
 
-	local point = self:SetWaypoint(c, z, x, y, callbackTbl)
-	self:SetCrazyArrow(point, self.db.profile.arrow.arrival)
+	return self:AddZWaypoint(c,z,x,y,desc)
 end
 
 function TomTom:AddZWaypoint(c,z,x,y,desc)
-	local point = self:SetWaypoint(c,z,x,y, callbackTbl)
-	self:SetCrazyArrow(point, self.db.profile.arrow.arrival)
+	local uid = self:SetWaypoint(c,z,x/100,y/100, callbackTbl)
+	self:SetCrazyArrow(uid, self.db.profile.arrow.arrival, desc)
+
+	-- Store this waypoint in the uid
+	waypoints[uid] = {
+		title = desc,
+		coord = self:GetCoord(x / 100 , y / 100),
+		zone = self:GetMapFile(c,z),
+		x = x,
+		y = y,
+	}
+end
+
+-- Code taken from HandyNotes, thanks Xinhuan
+
+---------------------------------------------------------
+-- Public functions for plugins to convert between MapFile <-> C,Z
+--
+local continentMapFile = {
+	[WORLDMAP_COSMIC_ID] = "Cosmic", -- That constant is -1
+	[0] = "World",
+	[1] = "Kalimdor",
+	[2] = "Azeroth",
+	[3] = "Expansion01",
+}
+local reverseMapFileC = {}
+local reverseMapFileZ = {}
+for C = 1, #Astrolabe.ContinentList do
+	for Z = 1, #Astrolabe.ContinentList[C] do
+		local mapFile = Astrolabe.ContinentList[C][Z]
+		reverseMapFileC[mapFile] = C
+		reverseMapFileZ[mapFile] = Z
+	end
+end
+for C = -1, 3 do
+	local mapFile = continentMapFile[C]
+	reverseMapFileC[mapFile] = C
+	reverseMapFileZ[mapFile] = 0
+end
+
+function TomTom:GetMapFile(C, Z)
+	if not C or not Z then return end
+	if Z == 0 then
+		return continentMapFile[C]
+	elseif C > 0 then
+		return Astrolabe.ContinentList[C][Z]
+	end
+end
+function TomTom:GetCZ(mapFile)
+	return reverseMapFileC[mapFile], reverseMapFileZ[mapFile]
+end
+
+-- Public functions for plugins to convert between coords <--> x,y
+function TomTom:GetCoord(x, y)
+	return floor(x * 10000 + 0.5) * 10000 + floor(y * 10000 + 0.5)
+end
+function TomTom:GetXY(id)
+	return floor(id / 10000) / 10000, (id % 10000) / 10000
 end
 
 TomTom = DongleStub("Dongle-1.1"):New("TomTom", TomTom)
@@ -322,7 +431,9 @@ end
 
 SLASH_WAY1 = "/way"
 SlashCmdList["WAY"] = function(msg)
-	local x,y,desc = msg:match("(%d+%.?%d*)%s+(%d+%.?%d*)%s*(.*)")
+	local x,y,desc = msg:match("(%d+%.?%d*)%s+(%d+%.?%d*)%s*(.*)$")
+	if not desc:match("%S") then desc = nil end
+
 	x,y = tonumber(x), tonumber(y)
 	TomTom:PrintF("Adding waypoint %d %d", x, y)
 	TomTom:AddWaypoint(x, y, desc)

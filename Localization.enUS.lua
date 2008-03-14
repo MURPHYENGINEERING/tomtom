@@ -43,6 +43,7 @@ TomTomLocals = {
 	["Shows an estimate of how long it will take you to reach the waypoint at your current speed"] = "Shows an estimate of how long it will take you to reach the waypoint at your current speed",
 	["The floating waypoint arrow can change color depending on whether or nor you are facing your destination.  By default it will display green when you are facing it directly, and red when you are facing away from it.  These colors can be changed in this section.  Setting these options to the same color will cause the arrow to not change color at all"] = "The floating waypoint arrow can change color depending on whether or nor you are facing your destination.  By default it will display green when you are facing it directly, and red when you are facing away from it.  These colors can be changed in this section.  Setting these options to the same color will cause the arrow to not change color at all",
 	["This setting will control the distance at which the waypoint arrow switches to a downwards arrow, indicating you have arrived at your destination"] = "This setting will control the distance at which the waypoint arrow switches to a downwards arrow, indicating you have arrived at your destination",
+	["TomTom"] = "TomTom",
 	["TomTom can display a tooltip containing information abouto waypoints, when they are moused over.  This setting toggles that functionality"] = "TomTom can display a tooltip containing information abouto waypoints, when they are moused over.  This setting toggles that functionality",
 	["TomTom can display multiple waypoint arrows on the minimap.  These options control the display of these waypoints"] = "TomTom can display multiple waypoint arrows on the minimap.  These options control the display of these waypoints",
 	["TomTom can display multiple waypoints on the world map.  These options control the display of these waypoints"] = "TomTom can display multiple waypoints on the world map.  These options control the display of these waypoints",
@@ -57,4 +58,4 @@ TomTomLocals = {
 	["\"Arrival Distance\""] = "\"Arrival Distance\"",
 }
 
-setmetatable(TomTomLocals, {__index=function(t,k) rawset(t, k, k) end})
+setmetatable(TomTomLocals, {__index=function(t,k) rawset(t, k, k); return k; end})

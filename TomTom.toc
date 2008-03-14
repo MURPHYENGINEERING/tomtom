@@ -1,4 +1,4 @@
-## Interface: 20300
+## Interface: 20400
 ## Title: TomTom
 ## Notes: Acts as your portable navigation assistant
 ## SavedVariables: TomTomDB
@@ -16,7 +16,6 @@ Localization.enUS.lua
 
 TomTom.lua
 TomTom_Waypoints.lua
-TomTom_Zones.lua
 TomTom_CrazyArrow.lua
 
 TomTom_Config.lua
