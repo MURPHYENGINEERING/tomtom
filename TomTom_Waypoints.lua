@@ -337,7 +337,7 @@ do
 
 	function Minimap_OnEvent(self, event, ...)
 		if event == "PLAYER_ENTERING_WORLD" then
-			local data = self.data
+			local data = self.point
 			Astrolabe:PlaceIconOnMinimap(self, data.c, data.z, data.x, data.y)
 		end
 	end
