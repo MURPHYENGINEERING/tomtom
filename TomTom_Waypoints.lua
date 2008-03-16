@@ -6,7 +6,7 @@
 local Astrolabe = DongleStub("Astrolabe-0.4")
 
 -- Create a tooltip to be used when mousing over waypoints
-local tooltip = CreateFrame("GameTooltip", "TomTomTooltip", nil, "GameTooltipTemplate")
+local tooltip = CreateFrame("GameTooltip", "TomTomTooltip", UIParent, "GameTooltipTemplate")
 do
 	-- Set the the tooltip's lines
 	local i = 1
