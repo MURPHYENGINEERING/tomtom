@@ -368,8 +368,6 @@ local config = LibStub("AceConfig-3.0")
 local dialog = LibStub("AceConfigDialog-3.0")
 local registered = false;
 
-function GetBuildInfo() return "0.3.0" end
-
 SLASH_TOMTOM1 = "/tomtom"
 SlashCmdList["TOMTOM"] = function(msg)
 	local build = GetBuildInfo()
