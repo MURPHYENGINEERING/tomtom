@@ -153,8 +153,9 @@ function TomTom:ReloadWaypoints()
 		local world = self.profile.worldmap.otherzone or same
 		for idx,waypoint in ipairs(data) do
 			local coord,title = waypoint:match("^(%d+):(.*)$")
+			if not title:match("%S") then title = nil end
 			local x,y = self:GetXY(coord)
-			self:AddZWaypoint(c, z, x*100, y*100, desc, false, minimap, world)
+			self:AddZWaypoint(c, z, x*100, y*100, title, false, minimap, world)
 		end
 	end
 end
@@ -313,6 +314,15 @@ local dropdown_info = {
 		{ -- Title
 			text = L["Waypoint Options"],
 			isTitle = 1,
+		},
+		{
+			-- set as crazy arrow
+			text = L["Set as waypoint arrow"],
+			func = function()
+				local uid = TomTom.dropdown.uid
+				local data = waypoints[uid]
+				TomTom:SetCrazyArrow(uid, TomTom.profile.arrow.arrival, data.title or "TomTom waypoint")
+			end,
 		},
 		{ -- Remove waypoint
 			text = L["Remove waypoint"],
