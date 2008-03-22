@@ -99,6 +99,7 @@ function TomTom:ADDON_LOADED(event, addon)
 
 		self.db = LibStub("AceDB-3.0"):New("TomTomDB", self.defaults, "Default")
 		self.waydb = LibStub("AceDB-3.0"):New("TomTomWaypoints", self.waydefaults)
+
 		self.db.RegisterCallback(self, "OnProfileChanged", "ReloadOptions")
 		self.db.RegisterCallback(self, "OnProfileCopied", "ReloadOptions")
 		self.db.RegisterCallback(self, "OnProfileReset", "ReloadOptions")
