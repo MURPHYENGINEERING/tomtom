@@ -61,7 +61,7 @@ local Minimap_OnEnter,Minimap_OnLeave,Minimap_OnUpdate,Minimap_OnClick,Minimap_O
 local Arrow_OnUpdate
 local World_OnEnter,World_OnLeave,World_OnClick,World_OnEvent
 
-function TomTom:SetWaypoint(c, z, x, y, callbacks, world)
+function TomTom:SetWaypoint(c, z, x, y, callbacks, show_minimap, show_world)
 	-- Try to acquire a waypoint from the frame pool
 	local point = table.remove(pool)
 
@@ -116,7 +116,8 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks, world)
 	point.z = z
 	point.x = x
 	point.y = y
-	point.world = world
+	point.show_world = show_world
+	point.show_minimap = show_minimap
 	point.callbacks = callbacks
 	point.worldmap.callbacks = callbacks and callbacks.world
 	point.minimap.callbacks = callbacks and callbacks.minimap
@@ -139,26 +140,36 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks, world)
 
 	-- Place the waypoint
 	Astrolabe:PlaceIconOnMinimap(point.minimap, c, z, x, y)
-	if point.world then
+
+	if show_world then
 		Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, point.worldmap, c, z, x, y)
+	end
+
+	if not show_minimap then
+		-- Hide the minimap icon/arrow if minimap is off
+		point.minimap:EnableMouse(false)
+		point.minimap.icon:Hide()
+		point.minimap.arrow:Hide()
+		point.minimap:SetScript("OnUpdate", nil)
+	else
+		point.minimap:EnableMouse(true)
+		point.minimap:SetScript("OnUpdate", Minimap_OnUpdate)
+		Minimap_OnUpdate(point.minimap, 5.0)
 	end
 
 	point.uid = getuid(point)
 	return point.uid
 end
 
-function TomTom:RemoveWaypoint(uid)
+function TomTom:ClearWaypoint(uid)
 	local point = resolveuid(uid, true)
-	Astrolabe:RemoveIconFromMinimap(point.minimap)
-	point.minimap:Hide()
-	point.worldmap:Hide()
-	table.insert(pool, point)
-
-	if point.callbacks and point.callbacks.remove then
-		point.callbacks.remove("remove", uid)
+	if point then
+		Astrolabe:RemoveIconFromMinimap(point.minimap)
+		point.minimap:Hide()
+		point.worldmap:Hide()
+		table.insert(pool, point)
+		point.uid = nil
 	end
-	
-	point.uid = nil
 end
 
 function TomTom:GetDistanceToWaypoint(uid)
@@ -253,11 +264,8 @@ do
 
 		if edge then
 			-- Check to see if this is a transition
-			if not data.edge then
-				self.icon:Hide()
-				self.arrow:Show()
-				data.edge = true
-			end
+			self.icon:Hide()
+			self.arrow:Show()
 
 			-- Rotate the icon, as required
 			local angle = Astrolabe:GetDirectionToIcon(self)
@@ -271,10 +279,9 @@ do
 			local sin,cos = math.sin(angle) * square_half, math.cos(angle) * square_half
 			self.arrow:SetTexCoord(0.5-sin, 0.5+cos, 0.5+cos, 0.5+sin, 0.5-cos, 0.5-sin, 0.5+sin, 0.5-cos)
 
-		elseif data.edge then
+		else
 			self.icon:Show()
 			self.arrow:Hide()
-			data.edge = nil
 		end
 
 		if callbacks and callbacks.distance then
@@ -335,13 +342,15 @@ do
 			end
 
 			local data = self.point
-			if data.world then
+			if data.worldmap and data.show_world then
 				local x,y = Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, self, data.c, data.z, data.x, data.y)
 				if (x and y and (0 < x and x <= 1) and (0 < y and y <= 1)) then
 					self:Show()
 				else
 					self:Hide()
 				end
+			else
+				self:Hide()
 			end
 		end
 	end

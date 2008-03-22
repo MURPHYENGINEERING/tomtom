@@ -34,6 +34,10 @@ local function createconfig()
 			TomTom:ShowHideCoordBlock()
 		elseif ns == "mapcoords" then
 			TomTom:ShowHideWorldCoords()
+		elseif ns == "arrow" then
+			TomTom:ShowHideCrazyArrow()
+		elseif opt == "otherzone" then
+			TomTom:ReloadWaypoints()
 		end
 	end
 
@@ -41,6 +45,7 @@ local function createconfig()
 
 	options.args.coordblock = {
 		type = "group",
+		order = 2,
 		name = L["Coordinate Block"],
 		desc = L["Options that alter the coordinate block"],
 		get = get,
@@ -122,6 +127,7 @@ local function createconfig()
 
 	options.args.crazytaxi = {
 		type = "group",
+		order = 3, 
 		name = L["Waypoint Arrow"],
 		get = get,
 		set = set,
@@ -202,6 +208,7 @@ local function createconfig()
 
 	options.args.minimap = {
 		type = "group",
+		order = 4,
 		name = L["Minimap"],
 		get = get,
 		set = set,
@@ -238,6 +245,7 @@ local function createconfig()
 
 	options.args.worldmap = {
 		type = "group",
+		order = 5,
 		name = L["World Map"],
 		get = get,
 		set = set,
@@ -329,10 +337,12 @@ local function createconfig()
 
 	options.args.general = {
 		type = "group",
+		order = 1,
 		name = L["General Options"],
 		get = get,
 		set = set,
 		args = {
+			--[[
 			comm = {
 				type = "toggle",
 				order = 1,
@@ -347,10 +357,12 @@ local function createconfig()
 				width = "double",
 				arg = "comm.prompt",
 			},
+			--]]
 			persistence = {
 				type = "toggle",
 				order = 3,
-				name = L["Save waypoints in between sessions"],
+				name = L["Save new waypoints until I remove them"],
+				desc = L["This option will not remove any waypoints that are currently set to persist, but only effects new waypoints that get set"],
 				width = "double",
 				arg = "persistence.savewaypoints",
 			},
@@ -367,7 +379,8 @@ local function createconfig()
 
 	options.args.profile = {
 		type = "group",
-		name = L["Profile options"],
+		order = 6,
+		name = L["Profile Options"],
 		args = {
 			desc = {
 				order = 1,

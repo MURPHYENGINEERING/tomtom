@@ -215,4 +215,17 @@ local function OnUpdate(self, elapsed)
 	end
 end
 
+function TomTom:ShowHideCrazyArrow()
+	if self.profile.arrow.enable then
+		wayframe:Show()
+		if self.profile.arrow.showtta then
+			tta:Show()
+		else
+			tta:Hide()
+		end
+	else
+		wayframe:Hide()
+	end
+end
+
 wayframe:SetScript("OnUpdate", OnUpdate)

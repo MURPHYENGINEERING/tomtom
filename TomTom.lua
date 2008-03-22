@@ -76,8 +76,8 @@ function TomTom:ADDON_LOADED(event, addon)
 				},
 				worldmap = {
 					enable = true,
-					otherzone = true,
 					tooltip = true,
+					otherzone = true,
 					clickcreate = true,
 				},
 				comm = {
@@ -117,6 +117,7 @@ function TomTom:ADDON_LOADED(event, addon)
 		self:RegisterEvent("CHAT_MSG_ADDON")
 
 		self:ReloadOptions()
+		self:ReloadWaypoints()
 	end
 end
 
@@ -126,17 +127,37 @@ function TomTom:ReloadOptions()
 
 	self:ShowHideWorldCoords()
 	self:ShowHideCoordBlock()
+	self:ShowHideCrazyArrow()
 
 end
 
 function TomTom:ReloadWaypoints()
+	-- Hide any waypoints that might be currently set
+	for uid,point in pairs(waypoints) do
+		self:ClearWaypoint(uid)
+	end
+
+	waypoints = {}
+	self.waypoints = self.waydb.profile
+
+	local pc,pz = self:GetCurrentCZ()
+
+	for zone,data in pairs(self.waypoints) do
+		local c,z = self:GetCZ(zone)
+		local same = (c == pc) and (z == pz)
+		local minimap = self.profile.minimap.otherzone or same
+		local world = self.profile.worldmap.otherzone or same
+		for idx,waypoint in ipairs(data) do
+			local coord,title = waypoint:match("^(%d+):(.*)$")
+			local x,y = self:GetXY(coord)
+			self:AddZWaypoint(c, z, x*100, y*100, desc, false, minimap, world)
+		end
+	end
 end
-
-
 
 function TomTom:ShowHideWorldCoords()
 	-- Bail out if we're not supposed to be showing this frame
-	if self.db.profile.mapcoords.playerenable or self.db.profile.mapcoords.cursorenable then
+	if self.profile.mapcoords.playerenable or self.db.profile.mapcoords.cursorenable then
 		-- Create the frame if it doesn't exist
 		if not TomTomWorldFrame then
 			TomTomWorldFrame = CreateFrame("Frame", nil, WorldMapFrame)
@@ -152,11 +173,11 @@ function TomTom:ShowHideWorldCoords()
 		TomTomWorldFrame.Player:Hide()
 		TomTomWorldFrame.Cursor:Hide()
 
-		if self.db.profile.mapcoords.playerenable then
+		if self.profile.mapcoords.playerenable then
 			TomTomWorldFrame.Player:Show()
 		end
 
-		if self.db.profile.mapcoords.cursorenable then
+		if self.profile.mapcoords.cursorenable then
 			TomTomWorldFrame.Cursor:Show()
 		end
 
@@ -169,7 +190,7 @@ end
 
 function TomTom:ShowHideCoordBlock()
 	-- Bail out if we're not supposed to be showing this frame
-	if self.db.profile.block.enable then
+	if self.profile.block.enable then
 		-- Create the frame if it doesn't exist
 		if not TomTomBlock then
 			-- Create the coordinate display
@@ -209,7 +230,7 @@ function TomTom:ShowHideCoordBlock()
 		-- Show the frame
 		TomTomBlock:Show()
 
-		local opt = self.db.profile.block
+		local opt = self.profile.block
 
 		-- Update the backdrop color, and border color
 		TomTomBlock:SetBackdropColor(unpack(opt.bgcolor))
@@ -267,6 +288,21 @@ end
 --  Dropdown menu code
 -------------------------------------------------------------------]]--
 
+StaticPopupDialogs["TOMTOM_REMOVE_ALL_CONFIRM"] = {
+	text = L["Are you sure you would like to remove ALL TomTom waypoints?"],
+	button1 = L["Yes"],
+	button2 = L["No"],
+	OnAccept = function()
+		for uid,point in pairs(waypoints) do
+			TomTom.waydb:ResetProfile()
+		end
+		TomTom:ReloadWaypoints()
+	end,
+	timeout = 30,
+	whileDead = 1,
+	hideOnEscape = 1,
+}
+
 local dropdown_info = {
 	-- Define level one elements here
 	[1] = {
@@ -281,6 +317,56 @@ local dropdown_info = {
 				local data = waypoints[uid]
 				TomTom:RemoveWaypoint(uid)
 				--TomTom:PrintF("Removing waypoint %0.2f, %0.2f in %s", data.x, data.y, data.zone) 
+			end,
+		},
+		{ -- Remove all waypoints from this zone
+			text = L["Remove all waypoints from this zone"],
+			func = function()
+				local uid = TomTom.dropdown.uid
+				local data = waypoints[uid]
+				for uid in pairs(waypoints[data.zone]) do
+					TomTom:RemoveWaypoint(uid)
+				end
+			end,
+		},
+		{ -- Remove ALL waypoints
+			text = L["Remove all waypoints"],
+			func = function()
+				StaticPopup_Show("TOMTOM_REMOVE_ALL_CONFIRM")
+			end,
+		},
+		{ -- Save this waypoint
+			text = L["Save this waypoint between sessions"],
+			checked = function()
+				return TomTom:UIDIsSaved(TomTom.dropdown.uid)
+			end,
+			func = function()
+				-- Check to see if it's already saved
+				local uid = TomTom.dropdown.uid
+				if TomTom:UIDIsSaved(uid) then
+					local data = waypoints[uid]
+					if data then
+						local key = string.format("%d:%s", data.coord, data.title or "")
+						local zone = data.zone
+						local sv = TomTom.waypoints[zone]
+
+						-- Find the entry in the saved variable
+						for idx,entry in ipairs(sv) do
+							if entry == key then
+								table.remove(sv, idx)
+								return
+							end
+						end
+					end
+				else
+					local data = waypoints[uid]
+					if data then
+						local key = string.format("%d:%s", data.coord, data.title or "")
+						local zone = data.zone
+						local sv = TomTom.waypoints[zone]
+						table.insert(sv, key)
+					end
+				end
 			end,
 		},
 	}
@@ -302,9 +388,34 @@ local function init_dropdown(level)
 
 	-- Add the buttons to the menu
 	for idx,entry in ipairs(info) do
+		if type(entry.checked) == "function" then
+			-- Make this button dynamic
+			local new = {}
+			for k,v in pairs(entry) do new[k] = v end
+			new.checked = new.checked()
+			entry = new
+		end
 		UIDropDownMenu_AddButton(entry, level)
 	end
 end
+
+function TomTom:UIDIsSaved(uid)
+	local data = waypoints[uid]
+	if data then
+		local key = string.format("%d:%s", data.coord, data.title or "")
+		local zone = data.zone
+		local sv = TomTom.waypoints[zone]
+
+		-- Find the entry in the saved variable
+		for idx,entry in ipairs(sv) do
+			if entry == key then
+				return true
+			end
+		end
+	end
+	return false
+end
+
 
 --[[-------------------------------------------------------------------
 --  Define callback functions 
@@ -345,42 +456,79 @@ local function _both_tooltip_update(event, tooltip, uid, dist)
 end
 
 local function _both_clear_distance(event, uid, range, distance, lastdistance)
-	self:RemoveWaypoint(uid)
+	TomTom:RemoveWaypoint(uid)
 end
 
-local function _both_remove(event, uid)
+local function _remove(event, uid)
 	local data = waypoints[uid]
-	local sv = self.db.profile.waypoints[data.zone]
+	local key = string.format("%d:%s", data.coord, data.title or "")
+	local zone = data.zone
+	local sv = TomTom.waypoints[zone]
 
 	-- Find the entry in the saved variable
 	for idx,entry in ipairs(sv) do
-		if entry.uid == uid then
+		if entry == key then
 			table.remove(sv, idx)
 			break
 		end
+	end
+
+	-- Remove this entry from the waypoints table
+	waypoints[uid] = nil
+	if waypoints[zone] then
+		waypoints[zone][uid] = nil
 	end
 end
 
 local function noop() end
 
--- TODO: Make this not suck
-function TomTom:AddWaypoint(x, y, desc, persistent, noWorld)
+function TomTom:GetCurrentCZ()
 	local oc,oz = Astrolabe:GetCurrentPlayerPosition()
 	SetMapToCurrentZone()
 	local c,z = Astrolabe:GetCurrentPlayerPosition()
 	if oc and oz then
 		SetMapZoom(oc,oz)
 	end
+	return c,z
+end
+
+function TomTom:RemoveWaypoint(uid)
+	local data = waypoints[uid]
+	self:ClearWaypoint(uid)
+
+	if data then
+		local key = string.format("%d:%s", data.coord, data.title or "")
+		local zone = data.zone
+		local sv = TomTom.waypoints[zone]
+
+		-- Find the entry in the saved variable
+		for idx,entry in ipairs(sv) do
+			if entry == key then
+				table.remove(sv, idx)
+				break
+			end
+		end
+	end
+	-- Remove this entry from the waypoints table
+	waypoints[uid] = nil
+	if waypoints[zone] then
+		waypoints[zone][uid] = nil
+	end
+end
+
+-- TODO: Make this not suck
+function TomTom:AddWaypoint(x, y, desc, persistent, minimap, world)
+	local c,z = self:GetCurrentCZ()
 
 	if not c or not z or c < 1 then
 		--self:Print("Cannot find a valid zone to place the coordinates")
 		return
 	end
 
-	return self:AddZWaypoint(c, z, x, y, desc, persistent, noWorld)
+	return self:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world)
 end
 
-function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, noWorld)
+function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world)
 	local callbacks = {
 		minimap = {
 			onclick = _both_onclick,
@@ -392,21 +540,23 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, noWorld)
 			tooltip_show = _world_tooltip_show,
 			tooltip_update = _both_tooltip_show,
 		},
+		remove = _remove,
 		distance = {},
 	}
 
-	if persistent == nil then
-		persistent = self.db.profile.persistence.savewaypoints
-	end
-
+	-- Default values
+	if persistent == nil then persistent = self.profile.persistence.savewaypoints end
+	if minimap == nil then minimap = true end
+	if world == nil then world = true end
+	
 	if not persistent then
-		local cleardistance = self.db.profile.persistence.cleardistance
+		local cleardistance = self.profile.persistence.cleardistance
 		callbacks.distance[cleardistance] = _both_clear_distance
 		callbacks.distance[cleardistance+1] = noop
 	end
 
-	local uid = self:SetWaypoint(c,z,x/100,y/100, callbacks, (not noWorld))
-	self:SetCrazyArrow(uid, self.db.profile.arrow.arrival, desc)
+	local uid = self:SetWaypoint(c,z,x/100,y/100, callbacks, minimap, world)
+	self:SetCrazyArrow(uid, self.profile.arrow.arrival, desc)
 
 	local coord = self:GetCoord(x / 100, y / 100)
 	local zone = self:GetMapFile(c, z)
@@ -419,10 +569,16 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, noWorld)
 		zone = zone,
 	}
 
+	if not waypoints[zone] then
+		waypoints[zone] = {}
+	end
+
+	waypoints[zone][uid] = true
+
 	-- If this is a persistent waypoint, then add it to the waypoints table
 	if persistent then
-		local data = string.format("%d:%s", coord, title or "")
-		table.insert(self.db.profile.waypoints[zone], data)
+		local data = string.format("%d:%s", coord, desc or "")
+		table.insert(self.waypoints[zone], data)
 	end
 end
 
