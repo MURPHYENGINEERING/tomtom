@@ -7,7 +7,27 @@ local L = TomTomLocals
 local Astrolabe = DongleStub("Astrolabe-0.4")
 
 -- Create the addon object
-TomTom = {}
+TomTom = {
+	events = {},
+	eventFrame = CreateFrame("Frame"),
+	RegisterEvent = function(self, event, method)
+		self.eventFrame:RegisterEvent(event)
+		self.events[event] = event or method
+	end,
+	UnregisterEvent = function(self, event)
+		self.eventFrame:UnregisterEvent(event)
+		self.events[event] = nil
+	end,
+}
+
+TomTom.eventFrame:SetScript("OnEvent", function(self, event, ...)
+	local method = TomTom.events[event]
+	if method and TomTom[method] then
+		TomTom[method](TomTom, event, ...)
+	end
+end)
+
+TomTom:RegisterEvent("ADDON_LOADED")
 
 -- Local definitions
 local GetCurrentCursorPosition
@@ -19,79 +39,99 @@ local RoundCoords
 
 local waypoints = {}
 
-function TomTom:Initialize()
-	self.defaults = {
-		profile = {
-			block = {
-				enable = true,
-				accuracy = 2,
-				bordercolor = {1, 0.8, 0, 0.8},
-				bgcolor = {0, 0, 0, 0.4},
-				lock = false,
-				height = 30,
-				width = 100,
-				fontsize = 12,
+function TomTom:ADDON_LOADED(event, addon)
+	if addon == "TomTom" then
+		self:UnregisterEvent("ADDON_LOADED")
+		self.defaults = {
+			profile = {
+				block = {
+					enable = true,
+					accuracy = 2,
+					bordercolor = {1, 0.8, 0, 0.8},
+					bgcolor = {0, 0, 0, 0.4},
+					lock = false,
+					height = 30,
+					width = 100,
+					fontsize = 12,
+				},
+				mapcoords = {
+					playerenable = true,
+					playeraccuracy = 2,
+					cursorenable = true,
+					cursoraccuracy = 2,
+				},
+				arrow = {
+					enable = true,
+					goodcolor = {0, 1, 0},
+					badcolor = {1, 0, 0},
+					middlecolor = {1, 1, 0},
+					arrival = 15,
+					lock = false,
+					showtta = true,
+				},
+				minimap = {
+					enable = true,
+					otherzone = true,
+					tooltip = true,
+				},
+				worldmap = {
+					enable = true,
+					otherzone = true,
+					tooltip = true,
+					clickcreate = true,
+				},
+				comm = {
+					enable = true,
+					prompt = false,
+				},
+				persistence = {
+					cleardistance = 10,
+					savewaypoints = true,
+				},
 			},
-			mapcoords = {
-				playerenable = true,
-				playeraccuracy = 2,
-				cursorenable = true,
-				cursoraccuracy = 2,
-			},
-			arrow = {
-				enable = true,
-				goodcolor = {0, 1, 0},
-				badcolor = {1, 0, 0},
-				middlecolor = {1, 1, 0},
-				arrival = 15,
-				lock = false,
-				showtta = true,
-			},
-			minimap = {
-				enable = true,
-				otherzone = true,
-				tooltip = true,
-			},
-			worldmap = {
-				enable = true,
-				otherzone = true,
-				tooltip = true,
-				clickcreate = true,
-			},
-			comm = {
-				enable = true,
-				prompt = false,
-			},
-			persistence = {
-				cleardistance = 10,
-				savewaypoints = true,
-			},
-		},
-	}
+		}
 
-	self.db = self:InitializeDB("TomTomDB", self.defaults)
+		self.waydefaults = {
+			profile = {
+				["*"] = {},
+			},
+		}
 
-	self.tooltip = CreateFrame("GameTooltip", "TomTomTooltip", nil, "GameTooltipTemplate")
-	self.dropdown = CreateFrame("Frame", "TomTomDropdown", nil, "UIDropDownMenuTemplate")
+		self.db = LibStub("AceDB-3.0"):New("TomTomDB", self.defaults, "Default")
+		self.waydb = LibStub("AceDB-3.0"):New("TomTomWaypoints", self.waydefaults)
+		self.db.RegisterCallback(self, "OnProfileChanged", "ReloadOptions")
+		self.db.RegisterCallback(self, "OnProfileCopied", "ReloadOptions")
+		self.db.RegisterCallback(self, "OnProfileReset", "ReloadOptions")
+		self.waydb.RegisterCallback(self, "OnProfileChanged", "ReloadWaypoints")
+		self.waydb.RegisterCallback(self, "OnProfileCopied", "ReloadWaypoints")
+		self.waydb.RegisterCallback(self, "OnProfileReset", "ReloadWaypoints")
 
-	self:RegisterEvent("PLAYER_LEAVING_WORLD")
-	self:RegisterEvent("PLAYER_ENTERING_WORLD")
-	self:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-	self:RegisterEvent("WORLD_MAP_UPDATE")
-	self:RegisterEvent("CHAT_MSG_ADDON")
+		self.tooltip = CreateFrame("GameTooltip", "TomTomTooltip", nil, "GameTooltipTemplate")
+		self.dropdown = CreateFrame("Frame", "TomTomDropdown", nil, "UIDropDownMenuTemplate")
 
-	-- Push the arrival distance into the callback table
-	local cleardistance = self.db.profile.persistence.cleardistance
-	if cleardistance > 0 then
-		callbackTbl.distance[cleardistance] = function(event, uid)
-			TomTom:RemoveWaypoint(uid)
-		end
-		callbackTbl.distance[cleardistance+1] = function() end
+		self:RegisterEvent("PLAYER_LEAVING_WORLD")
+		self:RegisterEvent("PLAYER_ENTERING_WORLD")
+		self:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+		self:RegisterEvent("WORLD_MAP_UPDATE")
+		self:RegisterEvent("CHAT_MSG_ADDON")
+
+		self:ReloadOptions()
 	end
+end
+
+function TomTom:ReloadOptions()
+	-- This handles the reloading of all options
+	self.profile = self.db.profile
 
 	self:ShowHideWorldCoords()
-	self:ShowHideBlockCoords()
+	self:ShowHideCoordBlock()
+
 end
+
+function TomTom:ReloadWaypoints()
+end
+
+
 
 function TomTom:ShowHideWorldCoords()
 	-- Bail out if we're not supposed to be showing this frame
@@ -126,7 +166,7 @@ function TomTom:ShowHideWorldCoords()
 	end
 end
 
-function TomTom:ShowHideBlockCoords()
+function TomTom:ShowHideCoordBlock()
 	-- Bail out if we're not supposed to be showing this frame
 	if self.db.profile.block.enable then
 		-- Create the frame if it doesn't exist
@@ -239,7 +279,7 @@ local dropdown_info = {
 				local uid = TomTom.dropdown.uid
 				local data = waypoints[uid]
 				TomTom:RemoveWaypoint(uid)
-				TomTom:PrintF("Removing waypoint %0.2f, %0.2f in %s", data.x, data.y, data.zone) 
+				--TomTom:PrintF("Removing waypoint %0.2f, %0.2f in %s", data.x, data.y, data.zone) 
 			end,
 		},
 	}
@@ -265,29 +305,65 @@ local function init_dropdown(level)
 	end
 end
 
-callbackTbl = {
-	onclick = function(event, uid, self, button)
-		TomTom.dropdown.uid = uid
-		UIDropDownMenu_Initialize(TomTom.dropdown, init_dropdown)
-		ToggleDropDownMenu(1, nil, TomTom.dropdown, "cursor", 0, 0)
-	end,
-	tooltip_show = function(event, tooltip, uid, dist)
-		local data = waypoints[uid]
+--[[-------------------------------------------------------------------
+--  Define callback functions 
+-------------------------------------------------------------------]]--
+local function _both_onclick(event, uid, self, button)
+	TomTom.dropdown.uid = uid
+	UIDropDownMenu_Initialize(TomTom.dropdown, init_dropdown)
+	ToggleDropDownMenu(1, nil, TomTom.dropdown, "cursor", 0, 0)
+end
 
-		tooltip:SetText(data.title or "TomTom waypoint")
-		tooltip:AddLine(string.format("%s yards away", math.floor(dist)), 1, 1, 1)
-		tooltip:AddLine(string.format("%s (%.2f, %.2f)", data.zone, data.x, data.y), 0.7, 0.7, 0.7)
-		tooltip:Show()
-	end,
-	tooltip_update = function(event, tooltip, uid, dist)
-		tooltip.lines[2]:SetFormattedText("%s yards away", math.floor(dist), 1, 1, 1)
-	end,
-	distance = {
-	},
-}
+local function _both_tooltip_show(event, tooltip, uid, dist)
+	local data = waypoints[uid]
+
+	tooltip:SetText(data.title or "TomTom waypoint")
+	tooltip:AddLine(string.format("%s yards away", math.floor(dist)), 1, 1, 1)
+	tooltip:AddLine(string.format("%s (%.2f, %.2f)", data.zone, data.x, data.y), 0.7, 0.7, 0.7)
+	tooltip:Show()
+end
+
+local function _minimap_tooltip_show(event, tooltip, uid, dist)
+	if not TomTom.db.profile.minimap.tooltip then 
+		tooltip:Hide()
+		return
+	end
+	return _both_tooltip_show(event, tooltip, uid, dist)
+end
+
+local function _world_tooltip_show(event, tooltip, uid, dist)
+	if not TomTom.db.profile.worldmap.tooltip then
+		tooltip:Hide()
+		return
+	end
+	return _both_tooltip_show(event, tooltip, uid, dist)
+end
+
+local function _both_tooltip_update(event, tooltip, uid, dist)
+	tooltip.lines[2]:SetFormattedText("%s yards away", math.floor(dist), 1, 1, 1)
+end
+
+local function _both_clear_distance(event, uid, range, distance, lastdistance)
+	self:RemoveWaypoint(uid)
+end
+
+local function _both_remove(event, uid)
+	local data = waypoints[uid]
+	local sv = self.db.profile.waypoints[data.zone]
+
+	-- Find the entry in the saved variable
+	for idx,entry in ipairs(sv) do
+		if entry.uid == uid then
+			table.remove(sv, idx)
+			break
+		end
+	end
+end
+
+local function noop() end
 
 -- TODO: Make this not suck
-function TomTom:AddWaypoint(x,y,desc)
+function TomTom:AddWaypoint(x, y, desc, persistent, noWorld)
 	local oc,oz = Astrolabe:GetCurrentPlayerPosition()
 	SetMapToCurrentZone()
 	local c,z = Astrolabe:GetCurrentPlayerPosition()
@@ -296,25 +372,57 @@ function TomTom:AddWaypoint(x,y,desc)
 	end
 
 	if not c or not z or c < 1 then
-		self:Print("Cannot find a valid zone to place the coordinates")
+		--self:Print("Cannot find a valid zone to place the coordinates")
 		return
 	end
 
-	return self:AddZWaypoint(c,z,x,y,desc)
+	return self:AddZWaypoint(c, z, x, y, desc, persistent, noWorld)
 end
 
-function TomTom:AddZWaypoint(c,z,x,y,desc)
-	local uid = self:SetWaypoint(c,z,x/100,y/100, callbackTbl)
+function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, noWorld)
+	local callbacks = {
+		minimap = {
+			onclick = _both_onclick,
+			tooltip_show = _minimap_tooltip_show,
+			tooltip_update = _both_tooltip_update,
+		},
+		world = {
+			onclick = _both_onclick,
+			tooltip_show = _world_tooltip_show,
+			tooltip_update = _both_tooltip_show,
+		},
+		distance = {},
+	}
+
+	if persistent == nil then
+		persistent = self.db.profile.persistence.savewaypoints
+	end
+
+	if not persistent then
+		local cleardistance = self.db.profile.persistence.cleardistance
+		callbacks.distance[cleardistance] = _both_clear_distance
+		callbacks.distance[cleardistance+1] = noop
+	end
+
+	local uid = self:SetWaypoint(c,z,x/100,y/100, callbacks, (not noWorld))
 	self:SetCrazyArrow(uid, self.db.profile.arrow.arrival, desc)
 
-	-- Store this waypoint in the uid
+	local coord = self:GetCoord(x / 100, y / 100)
+	local zone = self:GetMapFile(c, z)
+
 	waypoints[uid] = {
 		title = desc,
-		coord = self:GetCoord(x / 100 , y / 100),
-		zone = self:GetMapFile(c,z),
+		coord = coord,
 		x = x,
 		y = y,
+		zone = zone,
 	}
+
+	-- If this is a persistent waypoint, then add it to the waypoints table
+	if persistent then
+		local data = string.format("%d:%s", coord, title or "")
+		table.insert(self.db.profile.waypoints[zone], data)
+	end
 end
 
 -- Code taken from HandyNotes, thanks Xinhuan
@@ -363,8 +471,6 @@ end
 function TomTom:GetXY(id)
 	return floor(id / 10000) / 10000, (id % 10000) / 10000
 end
-
-TomTom = DongleStub("Dongle-1.1"):New("TomTom", TomTom)
 
 do
 	function GetCurrentCursorPosition()
@@ -435,7 +541,6 @@ SlashCmdList["WAY"] = function(msg)
 	if not desc:match("%S") then desc = nil end
 
 	x,y = tonumber(x), tonumber(y)
-	TomTom:PrintF("Adding waypoint %d %d", x, y)
+	--TomTom:PrintF("Adding waypoint %d %d", x, y)
 	TomTom:AddWaypoint(x, y, desc)
 end
-

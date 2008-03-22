@@ -61,7 +61,7 @@ local Minimap_OnEnter,Minimap_OnLeave,Minimap_OnUpdate,Minimap_OnClick,Minimap_O
 local Arrow_OnUpdate
 local World_OnEnter,World_OnLeave,World_OnClick,World_OnEvent
 
-function TomTom:SetWaypoint(c, z, x, y, callbacks)
+function TomTom:SetWaypoint(c, z, x, y, callbacks, world)
 	-- Try to acquire a waypoint from the frame pool
 	local point = table.remove(pool)
 
@@ -116,7 +116,10 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks)
 	point.z = z
 	point.x = x
 	point.y = y
+	point.world = world
 	point.callbacks = callbacks
+	point.worldmap.callbacks = callbacks and callbacks.world
+	point.minimap.callbacks = callbacks and callbacks.minimap
 
 	-- Process the callbacks table to put distances in a consumable format
 	if callbacks and callbacks.distance then
@@ -136,7 +139,9 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks)
 
 	-- Place the waypoint
 	Astrolabe:PlaceIconOnMinimap(point.minimap, c, z, x, y)
-	Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, point.worldmap, c, z, x, y)
+	if point.world then
+		Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, point.worldmap, c, z, x, y)
+	end
 
 	point.uid = getuid(point)
 	return point.uid
@@ -148,6 +153,11 @@ function TomTom:RemoveWaypoint(uid)
 	point.minimap:Hide()
 	point.worldmap:Hide()
 	table.insert(pool, point)
+
+	if point.callbacks and point.callbacks.remove then
+		point.callbacks.remove("remove", uid)
+	end
+	
 	point.uid = nil
 end
 
@@ -172,15 +182,15 @@ do
 	end
 
 	function Minimap_OnClick(self, button)
-		local data = self.point.callbacks
+		local data = self.callbacks
 
-		if data.onclick then
+		if data and data.onclick then
 			data.onclick("onclick", self.point.uid, self, button)
 		end
 	end
 
 	function Minimap_OnEnter(self, motion)
-		local data = self.point.callbacks
+		local data = self.callbacks
 
 		if data and data.tooltip_show then
 			local uid = self.point.uid
@@ -188,6 +198,13 @@ do
 
 			tooltip_uid = uid
 			tooltip_callbacks = data
+
+			-- Parent to UIParent, unless it's hidden
+			if UIParent:IsVisible() then
+				tooltip:SetParent(UIParent)
+			else
+				tooltip:SetParent(self)
+			end
 
 			tooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT")
 
@@ -318,19 +335,13 @@ do
 			end
 
 			local data = self.point
-			-- It seems that data.x and data.y are occasionally not valid
-			-- perhaps when the waypoint is removed.  Guard this for now
-			-- TODO: Fix permanently
-			if not data.x or not data.y then
-				self:Hide()
-				return
-			end
-
-			local x,y = Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, self, data.c, data.z, data.x, data.y)
-			if (x and y and (0 < x and x <= 1) and (0 < y and y <= 1)) then
-				self:Show()
-			else
-				self:Hide()
+			if data.world then
+				local x,y = Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, self, data.c, data.z, data.x, data.y)
+				if (x and y and (0 < x and x <= 1) and (0 < y and y <= 1)) then
+					self:Show()
+				else
+					self:Hide()
+				end
 			end
 		end
 	end
