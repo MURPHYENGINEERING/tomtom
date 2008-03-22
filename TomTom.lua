@@ -68,6 +68,7 @@ function TomTom:ADDON_LOADED(event, addon)
 					arrival = 15,
 					lock = false,
 					showtta = true,
+					autoqueue = true,
 				},
 				minimap = {
 					enable = true,
@@ -110,6 +111,8 @@ function TomTom:ADDON_LOADED(event, addon)
 		self.tooltip = CreateFrame("GameTooltip", "TomTomTooltip", nil, "GameTooltipTemplate")
 		self.dropdown = CreateFrame("Frame", "TomTomDropdown", nil, "UIDropDownMenuTemplate")
 
+		self.waypoints = waypoints
+
 		self:RegisterEvent("PLAYER_LEAVING_WORLD")
 		self:RegisterEvent("PLAYER_ENTERING_WORLD")
 		self:RegisterEvent("ZONE_CHANGED_NEW_AREA")
@@ -138,11 +141,12 @@ function TomTom:ReloadWaypoints()
 	end
 
 	waypoints = {}
-	self.waypoints = self.waydb.profile
+	self.waypoints = waypoints
+	self.waypointprofile = self.waydb.profile
 
 	local pc,pz = self:GetCurrentCZ()
 
-	for zone,data in pairs(self.waypoints) do
+	for zone,data in pairs(self.waypointprofile) do
 		local c,z = self:GetCZ(zone)
 		local same = (c == pc) and (z == pz)
 		local minimap = self.profile.minimap.otherzone or same
@@ -348,7 +352,7 @@ local dropdown_info = {
 					if data then
 						local key = string.format("%d:%s", data.coord, data.title or "")
 						local zone = data.zone
-						local sv = TomTom.waypoints[zone]
+						local sv = TomTom.waypointprofile[zone]
 
 						-- Find the entry in the saved variable
 						for idx,entry in ipairs(sv) do
@@ -363,7 +367,7 @@ local dropdown_info = {
 					if data then
 						local key = string.format("%d:%s", data.coord, data.title or "")
 						local zone = data.zone
-						local sv = TomTom.waypoints[zone]
+						local sv = TomTom.waypointprofile[zone]
 						table.insert(sv, key)
 					end
 				end
@@ -404,7 +408,7 @@ function TomTom:UIDIsSaved(uid)
 	if data then
 		local key = string.format("%d:%s", data.coord, data.title or "")
 		local zone = data.zone
-		local sv = TomTom.waypoints[zone]
+		local sv = TomTom.waypointprofile[zone]
 
 		-- Find the entry in the saved variable
 		for idx,entry in ipairs(sv) do
@@ -463,7 +467,7 @@ local function _remove(event, uid)
 	local data = waypoints[uid]
 	local key = string.format("%d:%s", data.coord, data.title or "")
 	local zone = data.zone
-	local sv = TomTom.waypoints[zone]
+	local sv = TomTom.waypointprofile[zone]
 
 	-- Find the entry in the saved variable
 	for idx,entry in ipairs(sv) do
@@ -499,7 +503,7 @@ function TomTom:RemoveWaypoint(uid)
 	if data then
 		local key = string.format("%d:%s", data.coord, data.title or "")
 		local zone = data.zone
-		local sv = TomTom.waypoints[zone]
+		local sv = TomTom.waypointprofile[zone]
 
 		-- Find the entry in the saved variable
 		for idx,entry in ipairs(sv) do
@@ -556,7 +560,9 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world)
 	end
 
 	local uid = self:SetWaypoint(c,z,x/100,y/100, callbacks, minimap, world)
-	self:SetCrazyArrow(uid, self.profile.arrow.arrival, desc)
+	if self.profile.arrow.autoqueue then
+		self:SetCrazyArrow(uid, self.profile.arrow.arrival, desc)
+	end
 
 	local coord = self:GetCoord(x / 100, y / 100)
 	local zone = self:GetMapFile(c, z)
@@ -578,7 +584,7 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world)
 	-- If this is a persistent waypoint, then add it to the waypoints table
 	if persistent then
 		local data = string.format("%d:%s", coord, desc or "")
-		table.insert(self.waypoints[zone], data)
+		table.insert(self.waypointprofile[zone], data)
 	end
 end
 
@@ -692,12 +698,114 @@ do
 	end
 end
 
+local function usage()
+	ChatFrame1:AddMessage("|cffffff78TomTom |r/way |cffffff78Usage:|r")
+	ChatFrame1:AddMessage("|cffffff78/way <x> <y> [desc]|r - Adds a waypoint at x,y with descrtiption desc")
+	ChatFrame1:AddMessage("|cffffff78/way <zone> <x> <y> [desc]|r - Adds a waypoint at x,y in zone with description desc")
+	ChatFrame1:AddMessage("|cffffff78/way reset all|r - Resets all waypoints")
+	ChatFrame1:AddMessage("|cffffff78/way reset <zone>|r - Resets all waypoints in zone")
+end
+
+local zlist = {}
+for cidx,c in ipairs{GetMapContinents()} do
+	for zidx,z in ipairs{GetMapZones(cidx)} do
+		zlist[z:lower():gsub("[%L]", "")] = {cidx, zidx, z}
+	end
+end
+
 SLASH_WAY1 = "/way"
 SlashCmdList["WAY"] = function(msg)
-	local x,y,desc = msg:match("(%d+%.?%d*)%s+(%d+%.?%d*)%s*(.*)$")
-	if not desc:match("%S") then desc = nil end
+	msg = msg:lower()
 
-	x,y = tonumber(x), tonumber(y)
-	--TomTom:PrintF("Adding waypoint %d %d", x, y)
-	TomTom:AddWaypoint(x, y, desc)
+	local tokens = {}
+	for token in msg:gmatch("%S+") do table.insert(tokens, token) end
+
+	if tokens[1] == "reset" then
+		if tokens[2] == "all" then
+			StaticPopup_Show("TOMTOM_REMOVE_ALL_CONFIRM")
+
+		elseif tokens[2] then
+			-- Reset the named zone
+			local _,zone = unpack(tokens)
+
+			-- Find a fuzzy match for the zone
+			local matches = {}
+			zone = zone:lower():gsub("[%L]", "")
+
+			for z,entry in pairs(zlist) do
+				if z:match(zone) then
+					table.insert(matches, entry)
+				end
+			end
+
+			if #matches > 5 then
+				ChatFrame1:AddMessage("Found " .. #matches .. " possible matches for zone '" .. tokens[2] .. "'.  Please be more specific.")
+				return
+			elseif #matches > 1 then
+				local poss = {}
+				for k,v in pairs(matches) do
+					table.insert(poss, v[3])
+				end
+				table.sort(poss)
+
+				ChatFrame1:AddMessage("Found multiple matches for zone '" .. tokens[2] .. "'.  Did you mean: " .. table.concat(poss, ", "))
+				return
+			end
+
+
+			local c,z,name = unpack(matches[1])
+			local zone = TomTom:GetMapFile(c, z)
+			if waypoints[zone] then
+				for uid in pairs(waypoints[zone]) do
+					TomTom:RemoveWaypoint(uid)
+				end
+			else
+				ChatFrame1:AddMessage("There were no waypoints to remove in " .. name)
+			end
+		end
+	elseif tokens[1] and not tonumber(tokens[1]) then
+		-- This is a waypoint set, with a zone before the coords
+		local zone,x,y,desc = unpack(tokens)
+
+		-- Find a fuzzy match for the zone
+		local matches = {}
+		zone = zone:lower():gsub("[%L]", "")
+
+		for z,entry in pairs(zlist) do
+			if z:match(zone) then
+				table.insert(matches, entry)
+			end
+		end
+
+		if #matches ~= 1 then
+			ChatFrame1:AddMessage("Found " .. #matches .. " possible matches for zone '" .. tokens[1] .. "'.  Please be more specific.")
+			return
+		end
+
+		local c,z,name = unpack(matches[1])
+
+		if not x or not tonumber(x) then
+			return usage()
+		elseif not y or not tonumber(y) then
+			return usage()
+		end
+
+		x = tonumber(x)
+		y = tonumber(y)
+		TomTom:AddZWaypoint(c, z, x, y, desc)
+	elseif tonumber(tokens[1]) then
+		-- A vanilla set command
+		local x,y,desc = unpack(tokens)
+		if not x or not tonumber(x) then
+			return usage()
+		elseif not y or not tonumber(y) then
+			return usage()
+		end
+
+		x = tonumber(x)
+		y = tonumber(y)
+		TomTom:AddWaypoint(x, y, desc)
+	else
+		return usage()
+	end
 end

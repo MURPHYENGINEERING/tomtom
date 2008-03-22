@@ -8,6 +8,8 @@
 
 local Astrolabe = DongleStub("Astrolabe-0.4")
 local sformat = string.format
+local L = TomTomLocals
+
 local GetPlayerBearing
 function GetPlayerBearing()
 	local obj; -- Remains an upvalue
@@ -51,7 +53,7 @@ end
 
 local twopi = math.pi * 2
 
-local wayframe = CreateFrame("Frame", "TomTomCrazyArrow", UIParent)
+local wayframe = CreateFrame("Button", "TomTomCrazyArrow", UIParent)
 wayframe:SetHeight(56)
 wayframe:SetWidth(42)
 wayframe:SetPoint("CENTER", 0, 0)

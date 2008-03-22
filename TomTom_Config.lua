@@ -144,15 +144,23 @@ local function createconfig()
 				width = "double",
 				arg = "arrow.enable",
 			},
-			lock = {
+			autoqueue = {
 				order = 3,
+				type = "toggle",
+				width = "double",
+				name = L["Automatically set waypoint arrow"],
+				desc = L["When a new waypoint is added, TomTom can automatically set the new waypoint as the \"Crazy Arrow\" waypoint."],
+				arg = "arrow.autoqueue",
+			},
+			lock = {
+				order = 4,
 				type = "toggle",
 				name = L["Lock waypoint arrow"],
 				desc = L["Locks the waypoint arrow, so it can't be moved accidentally"],
 				arg = "arrow.lock",
 			},
 			arrival = {
-				order = 4,
+				order = 5,
 				type = "toggle",
 				name = L["Show estimated time to arrival"],
 				desc = L["Shows an estimate of how long it will take you to reach the waypoint at your current speed"],
@@ -160,7 +168,7 @@ local function createconfig()
 				arg = "arrow.showtta",
 			},
 			heredistance = {
-				order = 5,
+				order = 6,
 				type = "range",
 				name = L["\"Arrival Distance\""],
 				desc = L["This setting will control the distance at which the waypoint arrow switches to a downwards arrow, indicating you have arrived at your destination"],
@@ -170,6 +178,7 @@ local function createconfig()
 			color = {
 				type = "group",
 				name = L["Arrow colors"],
+				order = 7,
 				inline = true,
 				args = {
 					help = {
@@ -414,7 +423,7 @@ SlashCmdList["TOMTOM"] = function(msg)
 	if not registered then
 		options = options or createconfig()
 		config:RegisterOptionsTable("TomTom", options)
-		dialog:SetDefaultSize("TomTom", 600, 400)
+		dialog:SetDefaultSize("TomTom", 600, 500)
 		registered = true
 	end
 
