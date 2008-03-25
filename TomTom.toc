@@ -2,9 +2,6 @@
 ## Title: TomTom
 ## Notes: Acts as your portable navigation assistant
 ## SavedVariables: TomTomDB, TomTomWaypoints
-## OptionalDeps: Dongle
-
-Dongle.lua
 
 libs\Astrolabe\Load.xml
 libs\LibStub\LibStub.lua
