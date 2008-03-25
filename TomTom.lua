@@ -725,10 +725,11 @@ end
 
 SLASH_WAY1 = "/way"
 SlashCmdList["WAY"] = function(msg)
-	msg = msg:lower()
-
 	local tokens = {}
 	for token in msg:gmatch("%S+") do table.insert(tokens, token) end
+
+	-- Lower the first token
+	tokens[1] = tokens[1]:lower()
 
 	if tokens[1] == "reset" then
 		if tokens[2] == "all" then
@@ -776,6 +777,7 @@ SlashCmdList["WAY"] = function(msg)
 	elseif tokens[1] and not tonumber(tokens[1]) then
 		-- This is a waypoint set, with a zone before the coords
 		local zone,x,y,desc = unpack(tokens)
+		if desc then desc = table.concat(tokens, " ", 4) end
 
 		-- Find a fuzzy match for the zone
 		local matches = {}
@@ -810,6 +812,9 @@ SlashCmdList["WAY"] = function(msg)
 			return usage()
 		elseif not y or not tonumber(y) then
 			return usage()
+		end
+		if desc then
+			desc = table.concat(tokens, " ", 3)
 		end
 
 		x = tonumber(x)
