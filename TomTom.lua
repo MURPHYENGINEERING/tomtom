@@ -114,9 +114,9 @@ function TomTom:ADDON_LOADED(event, addon)
 		self.waypoints = waypoints
 
 		self:RegisterEvent("PLAYER_LEAVING_WORLD")
-		self:RegisterEvent("PLAYER_ENTERING_WORLD")
-		self:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-		self:RegisterEvent("WORLD_MAP_UPDATE")
+		self:RegisterEvent("PLAYER_ENTERING_WORLD", "ReloadWaypoints")
+		self:RegisterEvent("ZONE_CHANGED_NEW_AREA", "ReloadWaypoints")
+		self:RegisterEvent("WORLD_MAP_UPDATE", "ReloadWaypoints")
 		self:RegisterEvent("CHAT_MSG_ADDON")
 
 		self:ReloadOptions()
