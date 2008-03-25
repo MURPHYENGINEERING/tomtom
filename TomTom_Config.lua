@@ -453,31 +453,31 @@ if tonumber(build) > 8000 then
 
 		-- General Options
 		config:RegisterOptionsTable("TomTom-General", options.args.general)
-		dialog:AddToBlizOptions("TomTom-General", options.args.general.name, "TomTom-Bliz")
+		dialog:AddToBlizOptions("TomTom-General", options.args.general.name, "TomTom")
 		
 		-- Coordinate Block Options
 		config:RegisterOptionsTable("TomTom-CoordBlock", options.args.coordblock)
-		dialog:AddToBlizOptions("TomTom-CoordBlock", options.args.coordblock.name, "TomTom-Bliz")
+		dialog:AddToBlizOptions("TomTom-CoordBlock", options.args.coordblock.name, "TomTom")
 
 		-- Crazy Taxi Options
 		config:RegisterOptionsTable("TomTom-CrazyTaxi", options.args.crazytaxi)
-		dialog:AddToBlizOptions("TomTom-CrazyTaxi", options.args.crazytaxi.name, "TomTom-Bliz")
+		dialog:AddToBlizOptions("TomTom-CrazyTaxi", options.args.crazytaxi.name, "TomTom")
 
 		-- Minimap Options
 		config:RegisterOptionsTable("TomTom-Minimap", options.args.minimap)
-		dialog:AddToBlizOptions("TomTom-Minimap", options.args.minimap.name, "TomTom-Bliz")
+		dialog:AddToBlizOptions("TomTom-Minimap", options.args.minimap.name, "TomTom")
 
 		-- World Map Options
 		config:RegisterOptionsTable("TomTom-Worldmap", options.args.worldmap)
-		dialog:AddToBlizOptions("TomTom-Worldmap", options.args.worldmap.name, "TomTom-Bliz")
+		dialog:AddToBlizOptions("TomTom-Worldmap", options.args.worldmap.name, "TomTom")
 		
 		-- Profile Options
 		local p_options = options.args.profile.args.options
 		local w_options = options.args.profile.args.waypoints
 		config:RegisterOptionsTable("TomTom-Profiles-Waypoints", w_options)
 		config:RegisterOptionsTable("TomTom-Profiles-Options", p_options)
-		dialog:AddToBlizOptions("TomTom-Profiles-Waypoints", w_options.name, "TomTom-Bliz")
-		dialog:AddToBlizOptions("TomTom-Profiles-Options", p_options.name, "TomTom-Bliz")
+		dialog:AddToBlizOptions("TomTom-Profiles-Waypoints", w_options.name, "TomTom")
+		dialog:AddToBlizOptions("TomTom-Profiles-Options", p_options.name, "TomTom")
 	end
 	)
 end
