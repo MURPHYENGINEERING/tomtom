@@ -558,20 +558,21 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world)
 			tooltip_update = _both_tooltip_show,
 		},
 		remove = _remove,
-		distance = {},
+		distance = {
+		},
 	}
+
+	local cleardistance = self.profile.persistence.cleardistance
+	if cleardistance > 0 then
+		callbacks.distance[cleardistance] = _both_clear_distance
+		callbacks.distance[cleardistance + 1] = noop
+	end
 
 	-- Default values
 	if persistent == nil then persistent = self.profile.persistence.savewaypoints end
 	if minimap == nil then minimap = true end
 	if world == nil then world = true end
 	
-	if not persistent then
-		local cleardistance = self.profile.persistence.cleardistance
-		callbacks.distance[cleardistance] = _both_clear_distance
-		callbacks.distance[cleardistance+1] = noop
-	end
-
 	local uid = self:SetWaypoint(c,z,x/100,y/100, callbacks, minimap, world)
 	if self.profile.arrow.autoqueue then
 		self:SetCrazyArrow(uid, self.profile.arrow.arrival, desc)
