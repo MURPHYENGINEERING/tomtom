@@ -1,6 +1,6 @@
 ## Interface: 20400
 ## Title: TomTom
-## Version: rwowi:revision
+## Version: wowi:revision
 ## Notes: Acts as your portable navigation assistant
 ## SavedVariables: TomTomDB, TomTomWaypoints
 

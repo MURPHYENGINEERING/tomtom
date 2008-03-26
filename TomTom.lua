@@ -18,7 +18,10 @@ TomTom = {
 		self.eventFrame:UnregisterEvent(event)
 		self.events[event] = nil
 	end,
+	version = GetAddOnMetadata("TomTom", "Version")
 }
+
+if TomTom.version == "wowi:revision" then TomTom.version = "SVN" end
 
 TomTom.eventFrame:SetScript("OnEvent", function(self, event, ...)
 	local method = TomTom.events[event]
