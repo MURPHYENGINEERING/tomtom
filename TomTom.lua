@@ -596,6 +596,8 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world)
 		local data = string.format("%d:%s", coord, desc or "")
 		table.insert(self.waypointprofile[zone], data)
 	end
+
+	return uid
 end
 
 -- Code taken from HandyNotes, thanks Xinhuan
