@@ -97,12 +97,14 @@ wayframe.arrow:SetAllPoints()
 local active_point, arrive_distance, showDownArrow, point_title
 
 function TomTom:SetCrazyArrow(uid, dist, title)
-	active_point = uid
-	arrive_distance = dist
-	point_title = title 
+	if self.profile.arrow.enable then
+		active_point = uid
+		arrive_distance = dist
+		point_title = title 
 
-	wayframe.title:SetText(title or "Unknown waypoint")
-	wayframe:Show()
+		wayframe.title:SetText(title or "Unknown waypoint")
+		wayframe:Show()
+	end
 end
 
 local status = wayframe.status
