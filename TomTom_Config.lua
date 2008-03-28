@@ -97,6 +97,7 @@ local function createconfig()
 						type = "color",
 						name = L["Border color"],
 						arg = "block.bordercolor",
+						hasAlpha = true,
 					},
 					bgcolor = {
 						type = "color",
