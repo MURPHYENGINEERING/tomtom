@@ -152,8 +152,8 @@ function TomTom:ReloadWaypoints()
 	for zone,data in pairs(self.waypointprofile) do
 		local c,z = self:GetCZ(zone)
 		local same = (c == pc) and (z == pz)
-		local minimap = self.profile.minimap.otherzone or same
-		local world = self.profile.worldmap.otherzone or same
+		local minimap = self.profile.minimap.enable and (self.profile.minimap.otherzone or same)
+		local world = self.profile.worldmap.enable and (self.profile.worldmap.otherzone or same)
 		for idx,waypoint in ipairs(data) do
 			local coord,title = waypoint:match("^(%d+):(.*)$")
 			if not title:match("%S") then title = nil end

@@ -38,6 +38,8 @@ local function createconfig()
 			TomTom:ShowHideCrazyArrow()
 		elseif opt == "otherzone" then
 			TomTom:ReloadWaypoints()
+		elseif info.arg == "minimap.enable" or info.arg == "worldmap.enable" then
+			TomTom:ReloadWaypoints()
 		end
 	end
 
