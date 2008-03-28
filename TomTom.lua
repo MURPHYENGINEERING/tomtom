@@ -4,7 +4,10 @@
 
 -- Simple localization table for messages
 local L = TomTomLocals
-local Astrolabe = DongleStub("Astrolabe-0.4")
+local Astrolabe = DongleStub("Astrolabe-0.4-NC")
+
+-- Speed up minimap updates
+Astrolabe.MinimapUpdateTime = 0.1
 
 -- Create the addon object
 TomTom = {
@@ -327,6 +330,12 @@ local dropdown_info = {
 				TomTom:SetCrazyArrow(uid, TomTom.profile.arrow.arrival, data.title or "TomTom waypoint")
 			end,
 		},
+		{
+			-- Send waypoint
+			text = L["Send waypoint to"],
+			hasArrow = true,
+			value = "send",
+		},
 		{ -- Remove waypoint
 			text = L["Remove waypoint"],
 			func = function()
@@ -386,7 +395,44 @@ local dropdown_info = {
 				end
 			end,
 		},
-	}
+	},
+	[2] = {
+		send = {
+			{
+				-- Title
+				text = L["Waypoint communication"],
+				isTitle = true,
+			},
+			{
+				-- Party
+				text = L["Send to party"],
+				func = function()
+					TomTom:SendWaypoint(TomTom.dropdown.uid, "PARTY")
+				end
+			},
+			{
+				-- Raid
+				text = L["Send to raid"],
+				func = function()
+					TomTom:SendWaypoint(TomTom.dropdown.uid, "RAID")
+				end
+			},
+			{
+				-- Battleground
+				text = L["Send to battleground"],
+				func = function()
+					TomTom:SendWaypoint(TomTom.dropdown.uid, "BATTLEGROUND")
+				end
+			},
+			{
+				-- Guild
+				text = L["Send to guild"],
+				func = function()
+					TomTom:SendWaypoint(TomTom.dropdown.uid, "GUILD")
+				end
+			},
+		},
+	},
 }
 
 local function init_dropdown(level)
@@ -433,6 +479,26 @@ function TomTom:UIDIsSaved(uid)
 	return false
 end
 
+function TomTom:SendWaypoint(uid, channel)
+	local data = waypoints[uid]
+	local msg = string.format("%s:%d:%s", data.zone, data.coord, data.title or "")
+	SendAddonMessage("TOMTOM2", msg, channel)
+end
+
+function TomTom:CHAT_MSG_ADDON(event, prefix, data, channel, sender)
+	if prefix ~= "TOMTOM2" then return end
+	--if sender == UnitName("player") then return end 
+
+	local zone,coord,title = string.split(":", data)
+	if not title:match("%S") then
+		title = "Waypoint from " .. sender
+	end
+
+	local c,z = self:GetCZ(zone)
+	local x,y = self:GetXY(tonumber(coord))
+	self:AddZWaypoint(c, z, x*100, y*100, title)
+	ChatFrame1:AddMessage("|cffffff78TomTom|r: Added '" .. title .. "' (sent from " .. sender .. ") to zone " .. zone)
+end
 
 --[[-------------------------------------------------------------------
 --  Define callback functions 

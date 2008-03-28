@@ -6,7 +6,7 @@
 --    with the artwork.)
 ----------------------------------------------------------------------------]]
 
-local Astrolabe = DongleStub("Astrolabe-0.4")
+local Astrolabe = DongleStub("Astrolabe-0.4-NC")
 local sformat = string.format
 local L = TomTomLocals
 
@@ -27,7 +27,13 @@ function GetPlayerBearing()
 	if not obj then return; end
 
 	-- If we've found what we were looking for, rewrite function to skip the search next time.
-	GetPlayerBearing = function() return (obj:GetFacing()); end
+	GetPlayerBearing = function() 
+		if GetCVar("rotateMinimap") ~= "0" then
+			return (MiniMapCompassRing:GetFacing() * -1)
+		else
+			return obj:GetFacing(); 
+		end
+	end
 	return GetPlayerBearing();
 end
 
@@ -242,15 +248,36 @@ wayframe:SetScript("OnUpdate", OnUpdate)
 local dropdown_info = {
 	-- Define level one elements here
 	[1] = {
-		{ -- Title
+		{
+			-- Title
 			text = L["TomTom Waypoint Arrow"],
 			isTitle = 1,
 		},
-		{ -- Remove waypoint
+		{
+			-- Remove a waypoint
 			text = L["Remove waypoint"],
 			func = function()
 				local uid = active_point
 				TomTom:RemoveWaypoint(uid)
+			end,
+		},
+		{
+			-- Remove all waypoints from this zone
+			text = L["Remove all waypoints from this zone"],
+			func = function()
+				local uid = active_point
+				local waypoints = TomTom.waypoints
+				local data = waypoints[uid]
+				for uid in pairs(waypoints[data.zone]) do
+					TomTom:RemoveWaypoint(uid)
+				end
+			end,
+		},
+		{
+			-- Remove all waypoints
+			text = L["Remove all waypoints"],
+			func = function()
+				StaticPopup_Show("TOMTOM_REMOVE_ALL_CONFIRM")
 			end,
 		},
 	}
