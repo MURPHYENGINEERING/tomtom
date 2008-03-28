@@ -233,3 +233,58 @@ function TomTom:ShowHideCrazyArrow()
 end
 
 wayframe:SetScript("OnUpdate", OnUpdate)
+
+
+--[[-------------------------------------------------------------------------
+--  Dropdown
+-------------------------------------------------------------------------]]--
+
+local dropdown_info = {
+	-- Define level one elements here
+	[1] = {
+		{ -- Title
+			text = L["TomTom Waypoint Arrow"],
+			isTitle = 1,
+		},
+		{ -- Remove waypoint
+			text = L["Remove waypoint"],
+			func = function()
+				local uid = active_point
+				TomTom:RemoveWaypoint(uid)
+			end,
+		},
+	}
+}
+
+local function init_dropdown(level)
+	-- Make sure level is set to 1, if not supplied
+	level = level or 1
+
+	-- Get the current level from the info table
+	local info = dropdown_info[level]
+
+	-- If a value has been set, try to find it at the current level
+	if level > 1 and UIDROPDOWNMENU_MENU_VALUE then
+		if info[UIDROPDOWNMENU_MENU_VALUE] then
+			info = info[UIDROPDOWNMENU_MENU_VALUE]
+		end
+	end
+
+	-- Add the buttons to the menu
+	for idx,entry in ipairs(info) do
+		if type(entry.checked) == "function" then
+			-- Make this button dynamic
+			local new = {}
+			for k,v in pairs(entry) do new[k] = v end
+			new.checked = new.checked()
+			entry = new
+		end
+		UIDropDownMenu_AddButton(entry, level)
+	end
+end
+
+wayframe:RegisterForClicks("RightButtonUp")
+wayframe:SetScript("OnClick", function(self, button)
+	UIDropDownMenu_Initialize(TomTom.dropdown, init_dropdown)
+	ToggleDropDownMenu(1, nil, TomTom.dropdown, "cursor", 0, 0)
+end)
