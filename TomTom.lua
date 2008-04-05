@@ -639,14 +639,25 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world)
 	if persistent == nil then persistent = self.profile.persistence.savewaypoints end
 	if minimap == nil then minimap = true end
 	if world == nil then world = true end
+
+	local coord = self:GetCoord(x / 100, y / 100)
+	local zone = self:GetMapFile(c, z)	
 	
+	-- Ensure there isn't already a waypoint at this location
+	if waypoints[zone] then
+		for uid in pairs(waypoints[zone]) do
+			local data = waypoints[uid]
+			if data.title == desc and data.coord == coord then
+				-- This is a duplicate waypoint
+				return
+			end
+		end
+	end
+
 	local uid = self:SetWaypoint(c,z,x/100,y/100, callbacks, minimap, world)
 	if self.profile.arrow.autoqueue then
 		self:SetCrazyArrow(uid, self.profile.arrow.arrival, desc)
 	end
-
-	local coord = self:GetCoord(x / 100, y / 100)
-	local zone = self:GetMapFile(c, z)
 
 	waypoints[uid] = {
 		title = desc,
