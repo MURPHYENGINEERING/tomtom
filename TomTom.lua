@@ -592,10 +592,11 @@ function TomTom:RemoveWaypoint(uid)
 			end
 		end
 	end
+
 	-- Remove this entry from the waypoints table
 	waypoints[uid] = nil
-	if waypoints[zone] then
-		waypoints[zone][uid] = nil
+	if data.zone and waypoints[data.zone] then
+		waypoints[data.zone][uid] = nil
 	end
 end
 
@@ -809,7 +810,7 @@ SlashCmdList["WAY"] = function(msg)
 
 		elseif tokens[2] then
 			-- Reset the named zone
-			local _,zone = unpack(tokens)
+			local zone = table.concat(tokens, " ", 2)
 
 			-- Find a fuzzy match for the zone
 			local matches = {}
@@ -835,7 +836,6 @@ SlashCmdList["WAY"] = function(msg)
 				return
 			end
 
-
 			local c,z,name = unpack(matches[1])
 			local zone = TomTom:GetMapFile(c, z)
 			if waypoints[zone] then
@@ -847,8 +847,19 @@ SlashCmdList["WAY"] = function(msg)
 			end
 		end
 	elseif tokens[1] and not tonumber(tokens[1]) then
+		-- Find the first numeric token
+		local zoneEnd = 1
+		for idx,token in ipairs(tokens) do
+			if tonumber(token) then
+				zoneEnd = idx - 1
+				break
+			end
+		end
+
 		-- This is a waypoint set, with a zone before the coords
-		local zone,x,y,desc = unpack(tokens)
+		local zone = table.concat(tokens, " ", 1, zoneEnd)
+		local x,y,desc = select(zoneEnd + 1, unpack(tokens))
+
 		if desc then desc = table.concat(tokens, " ", 4) end
 
 		-- Find a fuzzy match for the zone
