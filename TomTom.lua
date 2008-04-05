@@ -487,7 +487,7 @@ end
 
 function TomTom:CHAT_MSG_ADDON(event, prefix, data, channel, sender)
 	if prefix ~= "TOMTOM2" then return end
-	--if sender == UnitName("player") then return end 
+	if sender == UnitName("player") then return end 
 
 	local zone,coord,title = string.split(":", data)
 	if not title:match("%S") then
