@@ -648,8 +648,8 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world)
 		for uid in pairs(waypoints[zone]) do
 			local data = waypoints[uid]
 			if data.title == desc and data.coord == coord then
-				-- This is a duplicate waypoint
-				return
+				-- This is a duplicate waypoint, so return that uid
+				return uid
 			end
 		end
 	end
