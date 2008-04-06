@@ -457,9 +457,17 @@ local function init_dropdown(level)
 			for k,v in pairs(entry) do new[k] = v end
 			new.checked = new.checked()
 			entry = new
+		else
+			entry.checked = nil
 		end
+
 		UIDropDownMenu_AddButton(entry, level)
 	end
+end
+
+function TomTom:InitializeDropdown(uid)
+	self.dropdown.uid = uid
+	UIDropDownMenu_Initialize(self.dropdown, init_dropdown)
 end
 
 function TomTom:UIDIsSaved(uid)
@@ -504,8 +512,7 @@ end
 --  Define callback functions 
 -------------------------------------------------------------------]]--
 local function _both_onclick(event, uid, self, button)
-	TomTom.dropdown.uid = uid
-	UIDropDownMenu_Initialize(TomTom.dropdown, init_dropdown)
+	TomTom:InitializeDropdown(uid)
 	ToggleDropDownMenu(1, nil, TomTom.dropdown, "cursor", 0, 0)
 end
 
