@@ -278,7 +278,7 @@ function WorldMapButton_OnClick(...)
 	end
 end
 
-WorldMapMagnifyingGlassButton:SetText(ZOOM_OUT_BUTTON_TEXT .. "\nCtrl+Right Click To Add a Waypoint")
+WorldMapMagnifyingGlassButton:SetText(ZOOM_OUT_BUTTON_TEXT .. "\n" .. L["Ctrl+Right Click To Add a Waypoint"])
 
 local function WaypointCallback(event, arg1, arg2, arg3)
 	if event == "OnDistanceArrive" then
