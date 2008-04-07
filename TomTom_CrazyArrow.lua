@@ -89,7 +89,7 @@ local function OnDragStop(self, button)
 end
 
 local function OnEvent(self, event, ...)
-	if event == "ZONE_CHANGED_NEW_AREA" then
+	if event == "ZONE_CHANGED_NEW_AREA" and TomTom.profile.arrow.enable then
 		self:Show()
 	end
 end
