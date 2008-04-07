@@ -1,6 +1,8 @@
 --Localization.enUS.lua
 
 TomTomLocals = {
+	["%s (%.2f, %.2f)"] = "%s (%.2f, %.2f)",
+	["%s yards away"] = "%s yards away",
 	["Accept waypoints from guild and party members"] = "Accept waypoints from guild and party members",
 	["Allow control-right clicking on map to create new waypoint"] = "Allow control-right clicking on map to create new waypoint",
 	["Are you sure you would like to remove ALL TomTom waypoints?"] = "Are you sure you would like to remove ALL TomTom waypoints?",
@@ -28,6 +30,8 @@ TomTomLocals = {
 	["Enable world map waypoints"] = "Enable world map waypoints",
 	["Enables a floating block that displays your current position in the current zone"] = "Enables a floating block that displays your current position in the current zone",
 	["Font size"] = "Font size",
+	["Found %d possible matches for zone %s.  Please be more specific"] = "Found %d possible matches for zone %s.  Please be more specific",
+	["Found multiple matches for zone '%s'.  Did you mean: %s"] = "Found multiple matches for zone '%s'.  Did you mean: %s",
 	["General Options"] = "General Options",
 	["Good color"] = "Good color",
 	["Lock coordinate block"] = "Lock coordinate block",
@@ -63,6 +67,7 @@ TomTomLocals = {
 	["The color to be displayed when you are moving in the opposite direction of the active waypoint"] = "The color to be displayed when you are moving in the opposite direction of the active waypoint",
 	["The display of the coordinate block can be customized by changing the options below."] = "The display of the coordinate block can be customized by changing the options below.",
 	["The floating waypoint arrow can change color depending on whether or nor you are facing your destination.  By default it will display green when you are facing it directly, and red when you are facing away from it.  These colors can be changed in this section.  Setting these options to the same color will cause the arrow to not change color at all"] = "The floating waypoint arrow can change color depending on whether or nor you are facing your destination.  By default it will display green when you are facing it directly, and red when you are facing away from it.  These colors can be changed in this section.  Setting these options to the same color will cause the arrow to not change color at all",
+	["There were no waypoints to remove in %s"] = "There were no waypoints to remove in %s",
 	["This option will not remove any waypoints that are currently set to persist, but only effects new waypoints that get set"] = "This option will not remove any waypoints that are currently set to persist, but only effects new waypoints that get set",
 	["This setting will control the distance at which the waypoint arrow switches to a downwards arrow, indicating you have arrived at your destination"] = "This setting will control the distance at which the waypoint arrow switches to a downwards arrow, indicating you have arrived at your destination",
 	["TomTom"] = "TomTom",
@@ -73,16 +78,24 @@ TomTomLocals = {
 	["TomTom can hide waypoints in other zones, this setting toggles that functionality"] = "TomTom can hide waypoints in other zones, this setting toggles that functionality",
 	["TomTom provides an arrow that can be placed anywhere on the screen.  Similar to the arrow in \"Crazy Taxi\" it will point you towards your next waypoint"] = "TomTom provides an arrow that can be placed anywhere on the screen.  Similar to the arrow in \"Crazy Taxi\" it will point you towards your next waypoint",
 	["TomTom provides you with a floating coordinate display that can be used to determine your current position.  These options can be used to enable or disable this display, or customize the block's display."] = "TomTom provides you with a floating coordinate display that can be used to determine your current position.  These options can be used to enable or disable this display, or customize the block's display.",
+	["TomTom waypoint"] = "TomTom waypoint",
 	["TomTom's saved variables are organized so you can have shared options across all your characters, while having different sets of waypoints for each.  These options sections allow you to change the saved variable configurations so you can set up per-character options, or even share waypoints between characters"] = "TomTom's saved variables are organized so you can have shared options across all your characters, while having different sets of waypoints for each.  These options sections allow you to change the saved variable configurations so you can set up per-character options, or even share waypoints between characters",
 	["Waypoint Arrow"] = "Waypoint Arrow",
 	["Waypoint Options"] = "Waypoint Options",
 	["Waypoint communication"] = "Waypoint communication",
+	["Waypoint from %s"] = "Waypoint from %s",
 	["Waypoints can be automatically cleared when you reach them.  This slider allows you to customize the distance in yards that signals your \"arrival\" at the waypoint.  A setting of 0 turns off the auto-clearing feature\n\nChanging this setting only takes effect after reloading your interface."] = "Waypoints can be automatically cleared when you reach them.  This slider allows you to customize the distance in yards that signals your \"arrival\" at the waypoint.  A setting of 0 turns off the auto-clearing feature\n\nChanging this setting only takes effect after reloading your interface.",
 	["Waypoints profile"] = "Waypoints profile",
 	["When a new waypoint is added, TomTom can automatically set the new waypoint as the \"Crazy Arrow\" waypoint."] = "When a new waypoint is added, TomTom can automatically set the new waypoint as the \"Crazy Arrow\" waypoint.",
 	["World Map"] = "World Map",
 	["Yes"] = "Yes",
 	["\"Arrival Distance\""] = "\"Arrival Distance\"",
+	["|cffffff78/way <x> <y> [desc]|r - Adds a waypoint at x,y with descrtiption desc"] = "|cffffff78/way <x> <y> [desc]|r - Adds a waypoint at x,y with descrtiption desc",
+	["|cffffff78/way <zone> <x> <y> [desc]|r - Adds a waypoint at x,y in zone with description desc"] = "|cffffff78/way <zone> <x> <y> [desc]|r - Adds a waypoint at x,y in zone with description desc",
+	["|cffffff78/way reset <zone>|r - Resets all waypoints in zone"] = "|cffffff78/way reset <zone>|r - Resets all waypoints in zone",
+	["|cffffff78/way reset all|r - Resets all waypoints"] = "|cffffff78/way reset all|r - Resets all waypoints",
+	["|cffffff78TomTom |r/way |cffffff78Usage:|r"] = "|cffffff78TomTom |r/way |cffffff78Usage:|r",
+	["|cffffff78TomTom|r: Added '%s' (sent from %s) to zone %s"] = "|cffffff78TomTom|r: Added '%s' (sent from %s) to zone %s",
 }
 
 setmetatable(TomTomLocals, {__index=function(t,k) rawset(t, k, k); return k; end})

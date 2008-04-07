@@ -278,7 +278,8 @@ function WorldMapButton_OnClick(...)
 	end
 end
 
-WorldMapMagnifyingGlassButton:SetText(ZOOM_OUT_BUTTON_TEXT .. "\n" .. L["Ctrl+Right Click To Add a Waypoint"])
+local oldText = WorldMapMagnifyingGlassButton:GetText()
+WorldMapMagnifyingGlassButton:SetText(oldText .. "\n" .. L["Ctrl+Right Click To Add a Waypoint"])
 
 local function WaypointCallback(event, arg1, arg2, arg3)
 	if event == "OnDistanceArrive" then
@@ -286,11 +287,11 @@ local function WaypointCallback(event, arg1, arg2, arg3)
 	elseif event == "OnTooltipShown" then
 		local tooltip = arg1
 		if arg3 then
-			tooltip:SetText("TomTom waypoint")
-			tooltip:AddLine(string.format("%s yards away", math.floor(arg2)), 1, 1 ,1)
+			tooltip:SetText(L["TomTom waypoint"])
+			tooltip:AddLine(string.format(L["%s yards away"], math.floor(arg2)), 1, 1 ,1)
 			tooltip:Show()
 		else
-			tooltip.lines[2]:SetFormattedText("%s yards away", math.floor(arg2), 1, 1, 1)
+			tooltip.lines[2]:SetFormattedText(L["%s yards away"], math.floor(arg2), 1, 1, 1)
 		end
 	end
 end
@@ -327,7 +328,7 @@ local dropdown_info = {
 			func = function()
 				local uid = TomTom.dropdown.uid
 				local data = waypoints[uid]
-				TomTom:SetCrazyArrow(uid, TomTom.profile.arrow.arrival, data.title or "TomTom waypoint")
+				TomTom:SetCrazyArrow(uid, TomTom.profile.arrow.arrival, data.title or L["TomTom waypoint"])
 			end,
 		},
 		{
@@ -499,13 +500,14 @@ function TomTom:CHAT_MSG_ADDON(event, prefix, data, channel, sender)
 
 	local zone,coord,title = string.split(":", data)
 	if not title:match("%S") then
-		title = "Waypoint from " .. sender
+		title = string.format(L["Waypoint from %s"], sender)
 	end
 
 	local c,z = self:GetCZ(zone)
 	local x,y = self:GetXY(tonumber(coord))
 	self:AddZWaypoint(c, z, x*100, y*100, title)
-	ChatFrame1:AddMessage("|cffffff78TomTom|r: Added '" .. title .. "' (sent from " .. sender .. ") to zone " .. zone)
+	local msg = string.format(L["|cffffff78TomTom|r: Added '%s' (sent from %s) to zone %s"], title, sender, zone)
+	ChatFrame1:AddMessage(msg)
 end
 
 --[[-------------------------------------------------------------------
@@ -519,9 +521,9 @@ end
 local function _both_tooltip_show(event, tooltip, uid, dist)
 	local data = waypoints[uid]
 
-	tooltip:SetText(data.title or "TomTom waypoint")
-	tooltip:AddLine(string.format("%s yards away", math.floor(dist)), 1, 1, 1)
-	tooltip:AddLine(string.format("%s (%.2f, %.2f)", data.zone, data.x, data.y), 0.7, 0.7, 0.7)
+	tooltip:SetText(data.title or L["TomTom waypoint"])
+	tooltip:AddLine(string.format(L["%s yards away"], math.floor(dist)), 1, 1, 1)
+	tooltip:AddLine(string.format(L["%s (%.2f, %.2f)"], data.zone, data.x, data.y), 0.7, 0.7, 0.7)
 	tooltip:Show()
 end
 
@@ -542,7 +544,7 @@ local function _world_tooltip_show(event, tooltip, uid, dist)
 end
 
 local function _both_tooltip_update(event, tooltip, uid, dist)
-	tooltip.lines[2]:SetFormattedText("%s yards away", math.floor(dist), 1, 1, 1)
+	tooltip.lines[2]:SetFormattedText(L["%s yards away"], math.floor(dist), 1, 1, 1)
 end
 
 local function _both_clear_distance(event, uid, range, distance, lastdistance)
@@ -631,7 +633,6 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world)
 			tooltip_show = _world_tooltip_show,
 			tooltip_update = _both_tooltip_show,
 		},
-		remove = _remove,
 		distance = {
 		},
 	}
@@ -800,11 +801,11 @@ do
 end
 
 local function usage()
-	ChatFrame1:AddMessage("|cffffff78TomTom |r/way |cffffff78Usage:|r")
-	ChatFrame1:AddMessage("|cffffff78/way <x> <y> [desc]|r - Adds a waypoint at x,y with descrtiption desc")
-	ChatFrame1:AddMessage("|cffffff78/way <zone> <x> <y> [desc]|r - Adds a waypoint at x,y in zone with description desc")
-	ChatFrame1:AddMessage("|cffffff78/way reset all|r - Resets all waypoints")
-	ChatFrame1:AddMessage("|cffffff78/way reset <zone>|r - Resets all waypoints in zone")
+	ChatFrame1:AddMessage(L["|cffffff78TomTom |r/way |cffffff78Usage:|r"])
+	ChatFrame1:AddMessage(L["|cffffff78/way <x> <y> [desc]|r - Adds a waypoint at x,y with descrtiption desc"])
+	ChatFrame1:AddMessage(L["|cffffff78/way <zone> <x> <y> [desc]|r - Adds a waypoint at x,y in zone with description desc"])
+	ChatFrame1:AddMessage(L["|cffffff78/way reset all|r - Resets all waypoints"])
+	ChatFrame1:AddMessage(L["|cffffff78/way reset <zone>|r - Resets all waypoints in zone"])
 end
 
 local zlist = {}
@@ -841,7 +842,8 @@ SlashCmdList["WAY"] = function(msg)
 			end
 
 			if #matches > 5 then
-				ChatFrame1:AddMessage("Found " .. #matches .. " possible matches for zone '" .. tokens[2] .. "'.  Please be more specific.")
+				local msg = string.format(L["Found %d possible matches for zone %s.  Please be more specific"], #matches, tokens[2])
+				ChatFrame1:AddMessage(msg)
 				return
 			elseif #matches > 1 then
 				local poss = {}
@@ -850,7 +852,7 @@ SlashCmdList["WAY"] = function(msg)
 				end
 				table.sort(poss)
 
-				ChatFrame1:AddMessage("Found multiple matches for zone '" .. tokens[2] .. "'.  Did you mean: " .. table.concat(poss, ", "))
+				ChatFrame1:AddMessage(string.format(L["Found multiple matches for zone '%s'.  Did you mean: %s"], tokens[2], table.concat(poss, ", ")))
 				return
 			end
 
@@ -861,7 +863,7 @@ SlashCmdList["WAY"] = function(msg)
 					TomTom:RemoveWaypoint(uid)
 				end
 			else
-				ChatFrame1:AddMessage("There were no waypoints to remove in " .. name)
+				ChatFrame1:AddMessage(L["There were no waypoints to remove in %s"]:format(name))
 			end
 		end
 	elseif tokens[1] and not tonumber(tokens[1]) then
@@ -891,7 +893,8 @@ SlashCmdList["WAY"] = function(msg)
 		end
 
 		if #matches ~= 1 then
-			ChatFrame1:AddMessage("Found " .. #matches .. " possible matches for zone '" .. tokens[1] .. "'.  Please be more specific.")
+				local msg = string.format(L["Found %d possible matches for zone %s.  Please be more specific"], #matches, tokens[1])
+				ChatFrame1:AddMessage(msg)
 			return
 		end
 
