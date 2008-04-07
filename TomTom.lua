@@ -604,7 +604,7 @@ function TomTom:RemoveWaypoint(uid)
 
 	-- Remove this entry from the waypoints table
 	waypoints[uid] = nil
-	if data.zone and waypoints[data.zone] then
+	if data and data.zone and waypoints[data.zone] then
 		waypoints[data.zone][uid] = nil
 	end
 end
@@ -640,7 +640,6 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world)
 	local cleardistance = self.profile.persistence.cleardistance
 	if cleardistance > 0 then
 		callbacks.distance[cleardistance] = _both_clear_distance
-		callbacks.distance[cleardistance + 1] = noop
 	end
 
 	-- Default values

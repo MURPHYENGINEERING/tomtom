@@ -67,6 +67,23 @@ local Minimap_OnEnter,Minimap_OnLeave,Minimap_OnUpdate,Minimap_OnClick,Minimap_O
 local Arrow_OnUpdate
 local World_OnEnter,World_OnLeave,World_OnClick,World_OnEvent
 
+local square_half = math.sqrt(0.5)
+local rad_135 = math.rad(135)
+
+local function rotateArrow(self)
+	local angle = Astrolabe:GetDirectionToIcon(self)
+	angle = angle + rad_135
+
+	if GetCVar("rotateMinimap") == "1" then
+		local cring = MiniMapCompassRing:GetFacing()
+		angle = angle + cring
+	end
+
+	local sin,cos = math.sin(angle) * square_half, math.cos(angle) * square_half
+	self.arrow:SetTexCoord(0.5-sin, 0.5+cos, 0.5+cos, 0.5+sin, 0.5-cos, 0.5-sin, 0.5+sin, 0.5-cos)
+
+end
+
 function TomTom:SetWaypoint(c, z, x, y, callbacks, show_minimap, show_world)
 	-- Try to acquire a waypoint from the frame pool
 	local point = table.remove(pool)
@@ -130,19 +147,19 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks, show_minimap, show_world)
 
 	-- Process the callbacks table to put distances in a consumable format
 	if callbacks and callbacks.distance then
-		local list = {}
+		point.dlist = {}
 
 		for k,v in pairs(callbacks.distance) do
-			table.insert(list, k)
+			table.insert(point.dlist, k)
 		end
 
-		table.sort(list)
-		callbacks.__distances = list
+		table.sort(point.dlist)
 	end
 
 	-- Link the actual frames back to the waypoint object
 	point.minimap.point = point
 	point.worldmap.point = point
+	point.uid = getuid(point)
 
 	-- Place the waypoint
 	Astrolabe:PlaceIconOnMinimap(point.minimap, c, z, x, y)
@@ -157,13 +174,13 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks, show_minimap, show_world)
 		point.minimap.icon:Hide()
 		point.minimap.arrow:Hide()
 		point.minimap:SetScript("OnUpdate", nil)
+		rotateArrow(point.minimap)
 	else
 		point.minimap:EnableMouse(true)
 		point.minimap:SetScript("OnUpdate", Minimap_OnUpdate)
-		Minimap_OnUpdate(point.minimap, 5.0)
+		rotateArrow(point.minimap)
 	end
 
-	point.uid = getuid(point)
 	return point.uid
 end
 
@@ -173,8 +190,15 @@ function TomTom:ClearWaypoint(uid)
 		Astrolabe:RemoveIconFromMinimap(point.minimap)
 		point.minimap:Hide()
 		point.worldmap:Hide()
-		table.insert(pool, point)
+
+		-- Clear our handles to the callback tables
+		point.callbacks = nil
+		point.minimap.callbacks = nil
+		point.worldmap.callbacks = nil
+
+		point.dlist = nil
 		point.uid = nil
+		table.insert(pool, point)
 	end
 end
 
@@ -246,9 +270,8 @@ do
 	World_OnLeave = Minimap_OnLeave
 	World_OnClick = Minimap_OnClick
 
-	local square_half = math.sqrt(0.5)
-	local rad_135 = math.rad(135)
 	local minimap_count = 0
+
 	function Minimap_OnUpdate(self, elapsed)
 		local dist,x,y = Astrolabe:GetDistanceToIcon(self)
 		if not dist then
@@ -291,7 +314,7 @@ do
 		end
 
 		if callbacks and callbacks.distance then
-			local list = callbacks.__distances
+			local list = data.dlist
 
 			local state = data.state
 			local newstate
@@ -306,7 +329,7 @@ do
 				end
 
 				-- Handle the case where we're outside the largest circle
-				if not state then state = #list end
+				if not state then state = -1 end
 
 				data.state = state
 			else
@@ -319,7 +342,7 @@ do
 				end
 
 				-- Handle the case where we're outside the largest circle
-				if not newstate then newstate = #list end
+				if not newstate then newstate = -1 end
 			end
 
 			-- If newstate is set, then this is a transition
@@ -331,7 +354,7 @@ do
 				local distance = list[newstate]
 				local callback = callbacks.distance[distance]
 				if callback then
-					callback("distance", self.point.uid, distance, dist, data.lastdist)
+					callback("distance", data.uid, distance, dist, data.lastdist)
 				end
 				data.state = newstate
 			end	
