@@ -281,7 +281,6 @@ do
 
 		minimap_count = minimap_count + elapsed
 
-		-- Only take action every 0.2 seconds
 		if minimap_count < 0.1 then return end
 
 		-- Reset the counter
