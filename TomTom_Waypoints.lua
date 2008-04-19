@@ -72,6 +72,7 @@ local rad_135 = math.rad(135)
 
 local function rotateArrow(self)
 	local angle = Astrolabe:GetDirectionToIcon(self)
+	if not angle then return self:Hide() end
 	angle = angle + rad_135
 
 	if GetCVar("rotateMinimap") == "1" then
