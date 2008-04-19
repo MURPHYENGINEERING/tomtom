@@ -737,16 +737,21 @@ function TomTom:GetXY(id)
 end
 
 do
+	-- Code courtesy ckknight
 	function GetCurrentCursorPosition()
-		-- Coordinate calculation code taken from CT_MapMod
-		local cX, cY = GetCursorPosition()
-		local ceX, ceY = WorldMapFrame:GetCenter()
-		local wmfw, wmfh = WorldMapButton:GetWidth(), WorldMapButton:GetHeight()
+		local x, y = GetCursorPosition()
+		local left, top = WorldMapDetailFrame:GetLeft(), WorldMapDetailFrame:GetTop()
+		local width = WorldMapDetailFrame:GetWidth()
+		local height = WorldMapDetailFrame:GetHeight()
+		local scale = WorldMapDetailFrame:GetEffectiveScale()
+		local cx = (x/scale - left) / width
+		local cy = (top - y/scale) / height
 
-		cX = ( ( ( cX / WorldMapFrame:GetScale() ) - ( ceX - wmfw / 2 ) ) / wmfw + 22/10000 )
-		cY = ( ( ( ( ceY + wmfh / 2 ) - ( cY / WorldMapFrame:GetScale() ) ) / wmfh ) - 262/10000 )
+		if cx < 0 or cx > 1 or cy < 0 or cy > 1 then
+			return nil, nil
+		end
 
-		return cX, cY
+		return cx, cy
 	end
 
 	local coord_fmt = "%%.%df, %%.%df"
