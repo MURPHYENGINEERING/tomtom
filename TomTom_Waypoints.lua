@@ -71,6 +71,8 @@ local square_half = math.sqrt(0.5)
 local rad_135 = math.rad(135)
 
 local function rotateArrow(self)
+	if self.disabled then return end
+
 	local angle = Astrolabe:GetDirectionToIcon(self)
 	if not angle then return self:Hide() end
 	angle = angle + rad_135
@@ -82,7 +84,6 @@ local function rotateArrow(self)
 
 	local sin,cos = math.sin(angle) * square_half, math.cos(angle) * square_half
 	self.arrow:SetTexCoord(0.5-sin, 0.5+cos, 0.5+cos, 0.5+sin, 0.5-cos, 0.5-sin, 0.5+sin, 0.5-cos)
-
 end
 
 function TomTom:SetWaypoint(c, z, x, y, callbacks, show_minimap, show_world)
@@ -174,11 +175,11 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks, show_minimap, show_world)
 		point.minimap:EnableMouse(false)
 		point.minimap.icon:Hide()
 		point.minimap.arrow:Hide()
-		point.minimap:SetScript("OnUpdate", nil)
+		point.minimap.disabled = true
 		rotateArrow(point.minimap)
 	else
 		point.minimap:EnableMouse(true)
-		point.minimap:SetScript("OnUpdate", Minimap_OnUpdate)
+		point.minimap.disabled = false
 		rotateArrow(point.minimap)
 	end
 
@@ -275,7 +276,9 @@ do
 
 	function Minimap_OnUpdate(self, elapsed)
 		local dist,x,y = Astrolabe:GetDistanceToIcon(self)
-		if not dist then
+		local disabled = self.disabled
+
+		if not dist and not disabled then
 			self:Hide()
 			return
 		end
@@ -293,24 +296,27 @@ do
 
 		if edge then
 			-- Check to see if this is a transition
-			self.icon:Hide()
-			self.arrow:Show()
+			if not disabled then
+				self.icon:Hide()
+				self.arrow:Show()
 
-			-- Rotate the icon, as required
-			local angle = Astrolabe:GetDirectionToIcon(self)
-			angle = angle + rad_135
+				-- Rotate the icon, as required
+				local angle = Astrolabe:GetDirectionToIcon(self)
+				angle = angle + rad_135
 
-			if GetCVar("rotateMinimap") == "1" then
-				local cring = MiniMapCompassRing:GetFacing()
-				angle = angle + cring
+				if GetCVar("rotateMinimap") == "1" then
+					local cring = MiniMapCompassRing:GetFacing()
+					angle = angle + cring
+				end
+
+				local sin,cos = math.sin(angle) * square_half, math.cos(angle) * square_half
+				self.arrow:SetTexCoord(0.5-sin, 0.5+cos, 0.5+cos, 0.5+sin, 0.5-cos, 0.5-sin, 0.5+sin, 0.5-cos)
 			end
-
-			local sin,cos = math.sin(angle) * square_half, math.cos(angle) * square_half
-			self.arrow:SetTexCoord(0.5-sin, 0.5+cos, 0.5+cos, 0.5+sin, 0.5-cos, 0.5-sin, 0.5+sin, 0.5-cos)
-
 		else
-			self.icon:Show()
-			self.arrow:Hide()
+			if not disabled then
+				self.icon:Show()
+				self.arrow:Hide()
+			end
 		end
 
 		if callbacks and callbacks.distance then
