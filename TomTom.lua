@@ -621,21 +621,26 @@ function TomTom:AddWaypoint(x, y, desc, persistent, minimap, world)
 	return self:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world)
 end
 
-function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world)
-	local callbacks = {
-		minimap = {
-			onclick = _both_onclick,
-			tooltip_show = _minimap_tooltip_show,
-			tooltip_update = _both_tooltip_update,
-		},
-		world = {
-			onclick = _both_onclick,
-			tooltip_show = _world_tooltip_show,
-			tooltip_update = _both_tooltip_show,
-		},
-		distance = {
-		},
-	}
+function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, custom_callbacks)
+	local callbacks
+	if custom_callbacks then
+		callbacks = custom_callbacks
+	else
+		callbacks = {
+			minimap = {
+				onclick = _both_onclick,
+				tooltip_show = _minimap_tooltip_show,
+				tooltip_update = _both_tooltip_update,
+			},
+			world = {
+				onclick = _both_onclick,
+				tooltip_show = _world_tooltip_show,
+				tooltip_update = _both_tooltip_show,
+			},
+			distance = {
+			},
+		}
+	end
 
 	local cleardistance = self.profile.persistence.cleardistance
 	if cleardistance > 0 then
@@ -689,8 +694,11 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world)
 	return uid
 end
 
--- Code taken from HandyNotes, thanks Xinhuan
+function TomTom:SetCustomWaypoint(c,z,x,y,callback,minimap,world)
+	return self:AddZWaypoint(c, z, x, y, desc, false, minimap, world, callback)
+end
 
+-- Code taken from HandyNotes, thanks Xinhuan
 ---------------------------------------------------------
 -- Public functions for plugins to convert between MapFile <-> C,Z
 --
