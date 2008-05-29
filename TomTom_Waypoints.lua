@@ -9,7 +9,7 @@
 ----------------------------------------------------------------------------]]
 
 -- Import Astrolabe for locations
-local Astrolabe = DongleStub("Astrolabe-0.4-NC")
+local Astrolabe = DongleStub("Astrolabe-0.4")
 
 -- Create a tooltip to be used when mousing over waypoints
 local tooltip = CreateFrame("GameTooltip", "TomTomTooltip", UIParent, "GameTooltipTemplate")

@@ -6,7 +6,7 @@
 --    with the artwork.)
 ----------------------------------------------------------------------------]]
 
-local Astrolabe = DongleStub("Astrolabe-0.4-NC")
+local Astrolabe = DongleStub("Astrolabe-0.4")
 local sformat = string.format
 local L = TomTomLocals
 

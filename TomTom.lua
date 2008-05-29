@@ -4,7 +4,7 @@
 
 -- Simple localization table for messages
 local L = TomTomLocals
-local Astrolabe = DongleStub("Astrolabe-0.4-NC")
+local Astrolabe = DongleStub("Astrolabe-0.4")
 
 -- Speed up minimap updates
 Astrolabe.MinimapUpdateTime = 0.1
