@@ -50,6 +50,9 @@ function TomTom:ADDON_LOADED(event, addon)
 		self:UnregisterEvent("ADDON_LOADED")
 		self.defaults = {
 			profile = {
+				general = {
+					confirmremoveall = true,
+				},
 				block = {
 					enable = true,
 					accuracy = 2,
@@ -81,12 +84,14 @@ function TomTom:ADDON_LOADED(event, addon)
 					enable = true,
 					otherzone = true,
 					tooltip = true,
+					menu = true,
 				},
 				worldmap = {
 					enable = true,
 					tooltip = true,
 					otherzone = true,
 					clickcreate = true,
+					menu = true,
 				},
 				comm = {
 					enable = true,
@@ -360,7 +365,12 @@ local dropdown_info = {
 		{ -- Remove ALL waypoints
 			text = L["Remove all waypoints"],
 			func = function()
-				StaticPopup_Show("TOMTOM_REMOVE_ALL_CONFIRM")
+				if TomTom.db.profile.general.confirmremoveall then
+					StaticPopup_Show("TOMTOM_REMOVE_ALL_CONFIRM")
+				else
+					StaticPopupDialogs["TOMTOM_REMOVE_ALL_CONFIRM"].OnAccept()
+					return
+				end
 			end,
 		},
 		{ -- Save this waypoint
@@ -514,9 +524,18 @@ end
 --[[-------------------------------------------------------------------
 --  Define callback functions 
 -------------------------------------------------------------------]]--
-local function _both_onclick(event, uid, self, button)
-	TomTom:InitializeDropdown(uid)
-	ToggleDropDownMenu(1, nil, TomTom.dropdown, "cursor", 0, 0)
+local function _minimap_onclick(event, uid, self, button)
+	if TomTom.db.profile.minimap.menu then
+		TomTom:InitializeDropdown(uid)
+		ToggleDropDownMenu(1, nil, TomTom.dropdown, "cursor", 0, 0)
+	end
+end
+
+local function _world_onclick(event, uid, self, button)
+	if TomTom.db.profile.worldmap.menu then
+		TomTom:InitializeDropdown(uid)
+		ToggleDropDownMenu(1, nil, TomTom.dropdown, "cursor", 0, 0)
+	end
 end
 
 local function _both_tooltip_show(event, tooltip, uid, dist)
@@ -629,12 +648,12 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, custo
 	else
 		callbacks = {
 			minimap = {
-				onclick = _both_onclick,
+				onclick = _minimap_onclick,
 				tooltip_show = _minimap_tooltip_show,
 				tooltip_update = _both_tooltip_update,
 			},
 			world = {
-				onclick = _both_onclick,
+				onclick = _world_onclick,
 				tooltip_show = _world_tooltip_show,
 				tooltip_update = _both_tooltip_show,
 			},
@@ -838,7 +857,12 @@ SlashCmdList["WAY"] = function(msg)
 
 	if tokens[1] == "reset" then
 		if tokens[2] == "all" then
-			StaticPopup_Show("TOMTOM_REMOVE_ALL_CONFIRM")
+			if TomTom.db.profile.general.confirmremoveall then
+				StaticPopup_Show("TOMTOM_REMOVE_ALL_CONFIRM")
+			else
+				StaticPopupDialogs["TOMTOM_REMOVE_ALL_CONFIRM"].OnAccept()
+				return
+			end
 
 		elseif tokens[2] then
 			-- Reset the named zone

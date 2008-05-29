@@ -179,7 +179,7 @@ local function createconfig()
 				arg = "arrow.menu",
 			},
 			heredistance = {
-				order = 6,
+				order = 7,
 				type = "range",
 				name = L["\"Arrival Distance\""],
 				desc = L["This setting will control the distance at which the waypoint arrow switches to a downwards arrow, indicating you have arrived at your destination"],
@@ -189,7 +189,7 @@ local function createconfig()
 			color = {
 				type = "group",
 				name = L["Arrow colors"],
-				order = 7,
+				order = 8,
 				inline = true,
 				args = {
 					help = {
@@ -259,7 +259,13 @@ local function createconfig()
 				width = "double",
 				arg = "minimap.tooltip",
 			},
-
+			rightclick = {
+				type = "toggle",
+				name = L["Enable the right-click contextual menu"],
+				desc = L["Enables a menu when right-clicking on a waypoint allowing you to clear or remove waypoints"],
+				width = "double",
+				arg = "minimap.menu",
+			},
 		},
 	} -- End minimap options
 
@@ -305,8 +311,16 @@ local function createconfig()
 				width = "double",
 				arg = "worldmap.clickcreate",
 			},
-			player = {
+			rightclick = {
+				type = "toggle",
 				order = 6,
+				name = L["Enable the right-click contextual menu"],
+				desc = L["Enables a menu when right-clicking on a waypoint allowing you to clear or remove waypoints"],
+				width = "double",
+				arg = "worldmap.menu",
+			},
+			player = {
+				order = 7,
 				type = "group",
 				inline = true,
 				name = L["Player Coordinates"],
@@ -329,7 +343,7 @@ local function createconfig()
 				},
 			},
 			cursor = {
-				order = 7,
+				order = 8,
 				type = "group",
 				inline = true,
 				name = L["Cursor Coordinates"],
@@ -378,6 +392,14 @@ local function createconfig()
 				arg = "comm.prompt",
 			},
 			--]]
+			confirmremove = {
+				type = "toggle",
+				order = 2,
+				name = L["Ask for confirmation on \"Remove All\""],
+				desc = L["This option will toggle whether or not you are asked to confirm removing all waypoints.  If enabled, a dialog box will appear, requiring you to confirm removing the waypoints"],
+				width = "double",
+				arg = "general.confirmremoveall",
+			},
 			persistence = {
 				type = "toggle",
 				order = 3,

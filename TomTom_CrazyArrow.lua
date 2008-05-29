@@ -290,7 +290,12 @@ local dropdown_info = {
 			-- Remove all waypoints
 			text = L["Remove all waypoints"],
 			func = function()
-				StaticPopup_Show("TOMTOM_REMOVE_ALL_CONFIRM")
+				if TomTom.db.profile.general.confirmremoveall then
+					StaticPopup_Show("TOMTOM_REMOVE_ALL_CONFIRM")
+				else
+					StaticPopupDialogs["TOMTOM_REMOVE_ALL_CONFIRM"].OnAccept()
+					return
+				end
 			end,
 		},
 	}
