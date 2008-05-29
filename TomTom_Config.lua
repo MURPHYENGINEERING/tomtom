@@ -195,7 +195,7 @@ local function createconfig()
 					help = {
 						type = "description",
 						order = 1,
-						name = L["These options let you customize the size and opacity of the waypoint arrow, making it larger or partially transparent"],
+						name = L["These options let you customize the size and opacity of the waypoint arrow, making it larger or partially transparent, as well as limiting the size of the title display."],
 					},
 					scale = {
 						type = "range",
@@ -210,7 +210,22 @@ local function createconfig()
 						desc = L["This setting allows you to change the opacity of the waypoint arrow, making it transparent or opaque"],
 						min = 0, max = 1.0, step = 0.05,
 						arg = "arrow.alpha",
-					}
+					},
+					title_width = {
+						type = "range",
+						name = L["Title Width"],
+						desc = L["This setting allows you to specify the maximum width of the title text.  Any titles that are longer than this width (in game pixels) will be wrapped to the next line."],
+						min = 0, max = 500, step = 1,
+						arg = "arrow.title_width",
+					},
+					title_height = {
+						type = "range",
+						name = L["Title Height"],
+						desc = L["This setting allows you to specify the maximum height of the title text.  Any titles that are longer than this height (in game pixels) will be truncated."],
+						min = 0, max = 300, step = 1,
+						arg = "arrow.title_height",
+					},
+
 				}
 			},
 			color = {

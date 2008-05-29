@@ -81,6 +81,8 @@ function TomTom:ADDON_LOADED(event, addon)
 					menu = true,
 					scale = 1.0,
 					alpha = 1.0,
+					title_width = 0,
+					title_height = 0,
 				},
 				minimap = {
 					enable = true,

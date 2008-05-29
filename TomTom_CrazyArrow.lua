@@ -238,6 +238,11 @@ function TomTom:ShowHideCrazyArrow()
 		-- Set the scale and alpha
 		wayframe:SetScale(TomTom.db.profile.arrow.scale)
 		wayframe:SetAlpha(TomTom.db.profile.arrow.alpha)
+		local width = TomTom.db.profile.arrow.title_width
+		local height = TomTom.db.profile.arrow.title_height
+
+		wayframe.title:SetWidth(width)
+		wayframe.title:SetHeight(height)
 
 		if self.profile.arrow.showtta then
 			tta:Show()
