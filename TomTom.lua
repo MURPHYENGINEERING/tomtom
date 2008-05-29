@@ -79,6 +79,8 @@ function TomTom:ADDON_LOADED(event, addon)
 					showtta = true,
 					autoqueue = true,
 					menu = true,
+					scale = 1.0,
+					alpha = 1.0,
 				},
 				minimap = {
 					enable = true,

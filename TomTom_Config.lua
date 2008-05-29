@@ -186,10 +186,37 @@ local function createconfig()
 				min = 0, max = 150, step = 5,
 				arg = "arrow.arrival",
 			},
+			display = {
+				type = "group",
+				name = L["Arrow display"],
+				order = 8,
+				inline = true,
+				args = {
+					help = {
+						type = "description",
+						order = 1,
+						name = L["These options let you customize the size and opacity of the waypoint arrow, making it larger or partially transparent"],
+					},
+					scale = {
+						type = "range",
+						name = L["Scale"],
+						desc = L["This setting allows you to change the scale of the waypoint arrow, making it larger or smaller"],
+						min = 0, max = 3, step = 0.05,
+						arg = "arrow.scale",
+					},
+					alpha = {
+						type = "range",
+						name = L["Alpha"],
+						desc = L["This setting allows you to change the opacity of the waypoint arrow, making it transparent or opaque"],
+						min = 0, max = 1.0, step = 0.05,
+						arg = "arrow.alpha",
+					}
+				}
+			},
 			color = {
 				type = "group",
 				name = L["Arrow colors"],
-				order = 8,
+				order = 9,
 				inline = true,
 				args = {
 					help = {
