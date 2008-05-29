@@ -170,6 +170,14 @@ local function createconfig()
 				width = "double",
 				arg = "arrow.showtta",
 			},
+			rightclick = {
+				order = 6,
+				type = "toggle",
+				name = L["Enable the right-click contextual menu"],
+				desc = L["Enables a menu when right-clicking on the waypoint arrow allowing you to clear or remove waypoints"],
+				width = "double",
+				arg = "arrow.menu",
+			},
 			heredistance = {
 				order = 6,
 				type = "range",

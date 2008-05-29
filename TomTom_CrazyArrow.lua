@@ -325,6 +325,8 @@ end
 
 wayframe:RegisterForClicks("RightButtonUp")
 wayframe:SetScript("OnClick", function(self, button)
-	UIDropDownMenu_Initialize(TomTom.dropdown, init_dropdown)
-	ToggleDropDownMenu(1, nil, TomTom.dropdown, "cursor", 0, 0)
+	if TomTom.db.profile.arrow.menu then
+		UIDropDownMenu_Initialize(TomTom.dropdown, init_dropdown)
+		ToggleDropDownMenu(1, nil, TomTom.dropdown, "cursor", 0, 0)
+	end
 end)
