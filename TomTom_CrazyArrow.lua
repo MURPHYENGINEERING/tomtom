@@ -260,6 +260,13 @@ local dropdown_info = {
 			isTitle = 1,
 		},
 		{
+			-- Clear waypoint from crazy arrow
+			text = L["Clear waypoint from crazy arrow"],
+			func = function()
+				active_point = nil
+			end,
+		},
+		{
 			-- Remove a waypoint
 			text = L["Remove waypoint"],
 			func = function()
