@@ -96,6 +96,7 @@ function TomTom:ADDON_LOADED(event, addon)
 					otherzone = true,
 					clickcreate = true,
 					menu = true,
+					create_modifier = "C",
 				},
 				comm = {
 					enable = true,
@@ -272,14 +273,28 @@ end
 
 -- Hook the WorldMap OnClick
 local Orig_WorldMapButton_OnClick = WorldMapButton_OnClick
+local world_click_verify = {
+	["A"] = function() return IsAltKeyDown() end,
+	["C"] = function() return IsControlKeyDown() end,
+	["S"] = function() return IsShiftKeyDown() end,
+}
+
 function WorldMapButton_OnClick(...)
 	local mouseButton, button = ...
-	if IsControlKeyDown() and mouseButton == "RightButton" then
+	if mouseButton == "RightButton" then
+		-- Check for all the modifiers that are currently set
+		for mod in TomTom.db.profile.worldmap.create_modifier:gmatch("[ACS]") do
+			if not world_click_verify[mod] or not world_click_verify[mod]() then
+				return Orig_WorldMapButton_OnClick(...)
+			end
+		end
+
+		-- Actually try to add a note
 		local c,z = GetCurrentMapContinent(), GetCurrentMapZone()
 		local x,y = GetCurrentCursorPosition()
 
 		if z == 0 then
-			return
+			return Orig_WorldMapButton_OnClick(...)
 		end
 
 		local uid = TomTom:AddZWaypoint(c,z,x*100,y*100)

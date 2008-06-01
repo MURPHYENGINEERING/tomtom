@@ -361,8 +361,24 @@ local function createconfig()
 				width = "double",
 				arg = "worldmap.menu",
 			},
-			player = {
+			modifier = {
+				type = "select",
 				order = 7,
+				name = L["Create note modifier"],
+				desc = L["This setting changes the modifier used by TomTom when right-clicking on the world map to create a waypoint"],
+				values = {
+					["A"] = "Alt",
+					["C"] = "Ctrl",
+					["S"] = "Shift",
+					["AC"] = "Alt-Ctrl",
+					["AS"] = "Alt-Shift",
+					["CS"] = "Ctrl-Shift",
+					["ACS"] = "Alt-Ctrl-Shift",
+				},
+				arg = "worldmap.create_modifier",
+			},
+			player = {
+				order = 8,
 				type = "group",
 				inline = true,
 				name = L["Player Coordinates"],
@@ -385,7 +401,7 @@ local function createconfig()
 				},
 			},
 			cursor = {
-				order = 8,
+				order = 9,
 				type = "group",
 				inline = true,
 				name = L["Cursor Coordinates"],
