@@ -857,7 +857,9 @@ SlashCmdList["WAY"] = function(msg)
 	for token in msg:gmatch("%S+") do table.insert(tokens, token) end
 
 	-- Lower the first token
-	tokens[1] = tokens[1]:lower()
+	if tokens[1] then
+		tokens[1] = tokens[1]:lower()
+	end
 
 	if tokens[1] == "reset" then
 		if tokens[2] == "all" then
