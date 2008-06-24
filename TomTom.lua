@@ -587,7 +587,9 @@ local function _both_tooltip_update(event, tooltip, uid, dist)
 end
 
 local function _both_clear_distance(event, uid, range, distance, lastdistance)
-	TomTom:RemoveWaypoint(uid)
+	if not UnitOnTaxi("player") then
+		TomTom:RemoveWaypoint(uid)
+	end
 end
 
 local function _remove(event, uid)
