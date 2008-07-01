@@ -77,7 +77,7 @@ local function createconfig()
 			accuracy = {
 				order = 4,
 				type = "range",
-				name = "Coordinate Accuracy",
+				name = L["Coordinate Accuracy"],
 				desc = L["Coordinates can be displayed as simple XX, YY coordinate, or as more precise XX.XX, YY.YY.  This setting allows you to control that precision"],
 				min = 0, max = 2, step = 1,
 				arg = "block.accuracy",

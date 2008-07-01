@@ -2,6 +2,8 @@
 ## Title: TomTom
 ## Version: wowi:revision
 ## Notes: Acts as your portable navigation assistant
+## Notes-zhCN:一个简单的导航助手。
+## Author: Cladhaire
 ## SavedVariables: TomTomDB, TomTomWaypoints
 
 libs\Astrolabe\Load.xml
@@ -15,6 +17,7 @@ libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
 
 Localization.enUS.lua
 Localization.deDE.lua
+Localization.zhCN.lua
 
 TomTom.lua
 TomTom_Waypoints.lua
