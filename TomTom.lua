@@ -52,6 +52,7 @@ function TomTom:ADDON_LOADED(event, addon)
 			profile = {
 				general = {
 					confirmremoveall = true,
+					announce = false,
 				},
 				block = {
 					enable = true,
@@ -172,7 +173,7 @@ function TomTom:ReloadWaypoints()
 			local coord,title = waypoint:match("^(%d+):(.*)$")
 			if not title:match("%S") then title = nil end
 			local x,y = self:GetXY(coord)
-			self:AddZWaypoint(c, z, x*100, y*100, title, false, minimap, world)
+			self:AddZWaypoint(c, z, x*100, y*100, title, false, minimap, world, nil, true)
 		end
 	end
 end
@@ -651,7 +652,7 @@ function TomTom:RemoveWaypoint(uid)
 end
 
 -- TODO: Make this not suck
-function TomTom:AddWaypoint(x, y, desc, persistent, minimap, world)
+function TomTom:AddWaypoint(x, y, desc, persistent, minimap, world, silent)
 	local c,z = self:GetCurrentCZ()
 
 	if not c or not z or c < 1 then
@@ -659,10 +660,10 @@ function TomTom:AddWaypoint(x, y, desc, persistent, minimap, world)
 		return
 	end
 
-	return self:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world)
+	return self:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, silent)
 end
 
-function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, custom_callbacks)
+function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, custom_callbacks, silent)
 	local callbacks
 	if custom_callbacks then
 		callbacks = custom_callbacks
@@ -732,11 +733,17 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, custo
 		table.insert(self.waypointprofile[zone], data)
 	end
 
+	if not silent and self.profile.general.announce then
+		local ctxt = RoundCoords(x/100, y/100, 2)
+		local msg = string.format("|cffffff78TomTom:|r Added a waypoint (%s) in %s", ctxt, zone)
+		ChatFrame1:AddMessage(msg)
+	end
+
 	return uid
 end
 
-function TomTom:SetCustomWaypoint(c,z,x,y,callback,minimap,world)
-	return self:AddZWaypoint(c, z, x, y, desc, false, minimap, world, callback)
+function TomTom:SetCustomWaypoint(c,z,x,y,callback,minimap,world, silent)
+	return self:AddZWaypoint(c, z, x, y, desc, false, minimap, world, callback, silent)
 end
 
 -- Code taken from HandyNotes, thanks Xinhuan

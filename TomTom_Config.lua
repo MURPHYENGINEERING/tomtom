@@ -199,6 +199,7 @@ local function createconfig()
 					},
 					scale = {
 						type = "range",
+						order = 2,
 						name = L["Scale"],
 						desc = L["This setting allows you to change the scale of the waypoint arrow, making it larger or smaller"],
 						min = 0, max = 3, step = 0.05,
@@ -206,6 +207,7 @@ local function createconfig()
 					},
 					alpha = {
 						type = "range",
+						order = 3,
 						name = L["Alpha"],
 						desc = L["This setting allows you to change the opacity of the waypoint arrow, making it transparent or opaque"],
 						min = 0, max = 1.0, step = 0.05,
@@ -213,6 +215,7 @@ local function createconfig()
 					},
 					title_width = {
 						type = "range",
+						order = 4,
 						name = L["Title Width"],
 						desc = L["This setting allows you to specify the maximum width of the title text.  Any titles that are longer than this width (in game pixels) will be wrapped to the next line."],
 						min = 0, max = 500, step = 1,
@@ -220,12 +223,22 @@ local function createconfig()
 					},
 					title_height = {
 						type = "range",
+						order = 5,
 						name = L["Title Height"],
 						desc = L["This setting allows you to specify the maximum height of the title text.  Any titles that are longer than this height (in game pixels) will be truncated."],
 						min = 0, max = 300, step = 1,
 						arg = "arrow.title_height",
 					},
-
+					reset_position = {
+						order = 6,
+						type = "execute",
+						name = L["Reset Position"],
+						desc = L["Resets the position of the waypoint arrow if its been dragged off screen"],
+						func = function()
+							TomTomCrazyArrow:ClearAllPoints()
+							TomTomCrazyArrow:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+						end,
+					},
 				}
 			},
 			color = {
@@ -450,6 +463,14 @@ local function createconfig()
 				arg = "comm.prompt",
 			},
 			--]]
+			announce = {
+				type = "toggle",
+				order = 1,
+				name = L["Announce new waypoints when they are added"],
+				desc = L["TomTom can announce new waypoints to the default chat frame when they are added"],
+				width = "double",
+				arg = "general.announce",
+			},
 			confirmremove = {
 				type = "toggle",
 				order = 2,
