@@ -2,6 +2,10 @@
 --  TomTom by Cladhaire <cladhaire@gmail.com>
 ----------------------------------------------------------------------------]]
 
+function IsWrathBuild()
+	return(tonumber(select(4, GetBuildInfo())) >= 30000)
+end
+
 -- Simple localization table for messages
 local L = TomTomLocals
 local Astrolabe = DongleStub("Astrolabe-0.4")
@@ -467,7 +471,11 @@ local dropdown_info = {
 	},
 }
 
-local function init_dropdown(level)
+local function init_dropdown(self, level)
+	if not IsWrathBuild() then
+		level = self
+	end
+
 	-- Make sure level is set to 1, if not supplied
 	level = level or 1
 

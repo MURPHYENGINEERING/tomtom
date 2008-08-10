@@ -311,7 +311,11 @@ local dropdown_info = {
 	}
 }
 
-local function init_dropdown(level)
+local function init_dropdown(self, level)
+	if not IsWrathBuild() then
+		level = self
+	end
+
 	-- Make sure level is set to 1, if not supplied
 	level = level or 1
 
