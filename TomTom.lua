@@ -3,7 +3,7 @@
 ----------------------------------------------------------------------------]]
 
 function IsWrathBuild()
-	return(tonumber(select(4, GetBuildInfo())) >= 30000)
+	return select(4, GetBuildInfo()) >= 30000
 end
 
 -- Simple localization table for messages
@@ -699,8 +699,8 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, custo
 
 	-- Default values
 	if persistent == nil then persistent = self.profile.persistence.savewaypoints end
-	if minimap == nil then minimap = true end
-	if world == nil then world = true end
+	if minimap == nil then minimap = self.profile.minimap.enable end
+	if world == nil then world = self.profile.worldmap.enable end
 
 	local coord = self:GetCoord(x / 100, y / 100)
 	local zone = self:GetMapFile(c, z)	
