@@ -112,8 +112,6 @@ function TomTom:SetCrazyArrow(uid, dist, title)
 		arrive_distance = dist
 		point_title = title 
 
-		local c,z,x,y = Astrolabe:GetCurrentPlayerPosition()
-
 		wayframe.title:SetText(title or "Unknown waypoint")
 		wayframe:Show()
 	end

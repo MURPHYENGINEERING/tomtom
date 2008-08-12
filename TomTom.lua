@@ -19,7 +19,7 @@ TomTom = {
 	eventFrame = CreateFrame("Frame"),
 	RegisterEvent = function(self, event, method)
 		self.eventFrame:RegisterEvent(event)
-		self.events[event] = event or method
+		self.events[event] = method or event
 	end,
 	UnregisterEvent = function(self, event)
 		self.eventFrame:UnregisterEvent(event)
@@ -157,6 +157,8 @@ function TomTom:ReloadOptions()
 end
 
 function TomTom:ReloadWaypoints()
+	self:ShowHideCoordBlock()
+
 	-- Hide any waypoints that might be currently set
 	for uid,point in pairs(waypoints) do
 		self:ClearWaypoint(uid)
@@ -166,7 +168,12 @@ function TomTom:ReloadWaypoints()
 	self.waypoints = waypoints
 	self.waypointprofile = self.waydb.profile
 
-	local pc,pz = self:GetCurrentCZ()
+	if IsInInstance() then
+		return 
+	end
+
+	--local pc,pz = GetCurrentMapContinent(), GetCurrentMapZone()
+	local pc, pz = GetCurrentMapContinent(), GetCurrentMapZone()
 
 	for zone,data in pairs(self.waypointprofile) do
 		local c,z = self:GetCZ(zone)
@@ -624,16 +631,6 @@ end
 
 local function noop() end
 
-function TomTom:GetCurrentCZ()
-	local oc,oz = Astrolabe:GetCurrentPlayerPosition()
-	SetMapToCurrentZone()
-	local c,z = Astrolabe:GetCurrentPlayerPosition()
-	if oc and oz then
-		SetMapZoom(oc,oz)
-	end
-	return c,z
-end
-
 function TomTom:RemoveWaypoint(uid)
 	local data = waypoints[uid]
 	self:ClearWaypoint(uid)
@@ -661,7 +658,7 @@ end
 
 -- TODO: Make this not suck
 function TomTom:AddWaypoint(x, y, desc, persistent, minimap, world, silent)
-	local c,z = self:GetCurrentCZ()
+	local c,z = GetCurrentMapContinent(), GetCurrentMapZone()
 
 	if not c or not z or c < 1 then
 		--self:Print("Cannot find a valid zone to place the coordinates")
