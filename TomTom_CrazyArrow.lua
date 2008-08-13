@@ -132,7 +132,7 @@ local function OnUpdate(self, elapsed)
 	end
 
 	local dist,x,y = TomTom:GetDistanceToWaypoint(active_point)
-	if not dist then
+	if not dist or IsInInstance() then
 		self:Hide()
 		return
 	end

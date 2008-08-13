@@ -136,9 +136,9 @@ function TomTom:ADDON_LOADED(event, addon)
 		self.waypoints = waypoints
 
 		self:RegisterEvent("PLAYER_LEAVING_WORLD")
-		self:RegisterEvent("PLAYER_ENTERING_WORLD", "ReloadWaypoints")
-		self:RegisterEvent("ZONE_CHANGED_NEW_AREA", "ReloadWaypoints")
-		self:RegisterEvent("WORLD_MAP_UPDATE", "ReloadWaypoints")
+		self:RegisterEvent("PLAYER_ENTERING_WORLD", "ZoneChanged")
+		self:RegisterEvent("ZONE_CHANGED_NEW_AREA", "ZoneChanged")
+		self:RegisterEvent("WORLD_MAP_UPDATE", "ZoneChanged")
 		self:RegisterEvent("CHAT_MSG_ADDON")
 
 		self:ReloadOptions()
@@ -157,24 +157,12 @@ function TomTom:ReloadOptions()
 end
 
 function TomTom:ReloadWaypoints()
-	self:ShowHideCoordBlock()
-
-	-- Hide any waypoints that might be currently set
-	for uid,point in pairs(waypoints) do
-		self:ClearWaypoint(uid)
-	end
+	local pc, pz = GetCurrentMapContinent(), GetCurrentMapZone()
 
 	waypoints = {}
 	self.waypoints = waypoints
 	self.waypointprofile = self.waydb.profile
-
-	if IsInInstance() then
-		return 
-	end
-
-	--local pc,pz = GetCurrentMapContinent(), GetCurrentMapZone()
-	local pc, pz = GetCurrentMapContinent(), GetCurrentMapZone()
-
+	
 	for zone,data in pairs(self.waypointprofile) do
 		local c,z = self:GetCZ(zone)
 		local same = (c == pc) and (z == pz)
@@ -187,6 +175,11 @@ function TomTom:ReloadWaypoints()
 			self:AddZWaypoint(c, z, x*100, y*100, title, false, minimap, world, nil, true)
 		end
 	end
+end
+
+function TomTom:ZoneChanged()
+	-- Update the visibility of the coordinate box
+	self:ShowHideCoordBlock()
 end
 
 function TomTom:ShowHideWorldCoords()
@@ -668,7 +661,7 @@ function TomTom:AddWaypoint(x, y, desc, persistent, minimap, world, silent)
 	return self:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, silent)
 end
 
-function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, custom_callbacks, silent)
+function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, custom_callbacks, silent, crazy)
 	local callbacks
 	if custom_callbacks then
 		callbacks = custom_callbacks
@@ -698,6 +691,7 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, custo
 	if persistent == nil then persistent = self.profile.persistence.savewaypoints end
 	if minimap == nil then minimap = self.profile.minimap.enable end
 	if world == nil then world = self.profile.worldmap.enable end
+	if crazy == nil then crazy = self.profile.arrow.autoqueue end
 
 	local coord = self:GetCoord(x / 100, y / 100)
 	local zone = self:GetMapFile(c, z)	
@@ -714,7 +708,7 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, custo
 	end
 
 	local uid = self:SetWaypoint(c,z,x/100,y/100, callbacks, minimap, world)
-	if self.profile.arrow.autoqueue then
+	if crazy then
 		self:SetCrazyArrow(uid, self.profile.arrow.arrival, desc)
 	end
 

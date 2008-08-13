@@ -168,6 +168,8 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks, show_minimap, show_world)
 
 	if show_world then
 		Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, point.worldmap, c, z, x, y)
+	else
+		point.worldmap.disabled = true
 	end
 
 	if not show_minimap then
@@ -186,6 +188,32 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks, show_minimap, show_world)
 	return point.uid
 end
 
+function TomTom:HideWaypoint(uid, minimap, worldmap)
+	local point = resolveuid(uid)
+	if point then
+		if minimap then
+			point.minimap.disabled = true
+			point.minimap:Hide()
+		end
+
+		if worldmap then
+			point.worldmap.disabled = true
+			point.worldmap:Hide()		
+		end
+	end
+end
+
+function TomTom:ShowWaypoint(uid)
+	local point = resolveuid(uid)
+	if point then
+		point.minimap.disabled = not point.data.show_minimap
+		point.minimap:Show()
+
+		point.worldmap.disabled = not point.data.show_worldmap
+		point.worldmap:Show()
+	end
+end
+
 function TomTom:ClearWaypoint(uid)
 	local point = resolveuid(uid, true)
 	if point then
@@ -197,6 +225,10 @@ function TomTom:ClearWaypoint(uid)
 		point.callbacks = nil
 		point.minimap.callbacks = nil
 		point.worldmap.callbacks = nil
+
+		-- Clear disabled flags
+		point.minimap.disabled = nil
+		point.worldmap.disabled = nil
 
 		point.dlist = nil
 		point.uid = nil
@@ -278,7 +310,7 @@ do
 		local dist,x,y = Astrolabe:GetDistanceToIcon(self)
 		local disabled = self.disabled
 
-		if not dist and not disabled then
+		if disabled or not dist or IsInInstance() then
 			self:Hide()
 			return
 		end
@@ -377,7 +409,7 @@ do
 			end
 
 			local data = self.point
-			if data.worldmap and data.show_world then
+			if data.worldmap and data.show_world and not disabled then
 				local x,y = Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, self, data.c, data.z, data.x, data.y)
 				if (x and y and (0 < x and x <= 1) and (0 < y and y <= 1)) then
 					self:Show()
