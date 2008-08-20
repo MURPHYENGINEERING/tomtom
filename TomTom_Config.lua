@@ -531,67 +531,62 @@ local dialog = LibStub("AceConfigDialog-3.0")
 local registered = false;
 
 local options
+local function createBlizzOptions()
+	options = createconfig()
+
+	config:RegisterOptionsTable("TomTom-Bliz", {
+		name = L["TomTom"],
+		type = "group",
+		args = {
+			help = {
+				type = "description",
+				name = "TomTom is a simple navigation assistant",
+			},
+		},
+	})
+	dialog:SetDefaultSize("TomTom-Bliz", 600, 400)
+	dialog:AddToBlizOptions("TomTom-Bliz", "TomTom")
+
+
+	-- General Options
+	config:RegisterOptionsTable("TomTom-General", options.args.general)
+	local blizzPanel = dialog:AddToBlizOptions("TomTom-General", options.args.general.name, "TomTom")
+
+	-- Coordinate Block Options
+	config:RegisterOptionsTable("TomTom-CoordBlock", options.args.coordblock)
+	dialog:AddToBlizOptions("TomTom-CoordBlock", options.args.coordblock.name, "TomTom")
+
+	-- Crazy Taxi Options
+	config:RegisterOptionsTable("TomTom-CrazyTaxi", options.args.crazytaxi)
+	dialog:AddToBlizOptions("TomTom-CrazyTaxi", options.args.crazytaxi.name, "TomTom")
+
+	-- Minimap Options
+	config:RegisterOptionsTable("TomTom-Minimap", options.args.minimap)
+	dialog:AddToBlizOptions("TomTom-Minimap", options.args.minimap.name, "TomTom")
+
+	-- World Map Options
+	config:RegisterOptionsTable("TomTom-Worldmap", options.args.worldmap)
+	dialog:AddToBlizOptions("TomTom-Worldmap", options.args.worldmap.name, "TomTom")
+
+	-- Profile Options
+	local p_options = options.args.profile.args.options
+	local w_options = options.args.profile.args.waypoints
+	config:RegisterOptionsTable("TomTom-Profiles-Waypoints", w_options)
+	config:RegisterOptionsTable("TomTom-Profiles-Options", p_options)
+	dialog:AddToBlizOptions("TomTom-Profiles-Waypoints", w_options.name, "TomTom")
+	dialog:AddToBlizOptions("TomTom-Profiles-Options", p_options.name, "TomTom")
+	return blizzPanel
+end
 
 SLASH_TOMTOM1 = "/tomtom"
+local blizzPanel
 SlashCmdList["TOMTOM"] = function(msg)
 	if not registered then
-		options = options or createconfig()
-		config:RegisterOptionsTable("TomTom", options)
-		dialog:SetDefaultSize("TomTom", 600, 500)
+		blizzPanel = createBlizzOptions()
 		registered = true
 	end
 
-	dialog:Open("TomTom")
+	InterfaceOptionsFrame_OpenToFrame(blizzPanel)
 end
 
-local build = select(2, GetBuildInfo())
-if tonumber(build) > 8000 then
-	local hijack = CreateFrame("Frame", nil, InterfaceOptionsFrame)
-	hijack:SetScript("OnShow", function()
-		hijack:Hide()
-		options = createconfig()
 
-		config:RegisterOptionsTable("TomTom-Bliz", {
-			name = L["TomTom"],
-			type = "group",
-			args = {
-				help = {
-					type = "description",
-					name = "TomTom is a simple navigation assistant",
-				},
-			},
-		})
-		dialog:SetDefaultSize("TomTom-Bliz", 600, 400)
-		dialog:AddToBlizOptions("TomTom-Bliz", "TomTom")
-
-
-		-- General Options
-		config:RegisterOptionsTable("TomTom-General", options.args.general)
-		dialog:AddToBlizOptions("TomTom-General", options.args.general.name, "TomTom")
-		
-		-- Coordinate Block Options
-		config:RegisterOptionsTable("TomTom-CoordBlock", options.args.coordblock)
-		dialog:AddToBlizOptions("TomTom-CoordBlock", options.args.coordblock.name, "TomTom")
-
-		-- Crazy Taxi Options
-		config:RegisterOptionsTable("TomTom-CrazyTaxi", options.args.crazytaxi)
-		dialog:AddToBlizOptions("TomTom-CrazyTaxi", options.args.crazytaxi.name, "TomTom")
-
-		-- Minimap Options
-		config:RegisterOptionsTable("TomTom-Minimap", options.args.minimap)
-		dialog:AddToBlizOptions("TomTom-Minimap", options.args.minimap.name, "TomTom")
-
-		-- World Map Options
-		config:RegisterOptionsTable("TomTom-Worldmap", options.args.worldmap)
-		dialog:AddToBlizOptions("TomTom-Worldmap", options.args.worldmap.name, "TomTom")
-		
-		-- Profile Options
-		local p_options = options.args.profile.args.options
-		local w_options = options.args.profile.args.waypoints
-		config:RegisterOptionsTable("TomTom-Profiles-Waypoints", w_options)
-		config:RegisterOptionsTable("TomTom-Profiles-Options", p_options)
-		dialog:AddToBlizOptions("TomTom-Profiles-Waypoints", w_options.name, "TomTom")
-		dialog:AddToBlizOptions("TomTom-Profiles-Options", p_options.name, "TomTom")
-	end
-	)
-end
