@@ -159,6 +159,10 @@ end
 function TomTom:ReloadWaypoints()
 	local pc, pz = GetCurrentMapContinent(), GetCurrentMapZone()
 
+	for uid,value in pairs(waypoints) do
+		self:ClearWaypoint(uid)
+	end
+
 	waypoints = {}
 	self.waypoints = waypoints
 	self.waypointprofile = self.waydb.profile
@@ -335,9 +339,7 @@ StaticPopupDialogs["TOMTOM_REMOVE_ALL_CONFIRM"] = {
 	button1 = L["Yes"],
 	button2 = L["No"],
 	OnAccept = function()
-		for uid,point in pairs(waypoints) do
-			TomTom.waydb:ResetProfile()
-		end
+		TomTom.waydb:ResetProfile()
 		TomTom:ReloadWaypoints()
 	end,
 	timeout = 30,
