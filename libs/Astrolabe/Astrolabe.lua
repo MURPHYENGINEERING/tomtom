@@ -1,7 +1,7 @@
 --[[
 Name: Astrolabe
-Revision: $Rev: 78 $
-$Date: 2008-03-28 06:05:05 +0000 (Fri, 28 Mar 2008) $
+Revision: $Rev: 91 $
+$Date: 2008-08-21 02:51:27 +0100 (Thu, 21 Aug 2008) $
 Author(s): Esamynn (esamynn at wowinterface.com)
 Inspired By: Gatherer by Norganna
              MapLibrary by Kristofer Karlsson (krka at kth.se)
@@ -42,7 +42,7 @@ Note:
 -- DO NOT MAKE CHANGES TO THIS LIBRARY WITHOUT FIRST CHANGING THE LIBRARY_VERSION_MAJOR
 -- STRING (to something unique) OR ELSE YOU MAY BREAK OTHER ADDONS THAT USE THIS LIBRARY!!!
 local LIBRARY_VERSION_MAJOR = "Astrolabe-0.4"
-local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 78 $", "(%d+)") or 1)
+local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 91 $", "(%d+)") or 1)
 
 if not DongleStub then error(LIBRARY_VERSION_MAJOR .. " requires DongleStub.") end
 if not DongleStub:IsNewerVersion(LIBRARY_VERSION_MAJOR, LIBRARY_VERSION_MINOR) then return end
@@ -79,7 +79,7 @@ Astrolabe.MinimapIcons = {};
 Astrolabe.IconsOnEdge = {};
 Astrolabe.IconsOnEdge_GroupChangeCallbacks = {};
 
-Astrolabe.UpdateTimer = 0;
+Astrolabe.MinimapIconCount = 0
 Astrolabe.ForceNextUpdate = false;
 Astrolabe.IconsOnEdgeChanged = false;
 
@@ -102,7 +102,9 @@ local cos = math.cos;
 local abs = math.abs;
 local sqrt = math.sqrt;
 local min = math.min
+local max = math.max
 local yield = coroutine.yield
+local GetFramerate = GetFramerate
 
 
 --------------------------------------------------------------------------------------------------------------
@@ -117,11 +119,11 @@ end
 
 local function argcheck(value, num, ...)
 	assert(1, type(num) == "number", "Bad argument #2 to 'argcheck' (number expected, got " .. type(level) .. ")")
-
+	
 	for i=1,select("#", ...) do
 		if type(value) == select(i, ...) then return end
 	end
-
+	
 	local types = strjoin(", ", ...)
 	local name = string.match(debugstack(2,2,0), ": in function [`<](.-)['>]")
 	error(string.format("Bad argument #%d to 'Astrolabe.%s' (%s expected, got %s)", num, name, types, type(value)), 3)
@@ -364,9 +366,8 @@ end
 local minimapRotationEnabled = false;
 local minimapShape = false;
 
--- I don't cache the actual direction information because I don't want to 
--- encur the work required to retrieve it unless I'm actually going to use the information.  
 local MinimapCompassRing = MiniMapCompassRing;
+local minimapRotationOffset = -MinimapCompassRing:GetFacing()
 
 
 local function placeIconOnMinimap( minimap, minimapZoom, mapWidth, mapHeight, icon, dist, xDist, yDist )
@@ -384,11 +385,25 @@ local function placeIconOnMinimap( minimap, minimapZoom, mapWidth, mapHeight, ic
 	local isRound = true;
 	
 	if ( minimapRotationEnabled ) then
-		-- for the life of me, I cannot figure out why the following 
-		-- math works, but it does
-		local dir = atan2(xDist, yDist) + MinimapCompassRing:GetFacing();
-		xDist = dist * sin(dir);
-		yDist = dist * cos(dir);
+		local sinTheta = sin(minimapRotationOffset)
+		local cosTheta = cos(minimapRotationOffset)
+		--[[
+		Math Note
+		The math that is acutally going on in the next 3 lines is:
+			local dx, dy = xDist, -yDist
+			xDist = (dx * cosTheta) + (dy * sinTheta)
+			yDist = -((-dx * sinTheta) + (dy * cosTheta))
+		
+		This is because the origin for map coordinates is the top left corner
+		of the map, not the bottom left, and so we have to reverse the vertical 
+		distance when doing the our rotation, and then reverse the result vertical 
+		distance because this rotation formula gives us a result with the origin based 
+		in the bottom left corner (of the (+, +) quadrant).  
+		The actual code is a simplification of the above.  
+		]]
+		local dx, dy = xDist, yDist
+		xDist = (dx * cosTheta) - (dy * sinTheta)
+		yDist = (dx * sinTheta) + (dy * cosTheta)
 	end
 	
 	if ( minimapShape and not (xDist == 0 or yDist == 0) ) then
@@ -402,7 +417,7 @@ local function placeIconOnMinimap( minimap, minimapZoom, mapWidth, mapHeight, ic
 	
 	-- for non-circular portions of the Minimap edge
 	if not ( isRound ) then
-		dist = (abs(xDist) > abs(yDist)) and abs(xDist) or abs(yDist);
+		dist = max(abs(xDist), abs(yDist))
 	end
 
 	if ( (dist + iconDiameter) > mapRadius ) then
@@ -437,12 +452,21 @@ function Astrolabe:PlaceIconOnMinimap( icon, continent, zone, xPos, yPos )
 		--icon's position has no meaningful position relative to the player's current location
 		return -1;
 	end
+	
 	local iconData = GetWorkingTable(icon);
 	if ( self.MinimapIcons[icon] ) then
 		self.MinimapIcons[icon] = nil;
+	else
+		self.MinimapIconCount = self.MinimapIconCount + 1
 	end
-	AddedOrUpdatedIcons[icon] = iconData
 	
+	-- We know this icon's position is valid, so we need to make sure the icon placement 
+	-- system is active.  We call this here so that if this is the first icon being added to 
+	-- an empty buffer, the full recalc will not completely redo the work done by this function 
+	-- because the icon has not yet actually been placed in the buffer.  
+	self.processingFrame:Show()
+	
+	AddedOrUpdatedIcons[icon] = iconData
 	iconData.continent = continent;
 	iconData.zone = zone;
 	iconData.xPos = xPos;
@@ -452,6 +476,9 @@ function Astrolabe:PlaceIconOnMinimap( icon, continent, zone, xPos, yPos )
 	iconData.yDist = yDist;
 	
 	minimapRotationEnabled = GetCVar("rotateMinimap") ~= "0"
+	if ( minimapRotationEnabled ) then
+		minimapRotationOffset = -MinimapCompassRing:GetFacing()
+	end
 	
 	-- check Minimap Shape
 	minimapShape = GetMinimapShape and ValidMinimapShapes[GetMinimapShape()];
@@ -472,18 +499,29 @@ function Astrolabe:RemoveIconFromMinimap( icon )
 	self.MinimapIcons[icon] = nil;
 	self.IconsOnEdge[icon] = nil;
 	icon:Hide();
+	
+	local MinimapIconCount = self.MinimapIconCount - 1
+	if ( MinimapIconCount <= 0 ) then
+		-- no icons left to manage
+		self.processingFrame:Hide()
+		MinimapIconCount = 0 -- because I'm paranoid
+	end
+	self.MinimapIconCount = MinimapIconCount
+	
 	return 0;
 end
 
 function Astrolabe:RemoveAllMinimapIcons()
 	self:DumpNewIconsCache()
-	local minimapIcons = self.MinimapIcons;
+	local MinimapIcons = self.MinimapIcons;
 	local IconsOnEdge = self.IconsOnEdge;
-	for k, v in pairs(minimapIcons) do
-		minimapIcons[k] = nil;
+	for k, v in pairs(MinimapIcons) do
+		MinimapIcons[k] = nil;
 		IconsOnEdge[k] = nil;
 		k:Hide();
 	end
+	self.MinimapIconCount = 0
+	self.processingFrame:Hide()
 end
 
 local lastZoom; -- to remember the last seen Minimap zoom level
@@ -514,6 +552,9 @@ do
 				local lC, lZ, lx, ly = unpack(lastPosition);
 				
 				minimapRotationEnabled = GetCVar("rotateMinimap") ~= "0"
+				if ( minimapRotationEnabled ) then
+					minimapRotationOffset = -MinimapCompassRing:GetFacing()
+				end
 				
 				-- check current frame rate
 				local numPerCycle = min(50, GetFramerate() * (self.MinimapUpdateMultiplier or 1))
@@ -636,6 +677,9 @@ do
 			local C, Z, x, y = self:GetCurrentPlayerPosition();
 			if ( C and C >= 0 ) then
 				minimapRotationEnabled = GetCVar("rotateMinimap") ~= "0"
+				if ( minimapRotationEnabled ) then
+					minimapRotationOffset = -MinimapCompassRing:GetFacing()
+				end
 				
 				-- check current frame rate
 				local numPerCycle = GetFramerate() * (self.MinimapUpdateMultiplier or 1) * 2
@@ -826,7 +870,7 @@ function Astrolabe:OnEvent( frame, event )
 		end
 	
 	elseif ( event == "PLAYER_LEAVING_WORLD" ) then
-		frame:Hide();
+		frame:Hide(); -- yes, I know this is redunant
 		self:RemoveAllMinimapIcons(); --dump all minimap icons
 	
 	elseif ( event == "PLAYER_ENTERING_WORLD" ) then
@@ -872,6 +916,11 @@ function Astrolabe:OnShow( frame )
 	
 	-- re-calculate minimap icon positions
 	self:CalculateMinimapIconPositions(true);
+	
+	if ( self.MinimapIconCount <= 0 ) then
+		-- no icons left to manage
+		self.processingFrame:Hide()
+	end
 end
 
 -- called by AstrolabMapMonitor when all world maps are hidden
@@ -897,6 +946,13 @@ local function activate( newInstance, oldInstance )
 				newInstance[k] = v;
 			end
 		end
+		-- sync up the current MinimapIconCount value
+		local iconCount = 0
+		for _ in pairs(newInstance.MinimapIcons) do
+			iconCount = iconCount + 1
+		end
+		newInstance.MinimapIconCount = iconCount
+		
 		Astrolabe = oldInstance;
 	else
 		local frame = CreateFrame("Frame");
@@ -1390,6 +1446,100 @@ WorldMapSize = {
 		},
 	},
 }
+
+--- WotLK Adjustments
+if ( GetBuildInfo():sub(1, 3) == "3.0" ) then
+	WorldMapSize[0].height = 31809.64859753034;
+	WorldMapSize[0].width = 47714.27770954026;
+	
+	WorldMapSize[1].xOffset = -8590.409362625034;
+	WorldMapSize[1].yOffset = 5628.694276155668;
+	
+	WorldMapSize[2].xOffset = 18542.31268111796;
+	WorldMapSize[2].yOffset = 3585.574682467752;
+	WorldMapSize[2].zoneData.Stormwind = {
+		height = 1158.33686894901,
+		width = 1737.498058940429,
+		xOffset = 16449.05164642256,
+		yOffset = 19172.25350774846,
+	}
+	
+	WorldMapSize[4] = {
+		parentContinent = 0,
+		height = 11834.31067391958,
+		width = 17751.3936186856,
+		xOffset = 16020.94093549576,
+		yOffset = 454.2464807713226,
+		zoneData = {
+			BoreanTundra = {
+				height = 3843.765503862232,
+				width = 5764.58206497758,
+				xOffset = 646.3186767730767,
+				yOffset = 5695.480016983896,
+			},
+			CrystalsongForest = {
+				height = 1814.590053385046,
+				width = 2722.916164555434,
+				xOffset = 7773.400227973558,
+				yOffset = 4091.307437548815,
+			},
+			Dalaran = {
+				height = 553.3419356683534,
+				width = 830.014625253355,
+				xOffset = 8164.640128758279,
+				yOffset = 4526.722218200071,
+			},
+			Dragonblight = {
+				height = 3739.597759999098,
+				width = 5608.331259502691,
+				xOffset = 5590.067753073641,
+				yOffset = 5018.394106536425,
+			},
+			GrizzlyHills = {
+				height = 3500.013349296343,
+				width = 5249.9986179934,
+				xOffset = 10327.56614428777,
+				yOffset = 5076.727864214266,
+			},
+			HowlingFjord = {
+				height = 4031.266275060274,
+				width = 6045.831339550668,
+				xOffset = 10615.0658552538,
+				yOffset = 7476.736868262738,
+			},
+			IcecrownGlacier = {
+				height = 4181.266116737856,
+				width = 6270.831861693458,
+				xOffset = 3304.65133149085,
+				yOffset = 1166.296192718834,
+			},
+			LakeWintergrasp = {
+				height = 1983.342901980711,
+				width = 2974.999377667768,
+				xOffset = 4887.984320612982,
+				yOffset = 4876.725348039468,
+			},
+			SholazarBasin = {
+				height = 2904.177559586215,
+				width = 4356.248328680455,
+				xOffset = 2287.985279107324,
+				yOffset = 3305.887993444818,
+			},
+			TheStormPeaks = {
+				height = 4741.684940421732,
+				width = 7112.498205872217,
+				xOffset = 7375.483315518691,
+				yOffset = 395.4596828327046,
+			},
+			ZulDrak = {
+				height = 3329.179510740043,
+				width = 4993.747919923504,
+				xOffset = 9817.150055203074,
+				yOffset = 2924.636381254688,
+			},
+		},
+	}
+end
 
 local zeroData;
 zeroData = { xOffset = 0, height = 0, yOffset = 0, width = 0, __index = function() return zeroData end };
