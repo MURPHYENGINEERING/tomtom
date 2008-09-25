@@ -310,7 +310,7 @@ do
 		local dist,x,y = Astrolabe:GetDistanceToIcon(self)
 		local disabled = self.disabled
 
-		if disabled or not dist or IsInInstance() then
+		if not dist or IsInInstance() then
 			self:Hide()
 			return
 		end
