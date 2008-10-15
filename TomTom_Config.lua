@@ -588,4 +588,13 @@ SlashCmdList["TOMTOM"] = function(msg)
 	InterfaceOptionsFrame_OpenToCategory("TomTom")
 end
 
+local hijackFrame = CreateFrame("Frame", nil, InterfaceOptionsFrame)
+hijackFrame:SetScript("OnShow", function(self)
+	if not registered then
+		blizzPanel = createBlizzOptions()
+		registered = true
+	end
 
+	InterfaceOptionsFrame_OpenToCategory("TomTom")
+	self:SetScript("OnShow", nil)
+end)
