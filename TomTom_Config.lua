@@ -547,7 +547,6 @@ local function createBlizzOptions()
 	dialog:SetDefaultSize("TomTom-Bliz", 600, 400)
 	dialog:AddToBlizOptions("TomTom-Bliz", "TomTom")
 
-
 	-- General Options
 	config:RegisterOptionsTable("TomTom-General", options.args.general)
 	local blizzPanel = dialog:AddToBlizOptions("TomTom-General", options.args.general.name, "TomTom")
@@ -586,7 +585,7 @@ SlashCmdList["TOMTOM"] = function(msg)
 		registered = true
 	end
 
-	InterfaceOptionsFrame_OpenToFrame(blizzPanel)
+	InterfaceOptionsFrame_OpenToCategory("TomTom")
 end
 
 
