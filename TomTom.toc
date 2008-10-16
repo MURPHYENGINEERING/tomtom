@@ -3,8 +3,12 @@
 ## Version: wowi:revision
 ## Notes: Acts as your portable navigation assistant
 ## Notes-zhCN:一个简单的导航助手。
+## Notes-ruRU: Удобный портативный навигатор по игровой карте
 ## Author: Cladhaire
 ## SavedVariables: TomTomDB, TomTomWaypoints
+
+## X-Localizations: enUS, enGB, deDE, zhCN, ruRU
+## X-CompatibleLocales: enUS, enGB, deDE, frFR, esES, esMX, zhCN, zhTW, koKR, ruRU
 
 libs\Astrolabe\Load.xml
 libs\LibStub\LibStub.lua
@@ -18,6 +22,7 @@ libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
 Localization.enUS.lua
 Localization.deDE.lua
 Localization.zhCN.lua
+Localization.ruRU.lua
 
 TomTom.lua
 TomTom_Waypoints.lua

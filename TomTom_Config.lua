@@ -595,6 +595,5 @@ hijackFrame:SetScript("OnShow", function(self)
 		registered = true
 	end
 
-	InterfaceOptionsFrame_OpenToCategory("TomTom")
 	self:SetScript("OnShow", nil)
 end)
