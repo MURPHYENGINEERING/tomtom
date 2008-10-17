@@ -284,13 +284,13 @@ local world_click_verify = {
 	["S"] = function() return IsShiftKeyDown() end,
 }
 
-function WorldMapButton_OnClick(...)
+function WorldMapButton_OnClick(self, ...)
 	local mouseButton, button = ...
 	if mouseButton == "RightButton" then
 		-- Check for all the modifiers that are currently set
 		for mod in TomTom.db.profile.worldmap.create_modifier:gmatch("[ACS]") do
 			if not world_click_verify[mod] or not world_click_verify[mod]() then
-				return Orig_WorldMapButton_OnClick(...)
+				return Orig_WorldMapButton_OnClick(self, ...)
 			end
 		end
 
@@ -299,12 +299,12 @@ function WorldMapButton_OnClick(...)
 		local x,y = GetCurrentCursorPosition()
 
 		if z == 0 then
-			return Orig_WorldMapButton_OnClick(...)
+			return Orig_WorldMapButton_OnClick(self, ...)
 		end
 
 		local uid = TomTom:AddZWaypoint(c,z,x*100,y*100)
 	else
-		return Orig_WorldMapButton_OnClick(...)
+		return Orig_WorldMapButton_OnClick(self, ...)
 	end
 end
 
