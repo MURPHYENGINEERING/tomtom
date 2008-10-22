@@ -564,7 +564,9 @@ local function _both_tooltip_show(event, tooltip, uid, dist)
 	local data = waypoints[uid]
 
 	tooltip:SetText(data.title or L["TomTom waypoint"])
-	tooltip:AddLine(string.format(L["%s yards away"], math.floor(dist)), 1, 1, 1)
+	if dist and tonumber(dist) then
+		tooltip:AddLine(string.format(L["%s yards away"], math.floor(dist)), 1, 1, 1)
+	end
 	tooltip:AddLine(string.format(L["%s (%.2f, %.2f)"], data.zone, data.x, data.y), 0.7, 0.7, 0.7)
 	tooltip:Show()
 end
