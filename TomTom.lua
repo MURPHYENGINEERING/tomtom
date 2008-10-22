@@ -566,6 +566,8 @@ local function _both_tooltip_show(event, tooltip, uid, dist)
 	tooltip:SetText(data.title or L["TomTom waypoint"])
 	if dist and tonumber(dist) then
 		tooltip:AddLine(string.format(L["%s yards away"], math.floor(dist)), 1, 1, 1)
+	else
+		tooltip:AddLine(L["Unknown distance"])
 	end
 	tooltip:AddLine(string.format(L["%s (%.2f, %.2f)"], data.zone, data.x, data.y), 0.7, 0.7, 0.7)
 	tooltip:Show()
@@ -588,7 +590,11 @@ local function _world_tooltip_show(event, tooltip, uid, dist)
 end
 
 local function _both_tooltip_update(event, tooltip, uid, dist)
-	tooltip.lines[2]:SetFormattedText(L["%s yards away"], math.floor(dist), 1, 1, 1)
+	if dist and tonumber(dist) then
+		tooltip.lines[2]:SetFormattedText(L["%s yards away"], math.floor(dist), 1, 1, 1)
+	else
+		tooltip.lines[2]:SetText(L["Unknown distance"])
+	end
 end
 
 local function _both_clear_distance(event, uid, range, distance, lastdistance)
