@@ -77,6 +77,7 @@ function TomTom:ADDON_LOADED(event, addon)
 					middlecolor = {1, 1, 0},
 					arrival = 15,
 					lock = false,
+					noclick = false,
 					showtta = true,
 					autoqueue = true,
 					menu = true,
@@ -84,6 +85,8 @@ function TomTom:ADDON_LOADED(event, addon)
 					alpha = 1.0,
 					title_width = 0,
 					title_height = 0,
+					title_scale = 1,
+					title_alpha = 1,
 				},
 				minimap = {
 					enable = true,

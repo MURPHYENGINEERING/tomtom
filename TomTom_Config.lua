@@ -178,8 +178,16 @@ local function createconfig()
 				width = "double",
 				arg = "arrow.menu",
 			},
-			heredistance = {
+			disableclick = {
 				order = 7,
+				type = "toggle",
+				name = L["Disable all mouse input"],
+				desc = L["Disables the crazy taxi arrow for mouse input, allowing all clicks to pass through"],
+				width = "double",
+				arg = "arrow.noclick",
+			},
+			heredistance = {
+				order = 8,
 				type = "range",
 				name = L["\"Arrival Distance\""],
 				desc = L["This setting will control the distance at which the waypoint arrow switches to a downwards arrow, indicating you have arrived at your destination"],
@@ -189,7 +197,7 @@ local function createconfig()
 			display = {
 				type = "group",
 				name = L["Arrow display"],
-				order = 8,
+				order = 9,
 				inline = true,
 				args = {
 					help = {
@@ -229,8 +237,24 @@ local function createconfig()
 						min = 0, max = 300, step = 1,
 						arg = "arrow.title_height",
 					},
-					reset_position = {
+					title_scale = {
+						type = "range",
 						order = 6,
+						name = L["Title Scale"],
+						desc = L["This setting allows you to specify the scale of the title text."],
+						min = 0, max = 3, step = 0.05,
+						arg = "arrow.title_scale",
+					},
+					title_alpha = {
+						type = "range",
+						order = 7,
+						name = L["Title Alpha"],
+						desc = L["This setting allows you to change the opacity of the title text, making it transparent or opaque"],
+						min = 0, max = 1.0, step = 0.05,
+						arg = "arrow.title_alpha",
+					},
+					reset_position = {
+						order = 8,
 						type = "execute",
 						name = L["Reset Position"],
 						desc = L["Resets the position of the waypoint arrow if its been dragged off screen"],
@@ -244,7 +268,7 @@ local function createconfig()
 			color = {
 				type = "group",
 				name = L["Arrow colors"],
-				order = 9,
+				order = 10,
 				inline = true,
 				args = {
 					help = {
