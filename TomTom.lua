@@ -133,6 +133,7 @@ function TomTom:ADDON_LOADED(event, addon)
 		self.dropdown = CreateFrame("Frame", "TomTomDropdown", nil, "UIDropDownMenuTemplate")
 
 		self.waypoints = waypoints
+		self.waypointprofile = self.waydb.profile
 
 		self:RegisterEvent("PLAYER_LEAVING_WORLD")
 		self:RegisterEvent("PLAYER_ENTERING_WORLD", "ZoneChanged")
