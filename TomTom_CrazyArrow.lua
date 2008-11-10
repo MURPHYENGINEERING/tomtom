@@ -137,7 +137,7 @@ local function OnUpdate(self, elapsed)
 		return
 	end
 
-	status:SetText(sformat("%d yards", dist))
+	status:SetText(sformat(L["%d yards"], dist))
 
 	local cell
 
