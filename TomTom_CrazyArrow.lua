@@ -63,7 +63,7 @@ end
 
 local twopi = math.pi * 2
 
-local wayframe = CreateFrame("Button", "TomTomCrazyArrow", UIParent)
+local wayframe = CreateFrame("Button", "", UIParent)
 wayframe:SetHeight(42)
 wayframe:SetWidth(56)
 wayframe:SetPoint("CENTER", 0, 0)
@@ -248,7 +248,8 @@ function TomTom:ShowHideCrazyArrow()
 
 		wayframe.title:SetWidth(width)
 		wayframe.title:SetHeight(height)
-		wayframe.title:SetScale(scale)
+		-- TODO: Implement this
+		--wayframe.title:SetScale(scale)
 		wayframe.title:SetAlpha(TomTom.db.profile.arrow.title_alpha)
 
 		if self.profile.arrow.showtta then
