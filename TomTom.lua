@@ -880,9 +880,10 @@ for cidx,c in ipairs{GetMapContinents()} do
 	end
 end
 
-SLASH_WAY1 = "/way"
-SLASH_WAY2 = "/tway"
-SlashCmdList["WAY"] = function(msg)
+SLASH_TOMTOM_WAY1 = "/way"
+SLASH_TOMTOM_WAY2 = "/tway"
+SLASH_TOMTOM_WAY3 = "/tomtomway"
+SlashCmdList["TOMTOM_WAY"] = function(msg)
 	local tokens = {}
 	for token in msg:gmatch("%S+") do table.insert(tokens, token) end
 
