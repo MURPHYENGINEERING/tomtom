@@ -123,6 +123,17 @@ local function createconfig()
 						arg = "block.fontsize",
 						min = 1, max = 24, step = 1,
 					},
+					reset_position = {
+						type = "execute",
+						name = L["Reset Position"],
+						desc = L["Resets the position of the waypoint arrow if its been dragged off screen"],
+						func = function()
+							if TomTomBlock then
+								TomTomBlock:ClearAllPoints()
+								TomTomBlock:SetPoint("TOP", Minimap, "BOTTOM", -20, -10)
+							end
+						end,
+					},
 				},
 			},
 		},
