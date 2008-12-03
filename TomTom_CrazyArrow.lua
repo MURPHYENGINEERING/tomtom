@@ -63,7 +63,7 @@ end
 
 local twopi = math.pi * 2
 
-local wayframe = CreateFrame("Button", "", UIParent)
+local wayframe = CreateFrame("Button", "TomTomCrazyArrow", UIParent)
 wayframe:SetHeight(42)
 wayframe:SetWidth(56)
 wayframe:SetPoint("CENTER", 0, 0)
@@ -71,9 +71,12 @@ wayframe:EnableMouse(true)
 wayframe:SetMovable(true)
 wayframe:Hide()
 
-wayframe.title = wayframe:CreateFontString("OVERLAY", nil, "GameFontHighlightSmall")
-wayframe.status = wayframe:CreateFontString("OVERLAY", nil, "GameFontNormalSmall")
-wayframe.tta	= wayframe:CreateFontString("OVERLAY", nil, "GameFontNormalSmall")
+-- Frame used to control the scaling of the title and friends
+local titleframe = CreateFrame("Frame", nil, wayframe)
+
+wayframe.title = titleframe:CreateFontString("OVERLAY", nil, "GameFontHighlightSmall")
+wayframe.status = titleframe:CreateFontString("OVERLAY", nil, "GameFontNormalSmall")
+wayframe.tta = titleframe:CreateFontString("OVERLAY", nil, "GameFontNormalSmall")
 wayframe.title:SetPoint("TOP", wayframe, "BOTTOM", 0, 0)
 wayframe.status:SetPoint("TOP", wayframe.title, "BOTTOM", 0, 0)
 wayframe.tta:SetPoint("TOP", wayframe.status, "BOTTOM", 0, 0)
@@ -248,9 +251,8 @@ function TomTom:ShowHideCrazyArrow()
 
 		wayframe.title:SetWidth(width)
 		wayframe.title:SetHeight(height)
-		-- TODO: Implement this
-		--wayframe.title:SetScale(scale)
-		wayframe.title:SetAlpha(TomTom.db.profile.arrow.title_alpha)
+		titleframe:SetScale(scale)
+		titleframe:SetAlpha(TomTom.db.profile.arrow.title_alpha)
 
 		if self.profile.arrow.showtta then
 			tta:Show()
