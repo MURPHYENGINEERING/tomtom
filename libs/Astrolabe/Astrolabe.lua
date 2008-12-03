@@ -1,7 +1,7 @@
 --[[
 Name: Astrolabe
-Revision: $Rev: 93 $
-$Date: 2008-10-14 22:00:24 +0100 (Tue, 14 Oct 2008) $
+Revision: $Rev: 95 $
+$Date: 2008-12-03 22:44:26 +0000 (Wed, 03 Dec 2008) $
 Author(s): Esamynn (esamynn at wowinterface.com)
 Inspired By: Gatherer by Norganna
              MapLibrary by Kristofer Karlsson (krka at kth.se)
@@ -42,7 +42,7 @@ Note:
 -- DO NOT MAKE CHANGES TO THIS LIBRARY WITHOUT FIRST CHANGING THE LIBRARY_VERSION_MAJOR
 -- STRING (to something unique) OR ELSE YOU MAY BREAK OTHER ADDONS THAT USE THIS LIBRARY!!!
 local LIBRARY_VERSION_MAJOR = "Astrolabe-0.4"
-local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 93 $", "(%d+)") or 1)
+local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 95 $", "(%d+)") or 1)
 
 if not DongleStub then error(LIBRARY_VERSION_MAJOR .. " requires DongleStub.") end
 if not DongleStub:IsNewerVersion(LIBRARY_VERSION_MAJOR, LIBRARY_VERSION_MINOR) then return end
@@ -464,7 +464,15 @@ function Astrolabe:PlaceIconOnMinimap( icon, continent, zone, xPos, yPos )
 	-- system is active.  We call this here so that if this is the first icon being added to 
 	-- an empty buffer, the full recalc will not completely redo the work done by this function 
 	-- because the icon has not yet actually been placed in the buffer.  
-	self.processingFrame:Show()
+	-- 
+	-- Note: if the update system was inactive, then the LastPlayerPosition used to calculate the icon's
+	-- data earlier in this function was out of date, and will be updated by this show, thus we need to redo
+	-- the distance calculations
+	if not ( self.processingFrame:IsShown() ) then
+		self.processingFrame:Show()
+		lC, lZ, lx, ly = unpack(self.LastPlayerPosition);
+		dist, xDist, yDist = self:ComputeDistance(lC, lZ, lx, ly, continent, zone, xPos, yPos);
+	end
 	
 	AddedOrUpdatedIcons[icon] = iconData
 	iconData.continent = continent;
