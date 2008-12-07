@@ -237,9 +237,9 @@ function TomTom:ShowHideCrazyArrow()
 		wayframe:Show()
 
 		if self.profile.arrow.noclick then
-			wayframe:Disable()
+			wayframe:EnableMouse(false)
 		else
-			wayframe:Enable()
+			wayframe:EnableMouse(true)
 		end
 
 		-- Set the scale and alpha
