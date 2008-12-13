@@ -129,6 +129,7 @@ local last_distance = 0
 local tta_throttle = 0
 local speed = 0
 local speed_count = 0
+
 local function OnUpdate(self, elapsed)
 	if not active_point then
 		self:Hide()
@@ -349,13 +350,17 @@ local function init_dropdown(self, level)
 	end
 end
 
-wayframe:RegisterForClicks("RightButtonUp")
-wayframe:SetScript("OnClick", function(self, button)
-	if TomTom.db.profile.arrow.menu then
-		UIDropDownMenu_Initialize(TomTom.dropdown, init_dropdown)
-		ToggleDropDownMenu(1, nil, TomTom.dropdown, "cursor", 0, 0)
+local function WayFrame_OnClick(self, button)
+	if active_point then
+		if TomTom.db.profile.arrow.menu then
+			UIDropDownMenu_Initialize(TomTom.dropdown, init_dropdown)
+			ToggleDropDownMenu(1, nil, TomTom.dropdown, "cursor", 0, 0)
+		end
 	end
-end)
+end
+
+wayframe:RegisterForClicks("RightButtonUp")
+wayframe:SetScript("OnClick", WayFrame_OnClick)
 
 local function getCoords(column, row)
 	local xstart = (column * 56) / 512
@@ -366,7 +371,8 @@ local function getCoords(column, row)
 end
 
 local texcoords = setmetatable({}, {__index = function(t, k)
-	local col,row = k:match("(%d):(%d)")
+	local col,row = k:match("(%d+):(%d+)")
+	col,row = tonumber(col), tonumber(row)
 	local obj = {getCoords(col, row)}
 	rawset(t, k, obj)
 	return obj
@@ -392,11 +398,17 @@ wayframe:SetScript("OnEvent", function(self, event, arg1, ...)
 						tooltip:AddLine(sformat(L["%d yards"], dist), 1, 1, 1)
 					end
 				end,
+				OnClick = WayFrame_OnClick,
 			})
 
 			local crazyFeedFrame = CreateFrame("Frame")
-			local throttle = 0.5
+			local throttle = TomTom.db.profile.feeds.arrow_throttle
 			local counter = 0
+
+			function TomTom:UpdateArrowFeedThrottle()
+				throttle = TomTom.db.profile.feeds.arrow_throttle
+			end
+
 			crazyFeedFrame:SetScript("OnUpdate", function(self, elapsed)
 				counter = counter + elapsed
 				if counter < throttle then
@@ -404,7 +416,7 @@ wayframe:SetScript("OnEvent", function(self, event, arg1, ...)
 				end
 
 				counter = 0
-				
+
 				local angle = TomTom:GetDirectionToWaypoint(active_point)
 				local player = GetPlayerBearing()
 				if not angle or not player then

@@ -113,7 +113,9 @@ function TomTom:ADDON_LOADED(event, addon)
 				},
 				feeds = {
 					coords = false,
+					coords_throttle = 0.3,
 					arrow = false,
+					arrow_throttle = 0.1,
 				},
 			},
 		}
@@ -158,7 +160,12 @@ function TomTom:ADDON_LOADED(event, addon)
 			})
 
 			local coordFeedFrame = CreateFrame("Frame")
-			local throttle, counter = 0.5, 0
+			local throttle, counter = self.db.profile.feeds.coords_throttle, 0
+
+			function TomTom:UpdateCoordFeedThrottle()
+				throttle = self.db.profile.feeds.coords_throttle
+			end
+
 			coordFeedFrame:SetScript("OnUpdate", function(self, elapsed)
 				counter = counter + elapsed
 				if counter < throttle then

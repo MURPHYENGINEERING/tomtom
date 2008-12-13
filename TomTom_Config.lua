@@ -40,6 +40,10 @@ local function createconfig()
 			TomTom:ReloadWaypoints()
 		elseif info.arg == "minimap.enable" or info.arg == "worldmap.enable" then
 			TomTom:ReloadWaypoints()
+		elseif info.arg == "feeds.coords_throttle" then
+			TomTom:UpdateCoordFeedThrottle()
+		elseif info.arg == "feeds.arrow_throttle" then
+			TomTom:UpdateArrowFeedThrottle()
 		end
 	end
 
@@ -497,13 +501,31 @@ local function createconfig()
 				width = "double",
 				arg = "feeds.coords",
 			},
+			coords_throttle = {
+				type = "range",
+				order = 3,
+				name = L["Coordinate feed throttle"],
+				desc = L["Controls the frequency of updates for the coordinate LDB feed."],
+				width = "double",
+				min = 0, max = 2.0, step = 0.05,
+				arg = "feeds.coords_throttle",
+			},
 			arrow = {
 				type = "toggle",
 				order = 3,
 				name = L["Provide a LDB data source for the crazy-arrow"],
 				width = "double",
 				arg = "feeds.arrow",
-			}
+			},
+			arrow_throttle = {
+				type = "range",
+				order = 3,
+				name = L["Crazy Arrow feed throttle"],
+				desc = L["Controls the frequency of updates for the crazy arrow LDB feed."],
+				width = "double",
+				min = 0, max = 2.0, step = 0.05,
+				arg = "feeds.arrow_throttle",
+			},
 		},
 	}
 
