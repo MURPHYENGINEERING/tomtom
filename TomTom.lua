@@ -114,6 +114,7 @@ function TomTom:ADDON_LOADED(event, addon)
 				feeds = {
 					coords = false,
 					coords_throttle = 0.3,
+					coords_accuracy = 2,
 					arrow = false,
 					arrow_throttle = 0.1,
 				},
@@ -177,7 +178,7 @@ function TomTom:ADDON_LOADED(event, addon)
 				local opt = TomTom.db.profile
 
 				if x and y then
-					feed_coords.text = string.format("%s", RoundCoords(x, y, opt.block.accuracy))
+					feed_coords.text = string.format("%s", RoundCoords(x, y, opt.feeds.coords_accuracy))
 				end
 			end)
 		end
