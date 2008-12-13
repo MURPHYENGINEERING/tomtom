@@ -9,6 +9,7 @@
 local Astrolabe = DongleStub("Astrolabe-0.4")
 local sformat = string.format
 local L = TomTomLocals
+local ldb = LibStub("LibDataBroker-1.1")
 
 local GetPlayerBearing
 function GetPlayerBearing()
@@ -110,11 +111,11 @@ wayframe.arrow:SetAllPoints()
 local active_point, arrive_distance, showDownArrow, point_title
 
 function TomTom:SetCrazyArrow(uid, dist, title)
-	if self.profile.arrow.enable then
-		active_point = uid
-		arrive_distance = dist
-		point_title = title 
+	active_point = uid
+	arrive_distance = dist
+	point_title = title 
 
+	if self.profile.arrow.enable then
 		wayframe.title:SetText(title or "Unknown waypoint")
 		wayframe:Show()
 	end
@@ -353,5 +354,88 @@ wayframe:SetScript("OnClick", function(self, button)
 	if TomTom.db.profile.arrow.menu then
 		UIDropDownMenu_Initialize(TomTom.dropdown, init_dropdown)
 		ToggleDropDownMenu(1, nil, TomTom.dropdown, "cursor", 0, 0)
+	end
+end)
+
+local function getCoords(column, row)
+	local xstart = (column * 56) / 512
+	local ystart = (row * 42) / 512
+	local xend = ((column + 1) * 56) / 512
+	local yend = ((row + 1) * 42) / 512
+	return xstart, xend, ystart, yend
+end
+
+local texcoords = setmetatable({}, {__index = function(t, k)
+	local col,row = k:match("(%d):(%d)")
+	local obj = {getCoords(col, row)}
+	rawset(t, k, obj)
+	return obj
+end})
+
+wayframe:RegisterEvent("ADDON_LOADED")
+wayframe:SetScript("OnEvent", function(self, event, arg1, ...)
+	if arg1 == "TomTom" then
+		if TomTom.db.profile.feeds.arrow then
+			-- Create a data feed for coordinates
+			local feed_crazy = ldb:NewDataObject("TomTom_CrazyArrow", {
+				type = "data source",
+				icon = "Interface\\Addons\\TomTom\\Images\\Arrow",
+				text = "Crazy",
+				iconR = 1,
+				iconG = 1,
+				iconB = 1,
+				iconCoords = {0, 1, 0, 1},
+				OnTooltipShow = function(tooltip)
+					local dist = TomTom:GetDistanceToWaypoint(active_point)
+					if dist then
+						tooltip:AddLine(point_title or L["Unknown waypoint"])
+						tooltip:AddLine(sformat(L["%d yards"], dist), 1, 1, 1)
+					end
+				end,
+			})
+
+			local crazyFeedFrame = CreateFrame("Frame")
+			local throttle = 0.5
+			local counter = 0
+			crazyFeedFrame:SetScript("OnUpdate", function(self, elapsed)
+				counter = counter + elapsed
+				if counter < throttle then
+					return
+				end
+
+				counter = 0
+				
+				local angle = TomTom:GetDirectionToWaypoint(active_point)
+				local player = GetPlayerBearing()
+				if not angle or not player then
+					feed_crazy.iconCoords = texcoords["1:1"]
+					feed_crazy.iconR = 0.2
+					feed_crazy.iconG = 1.0
+					feed_crazy.iconB = 0.2
+					feed_crazy.text = "No waypoint"
+					return
+				end
+
+				angle = angle - player
+
+				local perc = math.abs((math.pi - math.abs(angle)) / math.pi)
+
+				local gr,gg,gb = unpack(TomTom.db.profile.arrow.goodcolor)
+				local mr,mg,mb = unpack(TomTom.db.profile.arrow.middlecolor)
+				local br,bg,bb = unpack(TomTom.db.profile.arrow.badcolor)
+				local r,g,b = ColorGradient(perc, br, bg, bb, mr, mg, mb, gr, gg, gb)		
+				feed_crazy.iconR = r
+				feed_crazy.iconG = g
+				feed_crazy.iconB = b
+
+				cell = floor(angle / twopi * 108 + 0.5) % 108
+				local column = cell % 9
+				local row = floor(cell / 9)
+
+				local key = column .. ":" .. row
+				feed_crazy.iconCoords = texcoords[key]
+				feed_crazy.text = point_title or "Unknown waypoint"
+			end)
+		end
 	end
 end)

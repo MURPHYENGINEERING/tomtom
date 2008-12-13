@@ -5,6 +5,7 @@
 -- Simple localization table for messages
 local L = TomTomLocals
 local Astrolabe = DongleStub("Astrolabe-0.4")
+local ldb = LibStub("LibDataBroker-1.1")
 
 -- Speed up minimap updates
 Astrolabe.MinimapUpdateTime = 0.1
@@ -110,6 +111,10 @@ function TomTom:ADDON_LOADED(event, addon)
 					cleardistance = 10,
 					savewaypoints = true,
 				},
+				feeds = {
+					coords = false,
+					arrow = false,
+				},
 			},
 		}
 
@@ -143,6 +148,32 @@ function TomTom:ADDON_LOADED(event, addon)
 
 		self:ReloadOptions()
 		self:ReloadWaypoints()
+
+		if self.db.profile.feeds.coords then
+			-- Create a data feed for coordinates
+			local feed_coords = ldb:NewDataObject("TomTom_Coords", {
+				type = "data source",
+				icon = "Interface\\Icons\\INV_Misc_Map_01",
+				text = "",
+			})
+
+			local coordFeedFrame = CreateFrame("Frame")
+			local throttle, counter = 0.5, 0
+			coordFeedFrame:SetScript("OnUpdate", function(self, elapsed)
+				counter = counter + elapsed
+				if counter < throttle then
+					return 
+				end
+				
+				counter = 0
+				local c,z,x,y = Astrolabe:GetCurrentPlayerPosition()
+				local opt = TomTom.db.profile
+
+				if x and y then
+					feed_coords.text = string.format("%s", RoundCoords(x, y, opt.block.accuracy))
+				end
+			end)
+		end
 	end
 end
 

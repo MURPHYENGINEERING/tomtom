@@ -1,7 +1,7 @@
 --[[
 Name: Astrolabe
-Revision: $Rev: 95 $
-$Date: 2008-12-03 22:44:26 +0000 (Wed, 03 Dec 2008) $
+Revision: $Rev: 98 $
+$Date: 2008-12-04 08:54:58 +0000 (Thu, 04 Dec 2008) $
 Author(s): Esamynn (esamynn at wowinterface.com)
 Inspired By: Gatherer by Norganna
              MapLibrary by Kristofer Karlsson (krka at kth.se)
@@ -42,7 +42,7 @@ Note:
 -- DO NOT MAKE CHANGES TO THIS LIBRARY WITHOUT FIRST CHANGING THE LIBRARY_VERSION_MAJOR
 -- STRING (to something unique) OR ELSE YOU MAY BREAK OTHER ADDONS THAT USE THIS LIBRARY!!!
 local LIBRARY_VERSION_MAJOR = "Astrolabe-0.4"
-local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 95 $", "(%d+)") or 1)
+local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 98 $", "(%d+)") or 1)
 
 if not DongleStub then error(LIBRARY_VERSION_MAJOR .. " requires DongleStub.") end
 if not DongleStub:IsNewerVersion(LIBRARY_VERSION_MAJOR, LIBRARY_VERSION_MINOR) then return end
@@ -104,6 +104,7 @@ local sqrt = math.sqrt;
 local min = math.min
 local max = math.max
 local yield = coroutine.yield
+local next = next
 local GetFramerate = GetFramerate
 
 
@@ -446,7 +447,20 @@ function Astrolabe:PlaceIconOnMinimap( icon, continent, zone, xPos, yPos )
 	argcheck(xPos, 5, "number");
 	argcheck(yPos, 6, "number");
 	
-	local lC, lZ, lx, ly = unpack(self.LastPlayerPosition);
+	-- if the positining system is currently active, just use the player position used by the last incremental (or full) update
+	-- otherwise, make sure we base our calculations off of the most recent player position
+	local lC, lZ, lx, ly;
+	if ( self.processingFrame:IsShown() ) then
+		lC, lZ, lx, ly = unpack(self.LastPlayerPosition);
+	else
+		lC, lZ, lx, ly = self:GetCurrentPlayerPosition();
+		local lastPosition = self.LastPlayerPosition;
+		lastPosition[1] = lC;
+		lastPosition[2] = lZ;
+		lastPosition[3] = lx;
+		lastPosition[4] = ly;
+	end
+	
 	local dist, xDist, yDist = self:ComputeDistance(lC, lZ, lx, ly, continent, zone, xPos, yPos);
 	if not ( dist ) then
 		--icon's position has no meaningful position relative to the player's current location
@@ -458,20 +472,6 @@ function Astrolabe:PlaceIconOnMinimap( icon, continent, zone, xPos, yPos )
 		self.MinimapIcons[icon] = nil;
 	else
 		self.MinimapIconCount = self.MinimapIconCount + 1
-	end
-	
-	-- We know this icon's position is valid, so we need to make sure the icon placement 
-	-- system is active.  We call this here so that if this is the first icon being added to 
-	-- an empty buffer, the full recalc will not completely redo the work done by this function 
-	-- because the icon has not yet actually been placed in the buffer.  
-	-- 
-	-- Note: if the update system was inactive, then the LastPlayerPosition used to calculate the icon's
-	-- data earlier in this function was out of date, and will be updated by this show, thus we need to redo
-	-- the distance calculations
-	if not ( self.processingFrame:IsShown() ) then
-		self.processingFrame:Show()
-		lC, lZ, lx, ly = unpack(self.LastPlayerPosition);
-		dist, xDist, yDist = self:ComputeDistance(lC, lZ, lx, ly, continent, zone, xPos, yPos);
 	end
 	
 	AddedOrUpdatedIcons[icon] = iconData
@@ -495,6 +495,9 @@ function Astrolabe:PlaceIconOnMinimap( icon, continent, zone, xPos, yPos )
 	local map = Minimap
 	placeIconOnMinimap(map, map:GetZoom(), map:GetWidth(), map:GetHeight(), icon, dist, xDist, yDist);
 	icon:Show()
+	
+	-- We know this icon's position is valid, so we need to make sure the icon placement system is active.  
+	self.processingFrame:Show()
 	
 	return 0;
 end
@@ -922,8 +925,12 @@ function Astrolabe:OnShow( frame )
 		return
 	end
 	
-	-- re-calculate minimap icon positions
-	self:CalculateMinimapIconPositions(true);
+	-- re-calculate minimap icon positions (if needed)
+	if ( next(self.MinimapIcons) ) then
+		self:CalculateMinimapIconPositions(true);
+	else
+		resetIncrementalUpdate = true;
+	end
 	
 	if ( self.MinimapIconCount <= 0 ) then
 		-- no icons left to manage

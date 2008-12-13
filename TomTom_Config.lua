@@ -477,6 +477,36 @@ local function createconfig()
 		},
 	} -- End world map options
 
+	-- LDB Data Feeds
+	options.args.feeds = {
+		type = "group",
+		order = 8,
+		name = L["Data Feed Options"],
+		get = get,
+		set = set,
+		args = {
+			help = {
+				order = 1,
+				type = "description",
+				name = L["TomTom is capable of providing data sources via LibDataBroker, which allows them to be displayed in any LDB compatible display.  These options enable or disable the individual feeds, but will only take effect after a reboot."],
+			},
+			coords = {
+				type = "toggle",
+				order = 2,
+				name = L["Provide a LDB data source for coordinates"],
+				width = "double",
+				arg = "feeds.coords",
+			},
+			arrow = {
+				type = "toggle",
+				order = 3,
+				name = L["Provide a LDB data source for the crazy-arrow"],
+				width = "double",
+				arg = "feeds.arrow",
+			}
+		},
+	}
+
 	options.args.general = {
 		type = "group",
 		order = 1,
@@ -601,6 +631,11 @@ local function createBlizzOptions()
 	-- World Map Options
 	config:RegisterOptionsTable("TomTom-Worldmap", options.args.worldmap)
 	dialog:AddToBlizOptions("TomTom-Worldmap", options.args.worldmap.name, "TomTom")
+
+	-- World Map Options
+	config:RegisterOptionsTable("TomTom-Feeds", options.args.feeds)
+	dialog:AddToBlizOptions("TomTom-Feeds", options.args.feeds.name, "TomTom")
+
 
 	-- Profile Options
 	local p_options = options.args.profile.args.options
