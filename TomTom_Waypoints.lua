@@ -188,6 +188,11 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks, show_minimap, show_world)
 	return point.uid
 end
 
+function TomTom:IsValidWaypoint(uid)
+	local obj = resolveuid(uid, false)
+	return obj and true or false
+end
+
 function TomTom:HideWaypoint(uid, minimap, worldmap)
 	local point = resolveuid(uid)
 	if point then
@@ -214,6 +219,7 @@ function TomTom:ShowWaypoint(uid)
 	end
 end
 
+-- This function removes the waypoint from the active set
 function TomTom:ClearWaypoint(uid)
 	local point = resolveuid(uid, true)
 	if point then

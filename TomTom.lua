@@ -88,6 +88,7 @@ function TomTom:ADDON_LOADED(event, addon)
 					title_height = 0,
 					title_scale = 1,
 					title_alpha = 1,
+					setclosest = true,
 				},
 				minimap = {
 					enable = true,
@@ -917,6 +918,39 @@ for cidx,c in ipairs{GetMapContinents()} do
 	for zidx,z in ipairs{GetMapZones(cidx)} do
 		zlist[z:lower():gsub("[%L]", "")] = {cidx, zidx, z}
 	end
+end
+
+function TomTom:SetClosestWaypoint()
+	local c,z,x,y = Astrolabe:GetCurrentPlayerPosition()
+	local zone = TomTom:GetMapFile(c, z)
+	local closest_uid = nil
+	local closest_dist = nil
+	if waypoints[zone] then
+		for uid in pairs(waypoints[zone]) do
+			local dist,x,y = TomTom:GetDistanceToWaypoint(uid)
+			if (dist and closest_dist == nil) or (dist and dist < closest_dist) then
+				closest_dist = dist
+				closest_uid = uid
+			end
+		end
+	end
+	if closest_dist then
+		local data = waypoints[closest_uid]
+		TomTom:SetCrazyArrow(closest_uid, TomTom.profile.arrow.arrival, data.title)
+	end
+end
+
+SLASH_TOMTOM_CLOSEST_WAYPOINT1 = "/cway"
+SLASH_TOMTOM_CLOSEST_WAYPOINT2 = "/closestway"
+SlashCmdList["TOMTOM_CLOSEST_WAYPOINT"] = function(msg)
+	TomTom:SetClosestWaypoint()
+end
+
+SLASH_TOMTOM_WAYBACK1 = "/wayb"
+SLASH_TOMTOM_WAYBACK2 = "/wayback"
+SlashCmdList["TOMTOM_WAYBACK"] = function(msg)
+	local backc,backz,backx,backy = Astrolabe:GetCurrentPlayerPosition()
+	TomTom:AddZWaypoint(backc, backz, backx*100, backy*100, L["Wayback"])
 end
 
 SLASH_TOMTOM_WAY1 = "/way"

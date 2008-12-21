@@ -201,8 +201,16 @@ local function createconfig()
 				width = "double",
 				arg = "arrow.noclick",
 			},
-			heredistance = {
+			setclosest = {
 				order = 8,
+				type = "toggle",
+				name = L["Automatically set to next closest waypoint"],
+				desc = L["When the current waypoint is cleared (either by the user or automatically) and this option is set, TomTom will automatically set the closest waypoint in the current zone as active waypoint."],
+				width = "double",
+				arg = "arrow.setclosest",
+			},
+			heredistance = {
+				order = 9,
 				type = "range",
 				name = L["\"Arrival Distance\""],
 				desc = L["This setting will control the distance at which the waypoint arrow switches to a downwards arrow, indicating you have arrived at your destination"],
@@ -212,7 +220,7 @@ local function createconfig()
 			display = {
 				type = "group",
 				name = L["Arrow display"],
-				order = 9,
+				order = 10,
 				inline = true,
 				args = {
 					help = {

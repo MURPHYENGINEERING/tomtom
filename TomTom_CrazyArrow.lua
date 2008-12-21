@@ -137,7 +137,19 @@ local function OnUpdate(self, elapsed)
 	end
 
 	local dist,x,y = TomTom:GetDistanceToWaypoint(active_point)
+
+	-- The only time we cannot calculate the distance is when the waypoint
+	-- is on another continent, or we are in an instance
 	if not dist or IsInInstance() then
+		if not TomTom:IsValidWaypoint(active_point) then
+			active_point = nil
+			-- Change the crazy arrow to point at the closest waypoint
+			if TomTom.profile.arrow.setclosest then
+				TomTom:SetClosestWaypoint()
+				return
+			end
+		end
+
 		self:Hide()
 		return
 	end
@@ -286,6 +298,10 @@ local dropdown_info = {
 			text = L["Clear waypoint from crazy arrow"],
 			func = function()
 				active_point = nil
+				if TomTom.profile.arrow.setclosest then
+					TomTom:SetClosestWaypoint()
+					return
+				end
 			end,
 		},
 		{
