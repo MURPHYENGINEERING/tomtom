@@ -1,7 +1,7 @@
 --[[
 Name: Astrolabe
-Revision: $Rev: 98 $
-$Date: 2008-12-04 08:54:58 +0000 (Thu, 04 Dec 2008) $
+Revision: $Rev: 100 $
+$Date: 2008-12-21 09:07:03 +0000 (Sun, 21 Dec 2008) $
 Author(s): Esamynn (esamynn at wowinterface.com)
 Inspired By: Gatherer by Norganna
              MapLibrary by Kristofer Karlsson (krka at kth.se)
@@ -42,7 +42,7 @@ Note:
 -- DO NOT MAKE CHANGES TO THIS LIBRARY WITHOUT FIRST CHANGING THE LIBRARY_VERSION_MAJOR
 -- STRING (to something unique) OR ELSE YOU MAY BREAK OTHER ADDONS THAT USE THIS LIBRARY!!!
 local LIBRARY_VERSION_MAJOR = "Astrolabe-0.4"
-local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 98 $", "(%d+)") or 1)
+local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 100 $", "(%d+)") or 1)
 
 if not DongleStub then error(LIBRARY_VERSION_MAJOR .. " requires DongleStub.") end
 if not DongleStub:IsNewerVersion(LIBRARY_VERSION_MAJOR, LIBRARY_VERSION_MINOR) then return end
@@ -448,17 +448,21 @@ function Astrolabe:PlaceIconOnMinimap( icon, continent, zone, xPos, yPos )
 	argcheck(yPos, 6, "number");
 	
 	-- if the positining system is currently active, just use the player position used by the last incremental (or full) update
-	-- otherwise, make sure we base our calculations off of the most recent player position
+	-- otherwise, make sure we base our calculations off of the most recent player position (if one is available)
 	local lC, lZ, lx, ly;
 	if ( self.processingFrame:IsShown() ) then
 		lC, lZ, lx, ly = unpack(self.LastPlayerPosition);
 	else
 		lC, lZ, lx, ly = self:GetCurrentPlayerPosition();
-		local lastPosition = self.LastPlayerPosition;
-		lastPosition[1] = lC;
-		lastPosition[2] = lZ;
-		lastPosition[3] = lx;
-		lastPosition[4] = ly;
+		if ( lC and lC >= 0 ) then
+			local lastPosition = self.LastPlayerPosition;
+			lastPosition[1] = lC;
+			lastPosition[2] = lZ;
+			lastPosition[3] = lx;
+			lastPosition[4] = ly;
+		else
+			lC, lZ, lx, ly = unpack(self.LastPlayerPosition);
+		end
 	end
 	
 	local dist, xDist, yDist = self:ComputeDistance(lC, lZ, lx, ly, continent, zone, xPos, yPos);
@@ -883,6 +887,8 @@ function Astrolabe:OnEvent( frame, event )
 	elseif ( event == "PLAYER_LEAVING_WORLD" ) then
 		frame:Hide(); -- yes, I know this is redunant
 		self:RemoveAllMinimapIcons(); --dump all minimap icons
+		-- TODO: when I uncouple the point buffer from Minimap drawing,
+		--       I should consider updating LastPlayerPosition here
 	
 	elseif ( event == "PLAYER_ENTERING_WORLD" ) then
 		frame:Show();
@@ -929,13 +935,20 @@ function Astrolabe:OnShow( frame )
 	if ( next(self.MinimapIcons) ) then
 		self:CalculateMinimapIconPositions(true);
 	else
+		-- needed so that the cycle doesn't overwrite an updated LastPlayerPosition
 		resetIncrementalUpdate = true;
 	end
 	
 	if ( self.MinimapIconCount <= 0 ) then
 		-- no icons left to manage
-		self.processingFrame:Hide()
+		frame:Hide();
 	end
+end
+
+function Astrolabe:OnHide( frame )
+	-- dump the new icons cache here
+	-- a full update will performed the next time processing is re-actived
+	self:DumpNewIconsCache()
 end
 
 -- called by AstrolabMapMonitor when all world maps are hidden
@@ -1006,6 +1019,11 @@ local function activate( newInstance, oldInstance )
 	frame:SetScript("OnShow",
 		function( frame )
 			Astrolabe:OnShow(frame);
+		end
+	);
+	frame:SetScript("OnHide",
+		function( frame )
+			Astrolabe:OnHide(frame);
 		end
 	);
 	
