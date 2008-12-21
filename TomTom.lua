@@ -54,6 +54,7 @@ function TomTom:ADDON_LOADED(event, addon)
 				general = {
 					confirmremoveall = true,
 					announce = false,
+					corpse_arrow = true,
 				},
 				block = {
 					enable = true,

@@ -600,6 +600,14 @@ local function createconfig()
 				min = 0, max = 150, step = 1,
 				arg = "persistence.cleardistance",
 			},
+			corpse_arrow = {
+				type = "toggle",
+				order = 5,
+				name = L["Automatically set a waypoint when I die"],
+				desc = L["TomTom can automatically set a waypoint when you die, guiding you back to your corpse"],
+				width = "double",
+				arg = "general.corpse_arrow",
+			},
 		},
 	}
 

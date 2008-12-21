@@ -28,5 +28,6 @@ Localization.ruRU.lua
 TomTom.lua
 TomTom_Waypoints.lua
 TomTom_CrazyArrow.lua
+TomTom_Corpse.lua
 
 TomTom_Config.lua
