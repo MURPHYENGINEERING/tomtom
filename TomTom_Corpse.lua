@@ -59,6 +59,12 @@ local function SetCorpseArrow()
 	end
 end
 
+local function StartCorpseSearch()
+	if not IsInInstance() then
+		eventFrame:Show()
+	end
+end
+
 local function ClearCorpseArrow()
 	if uid then
 		TomTom:RemoveWaypoint(uid)
@@ -89,13 +95,13 @@ eventFrame:SetScript("OnEvent", function(self, event, arg1, ...)
 	if event == "ADDON_LOADED" and arg1 == "TomTom" then
 		self:UnregisterEvent("ADDON_LOADED")
 		if UnitIsDeadOrGhost("player") then
-			self:Show()
+			StartCorpseSearch()
 		end
 	end
 
 	if event == "PLAYER_ALIVE" then
 		if UnitIsDeadOrGhost("player") then
-			self:Show()
+			StartCorpseSearch()
 		else
 			ClearCorpseArrow()
 		end
@@ -107,7 +113,7 @@ eventFrame:SetScript("OnEvent", function(self, event, arg1, ...)
 		if not IsInInstance() then
 			x,y = GetPlayerMapPosition("player")
 		end
-		self:Show()
+		StartCorpseSearch()
 	elseif event == "PLAYER_UNGHOST" then
 		ClearCorpseArrow()
 	end
