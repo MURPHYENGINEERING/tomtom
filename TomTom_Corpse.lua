@@ -53,7 +53,7 @@ local function GetCorpseLocation()
 end
 
 local function SetCorpseArrow()
-	if c and z and x and y then
+	if c and z and x and y and c > 0 and z > 0 and x > 0 and y > 0 then
 		uid = TomTom:AddZWaypoint(c, z, x*100, y*100, L["My Corpse"], false, true, true, nil, true, true)
 		return uid
 	end
