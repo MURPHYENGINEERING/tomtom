@@ -297,10 +297,15 @@ local dropdown_info = {
 			-- Clear waypoint from crazy arrow
 			text = L["Clear waypoint from crazy arrow"],
 			func = function()
+				local prior = active_point
+
 				active_point = nil
 				if TomTom.profile.arrow.setclosest then
-					TomTom:SetClosestWaypoint()
-					return
+					local uid = TomTom:GetClosestWaypoint()
+					if uid and uid ~= prior then
+						TomTom:SetClosestWaypoint()
+						return
+					end
 				end
 			end,
 		},

@@ -743,6 +743,10 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, custo
 	local coord = self:GetCoord(x / 100, y / 100)
 	local zone = self:GetMapFile(c, z)	
 	
+	if not zone then 
+		return
+	end
+
 	-- Ensure there isn't already a waypoint at this location
 	if waypoints[zone] then
 		for uid in pairs(waypoints[zone]) do
@@ -921,7 +925,7 @@ for cidx,c in ipairs{GetMapContinents()} do
 	end
 end
 
-function TomTom:SetClosestWaypoint()
+function TomTom:GetClosestWaypoint()
 	local c,z,x,y = Astrolabe:GetCurrentPlayerPosition()
 	local zone = TomTom:GetMapFile(c, z)
 	local closest_uid = nil
@@ -936,8 +940,15 @@ function TomTom:SetClosestWaypoint()
 		end
 	end
 	if closest_dist then
-		local data = waypoints[closest_uid]
-		TomTom:SetCrazyArrow(closest_uid, TomTom.profile.arrow.arrival, data.title)
+		return closest_uid
+	end
+end
+
+function TomTom:SetClosestWaypoint()
+	local uid = self:GetClosestWaypoint()
+	if uid then
+		local data = waypoints[uid]
+		TomTom:SetCrazyArrow(uid, TomTom.profile.arrow.arrival, data.title)
 	end
 end
 
