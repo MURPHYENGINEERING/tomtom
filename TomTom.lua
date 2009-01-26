@@ -1039,7 +1039,7 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 		local zone = table.concat(tokens, " ", 1, zoneEnd)
 		local x,y,desc = select(zoneEnd + 1, unpack(tokens))
 
-		if desc then desc = table.concat(tokens, " ", 4) end
+		if desc then desc = table.concat(tokens, " ", zoneEnd + 3) end
 
 		-- Find a fuzzy match for the zone
 		local matches = {}
