@@ -1,7 +1,7 @@
 --[[
 Name: Astrolabe
-Revision: $Rev: 100 $
-$Date: 2008-12-21 09:07:03 +0000 (Sun, 21 Dec 2008) $
+Revision: $Rev: 104 $
+$Date: 2009-03-28 18:21:44 +0000 (Sat, 28 Mar 2009) $
 Author(s): Esamynn (esamynn at wowinterface.com)
 Inspired By: Gatherer by Norganna
              MapLibrary by Kristofer Karlsson (krka at kth.se)
@@ -42,7 +42,7 @@ Note:
 -- DO NOT MAKE CHANGES TO THIS LIBRARY WITHOUT FIRST CHANGING THE LIBRARY_VERSION_MAJOR
 -- STRING (to something unique) OR ELSE YOU MAY BREAK OTHER ADDONS THAT USE THIS LIBRARY!!!
 local LIBRARY_VERSION_MAJOR = "Astrolabe-0.4"
-local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 100 $", "(%d+)") or 1)
+local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 104 $", "(%d+)") or 1)
 
 if not DongleStub then error(LIBRARY_VERSION_MAJOR .. " requires DongleStub.") end
 if not DongleStub:IsNewerVersion(LIBRARY_VERSION_MAJOR, LIBRARY_VERSION_MINOR) then return end
@@ -367,8 +367,7 @@ end
 local minimapRotationEnabled = false;
 local minimapShape = false;
 
-local MinimapCompassRing = MiniMapCompassRing;
-local minimapRotationOffset = -MinimapCompassRing:GetFacing()
+local minimapRotationOffset = GetPlayerFacing();
 
 
 local function placeIconOnMinimap( minimap, minimapZoom, mapWidth, mapHeight, icon, dist, xDist, yDist )
@@ -489,7 +488,7 @@ function Astrolabe:PlaceIconOnMinimap( icon, continent, zone, xPos, yPos )
 	
 	minimapRotationEnabled = GetCVar("rotateMinimap") ~= "0"
 	if ( minimapRotationEnabled ) then
-		minimapRotationOffset = -MinimapCompassRing:GetFacing()
+		minimapRotationOffset = GetPlayerFacing();
 	end
 	
 	-- check Minimap Shape
@@ -568,7 +567,7 @@ do
 				
 				minimapRotationEnabled = GetCVar("rotateMinimap") ~= "0"
 				if ( minimapRotationEnabled ) then
-					minimapRotationOffset = -MinimapCompassRing:GetFacing()
+					minimapRotationOffset = GetPlayerFacing();
 				end
 				
 				-- check current frame rate
@@ -693,7 +692,7 @@ do
 			if ( C and C >= 0 ) then
 				minimapRotationEnabled = GetCVar("rotateMinimap") ~= "0"
 				if ( minimapRotationEnabled ) then
-					minimapRotationOffset = -MinimapCompassRing:GetFacing()
+					minimapRotationOffset = GetPlayerFacing();
 				end
 				
 				-- check current frame rate

@@ -11,33 +11,6 @@ local sformat = string.format
 local L = TomTomLocals
 local ldb = LibStub("LibDataBroker-1.1")
 
-local GetPlayerBearing
-function GetPlayerBearing()
-	local obj; -- Remains an upvalue
-	do
-		local t = {Minimap:GetChildren()}; -- Becomes garbage
-		for k, v in pairs(t) do
-			if v:IsObjectType("Model") and not v:GetName() then
-				local model = v:GetModel():lower()
-				if model:match("interface\\minimap\\minimaparrow") then 
-					obj = v; break;
-				end
-			end
-		end
-	end
-	if not obj then return; end
-
-	-- If we've found what we were looking for, rewrite function to skip the search next time.
-	GetPlayerBearing = function() 
-		if GetCVar("rotateMinimap") ~= "0" then
-			return (MiniMapCompassRing:GetFacing() * -1)
-		else
-			return obj:GetFacing(); 
-		end
-	end
-	return GetPlayerBearing();
-end
-
 local function ColorGradient(perc, ...)
 	local num = select("#", ...)
 	local hexes = type(select(1, ...)) == "string"
@@ -191,7 +164,7 @@ local function OnUpdate(self, elapsed)
 		end
 
 		local angle = TomTom:GetDirectionToWaypoint(active_point)
-		local player = GetPlayerBearing()
+		local player = GetPlayerFacing()
 
 		angle = angle - player
 
@@ -439,7 +412,7 @@ wayframe:SetScript("OnEvent", function(self, event, arg1, ...)
 				counter = 0
 
 				local angle = TomTom:GetDirectionToWaypoint(active_point)
-				local player = GetPlayerBearing()
+				local player = GetPlayerFacing()
 				if not angle or not player then
 					feed_crazy.iconCoords = texcoords["1:1"]
 					feed_crazy.iconR = 0.2

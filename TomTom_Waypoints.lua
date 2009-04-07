@@ -78,8 +78,9 @@ local function rotateArrow(self)
 	angle = angle + rad_135
 
 	if GetCVar("rotateMinimap") == "1" then
-		local cring = MiniMapCompassRing:GetFacing()
-		angle = angle + cring
+		--local cring = MiniMapCompassRing:GetFacing()
+        local cring = GetPlayerFacing()
+		angle = angle - cring
 	end
 
 	local sin,cos = math.sin(angle) * square_half, math.cos(angle) * square_half
@@ -343,8 +344,9 @@ do
 				angle = angle + rad_135
 
 				if GetCVar("rotateMinimap") == "1" then
-					local cring = MiniMapCompassRing:GetFacing()
-					angle = angle + cring
+					--local cring = MiniMapCompassRing:GetFacing()
+                    local cring = GetPlayerFacing()
+					angle = angle - cring
 				end
 
 				local sin,cos = math.sin(angle) * square_half, math.cos(angle) * square_half
