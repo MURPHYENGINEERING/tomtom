@@ -322,20 +322,20 @@ function TomTom:ShowHideCoordBlock()
 end
 
 -- Hook the WorldMap OnClick
-local Orig_WorldMapButton_OnClick = WorldMapButton_OnClick
 local world_click_verify = {
 	["A"] = function() return IsAltKeyDown() end,
 	["C"] = function() return IsControlKeyDown() end,
 	["S"] = function() return IsShiftKeyDown() end,
 }
 
-function WorldMapButton_OnClick(self, ...)
+local origScript = WorldMapButton:GetScript("OnMouseUp")
+WorldMapButton:SetScript("OnMouseUp", function(self, ...)
 	local mouseButton, button = ...
 	if mouseButton == "RightButton" then
 		-- Check for all the modifiers that are currently set
 		for mod in TomTom.db.profile.worldmap.create_modifier:gmatch("[ACS]") do
 			if not world_click_verify[mod] or not world_click_verify[mod]() then
-				return Orig_WorldMapButton_OnClick(self, ...)
+                return origScript and origScript(self, ...) or true
 			end
 		end
 
@@ -344,17 +344,14 @@ function WorldMapButton_OnClick(self, ...)
 		local x,y = GetCurrentCursorPosition()
 
 		if z == 0 then
-			return Orig_WorldMapButton_OnClick(self, ...)
+			return origScript and origScript(self, ...) or true
 		end
 
 		local uid = TomTom:AddZWaypoint(c,z,x*100,y*100)
 	else
-		return Orig_WorldMapButton_OnClick(self, ...)
+		return origScript and origScript(self, ...) or true
 	end
-end
-
-local oldText = WorldMapMagnifyingGlassButton:GetText()
-WorldMapMagnifyingGlassButton:SetText(oldText .. "\n" .. L["Ctrl+Right Click To Add a Waypoint"])
+end)
 
 local function WaypointCallback(event, arg1, arg2, arg3)
 	if event == "OnDistanceArrive" then

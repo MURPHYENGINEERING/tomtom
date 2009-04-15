@@ -1,5 +1,6 @@
-## Interface: 30000
+## Interface: 30100
 ## Title: TomTom
+## Author: jnwhiteh
 ## Version: wowi:revision
 ## Notes: Acts as your portable navigation assistant
 ## Notes-zhCN:一个简单的导航助手。
