@@ -120,7 +120,12 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks, show_minimap, show_world)
 		minimap:RegisterEvent("PLAYER_ENTERING_WORLD")
 		minimap:SetScript("OnEvent", Minimap_OnEvent)
 
-		local worldmap = CreateFrame("Button", nil, WorldMapDetailFrame)
+        if not TomTomMapOverlay then
+            local overlay = CreateFrame("Frame", "TomTomMapOverlay", WorldMapDetailFrame)
+            overlay:SetAllPoints(true)
+        end
+
+		local worldmap = CreateFrame("Button", nil, TomTomMapOverlay)
 		worldmap:SetHeight(12)
 		worldmap:SetWidth(12)
 		worldmap:RegisterForClicks("RightButtonUp")
@@ -168,7 +173,7 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks, show_minimap, show_world)
 	Astrolabe:PlaceIconOnMinimap(point.minimap, c, z, x, y)
 
 	if show_world then
-		Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, point.worldmap, c, z, x, y)
+		Astrolabe:PlaceIconOnWorldMap(TomTomMapOverlay, point.worldmap, c, z, x, y)
 	else
 		point.worldmap.disabled = true
 	end
@@ -418,7 +423,7 @@ do
 
 			local data = self.point
 			if data.worldmap and data.show_world and not disabled then
-				local x,y = Astrolabe:PlaceIconOnWorldMap(WorldMapDetailFrame, self, data.c, data.z, data.x, data.y)
+				local x,y = Astrolabe:PlaceIconOnWorldMap(TomTomMapOverlay, self, data.c, data.z, data.x, data.y)
 				if (x and y and (0 < x and x <= 1) and (0 < y and y <= 1)) then
 					self:Show()
 				else
