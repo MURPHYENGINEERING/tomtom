@@ -328,8 +328,8 @@ local world_click_verify = {
 	["S"] = function() return IsShiftKeyDown() end,
 }
 
-local origScript = WorldMapButton:GetScript("OnMouseUp")
-WorldMapButton:SetScript("OnMouseUp", function(self, ...)
+local origScript = WorldMapButton_OnClick
+WorldMapButton_OnClick = function(self, ...)
 	local mouseButton, button = ...
 	if mouseButton == "RightButton" then
 		-- Check for all the modifiers that are currently set
@@ -351,7 +351,11 @@ WorldMapButton:SetScript("OnMouseUp", function(self, ...)
 	else
 		return origScript and origScript(self, ...) or true
 	end
-end)
+end
+
+if WorldMapButton:GetScript("OnMouseUp") == origScript then
+    WorldMapButton:SetScript("OnMouseUp", WorldMapButton_OnClick)
+end
 
 local function WaypointCallback(event, arg1, arg2, arg3)
 	if event == "OnDistanceArrive" then
