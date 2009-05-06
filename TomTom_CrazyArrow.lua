@@ -372,8 +372,41 @@ local texcoords = setmetatable({}, {__index = function(t, k)
 	return obj
 end})
 
+function TomTom:SetCrazyArrowDirection(angle)
+    cell = floor(angle / twopi * 108 + 0.5) % 108
+    local column = cell % 9
+    local row = floor(cell / 9)
+
+    local key = column .. ":" .. row
+    arrow:SetTexCoord(unpack(texcoords[key]))
+end
+
+function TomTom:SetCrazyArrowColor(r, g, b, a)
+    arrow:SetVertexColor(r, g, b, a)
+end
+
+function TomTom:SetCrazyArrowTitle(title, status, tta)
+    wayframe.title:SetText(title)
+    wayframe.status:SetText(title)
+    wayframe.tta:SetText(title)
+end
+
+function TomTom:HijackCrazyArrow(onupdate)
+    wayframe:SetScript("OnUpdate", onupdate)
+    wayframe.hijacked = true
+end
+
+function TomTom:ReleaseCrazyArrow()
+    wayframe:SetScript("OnUpdate", OnUpdate)
+    wayframe.hijacked = false
+end
+
+function TomTom:IsHijacked()
+    return wayframe.hijacked
+end
+
 wayframe:RegisterEvent("ADDON_LOADED")
-wayframe:SetScript("OnEvent", function(self, event, arg1, ...)
+local function wayframe_OnEvent(self, event, arg1, ...)
 	if arg1 == "TomTom" then
 		if TomTom.db.profile.feeds.arrow then
 			-- Create a data feed for coordinates
@@ -444,4 +477,6 @@ wayframe:SetScript("OnEvent", function(self, event, arg1, ...)
 			end)
 		end
 	end
-end)
+end
+
+wayframe:SetScript("OnEvent", wayframe_OnEvent)
