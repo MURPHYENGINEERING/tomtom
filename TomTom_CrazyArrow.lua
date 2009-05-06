@@ -505,6 +505,7 @@ end
 function TomTom:HijackCrazyArrow(onupdate)
     wayframe:SetScript("OnUpdate", onupdate)
     wayframe.hijacked = true
+    wayframe:Show()
 end
 
 -- Releases the crazy arrow by restoring the original OnUpdate script
