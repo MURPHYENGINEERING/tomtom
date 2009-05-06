@@ -372,39 +372,6 @@ local texcoords = setmetatable({}, {__index = function(t, k)
 	return obj
 end})
 
-function TomTom:SetCrazyArrowDirection(angle)
-    cell = floor(angle / twopi * 108 + 0.5) % 108
-    local column = cell % 9
-    local row = floor(cell / 9)
-
-    local key = column .. ":" .. row
-    arrow:SetTexCoord(unpack(texcoords[key]))
-end
-
-function TomTom:SetCrazyArrowColor(r, g, b, a)
-    arrow:SetVertexColor(r, g, b, a)
-end
-
-function TomTom:SetCrazyArrowTitle(title, status, tta)
-    wayframe.title:SetText(title)
-    wayframe.status:SetText(title)
-    wayframe.tta:SetText(title)
-end
-
-function TomTom:HijackCrazyArrow(onupdate)
-    wayframe:SetScript("OnUpdate", onupdate)
-    wayframe.hijacked = true
-end
-
-function TomTom:ReleaseCrazyArrow()
-    wayframe:SetScript("OnUpdate", OnUpdate)
-    wayframe.hijacked = false
-end
-
-function TomTom:IsHijacked()
-    return wayframe.hijacked
-end
-
 wayframe:RegisterEvent("ADDON_LOADED")
 local function wayframe_OnEvent(self, event, arg1, ...)
 	if arg1 == "TomTom" then
@@ -480,3 +447,73 @@ local function wayframe_OnEvent(self, event, arg1, ...)
 end
 
 wayframe:SetScript("OnEvent", wayframe_OnEvent)
+
+--[[-------------------------------------------------------------------------
+--  API for manual control of Crazy Arrow
+--
+--  This allow for an addon to specify their own control of the waypoint
+--  arrow without needing to tip-toe around the API.  It may not integrate
+--  properly, but in general it should work.
+--
+--  Example Usage:
+--
+--  if not TomTom:CrazyArrowIsHijacked() then
+--    TomTom:HijackCrazyArrow(function(self, elapsed)
+--      -- Random angle
+--      local angle = math.random(math.pi * 2)
+--      TomTom:SetCrazyArrowDirection(angle)
+--      -- Random color
+--      local r = math.random(100) / 100
+--      local g = math.random(100) / 100
+--      local b = math.random(100) / 100
+--      TomTom:SetCrazyArrowColor(r, g, b)
+--      -- Titles
+--      TomTom:SetCrazyArrowTitle("Hijacked arrow", "Hijacked", "You will never arrive")
+--    end)
+--  end
+--
+--  -- At some point later
+--  TomTom:ReleaseCrazyArrow()
+-------------------------------------------------------------------------]]--
+
+-- Set the direction of the crazy arrow without taking the player's facing
+-- into consideration.  This can be accomplished by subtracting
+-- GetPlayerFacing() from the angle before passing it in.
+function TomTom:SetCrazyArrowDirection(angle)
+    cell = floor(angle / twopi * 108 + 0.5) % 108
+    local column = cell % 9
+    local row = floor(cell / 9)
+
+    local key = column .. ":" .. row
+    arrow:SetTexCoord(unpack(texcoords[key]))
+end
+
+-- Convenience function to set the color of the crazy arrow
+function TomTom:SetCrazyArrowColor(r, g, b, a)
+    arrow:SetVertexColor(r, g, b, a)
+end
+
+-- Convenience function to set the title/status and time to arrival text
+-- of the crazy arrow.
+function TomTom:SetCrazyArrowTitle(title, status, tta)
+    wayframe.title:SetText(title)
+    wayframe.status:SetText(title)
+    wayframe.tta:SetText(title)
+end
+
+-- Function to actually hijack the crazy arrow by replacing the OnUpdate script
+function TomTom:HijackCrazyArrow(onupdate)
+    wayframe:SetScript("OnUpdate", onupdate)
+    wayframe.hijacked = true
+end
+
+-- Releases the crazy arrow by restoring the original OnUpdate script
+function TomTom:ReleaseCrazyArrow()
+    wayframe:SetScript("OnUpdate", OnUpdate)
+    wayframe.hijacked = false
+end
+
+-- Returns whether or not the crazy arrow is currently hijacked
+function TomTom:CrazyArrowIsHijacked()
+    return wayframe.hijacked
+end
