@@ -497,8 +497,8 @@ end
 -- of the crazy arrow.
 function TomTom:SetCrazyArrowTitle(title, status, tta)
     wayframe.title:SetText(title)
-    wayframe.status:SetText(title)
-    wayframe.tta:SetText(title)
+    wayframe.status:SetText(status)
+    wayframe.tta:SetText(tta)
 end
 
 -- Function to actually hijack the crazy arrow by replacing the OnUpdate script
