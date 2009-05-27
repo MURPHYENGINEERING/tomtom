@@ -786,7 +786,7 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, custo
 
 	if not silent and self.profile.general.announce then
 		local ctxt = RoundCoords(x/100, y/100, 2)
-		local msg = string.format("|cffffff78TomTom:|r Added a waypoint (%s) in %s", ctxt, zone)
+        local msg = string.format("|cffffff78TomTom:|r Added a waypoint (%s%s%s) in %s", desc and desc or "", desc and " - " or "", ctxt, zone)
 		ChatFrame1:AddMessage(msg)
 	end
 
