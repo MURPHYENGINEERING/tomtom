@@ -233,10 +233,10 @@ function TomTom:ShowHideWorldCoords()
 		-- Create the frame if it doesn't exist
 		if not TomTomWorldFrame then
 			TomTomWorldFrame = CreateFrame("Frame", nil, WorldMapFrame)
-			TomTomWorldFrame.Player = TomTomWorldFrame:CreateFontString("OVERLAY", nil, "GameFontHighlightSmall")
+			TomTomWorldFrame.Player = TomTomWorldFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 			TomTomWorldFrame.Player:SetPoint("BOTTOM", WorldMapPositioningGuide, "BOTTOM", -100, 11)
 
-			TomTomWorldFrame.Cursor = TomTomWorldFrame:CreateFontString("OVERLAY", nil, "GameFontHighlightSmall")
+			TomTomWorldFrame.Cursor = TomTomWorldFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 			TomTomWorldFrame.Cursor:SetPoint("BOTTOM", WorldMapPositioningGuide, "BOTTOM", 100, 11)
 
 			TomTomWorldFrame:SetScript("OnUpdate", WorldMap_OnUpdate)
@@ -278,7 +278,7 @@ function TomTom:ShowHideCoordBlock()
 			TomTomBlock:RegisterForClicks("RightButtonUp")
 			TomTomBlock:SetPoint("TOP", Minimap, "BOTTOM", -20, -10)
 
-			TomTomBlock.Text = TomTomBlock:CreateFontString("OVERLAY", nil, "GameFontNormal")
+			TomTomBlock.Text = TomTomBlock:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 			TomTomBlock.Text:SetJustifyH("CENTER")
 			TomTomBlock.Text:SetPoint("CENTER", 0, 0)
 

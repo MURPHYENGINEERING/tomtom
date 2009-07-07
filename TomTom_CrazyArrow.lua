@@ -77,7 +77,7 @@ wayframe:RegisterForDrag("LeftButton")
 wayframe:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 wayframe:SetScript("OnEvent", OnEvent)
 
-wayframe.arrow = wayframe:CreateTexture("OVERLAY")
+wayframe.arrow = wayframe:CreateTexture(nil, "OVERLAY")
 wayframe.arrow:SetTexture("Interface\\Addons\\TomTom\\Images\\Arrow")
 wayframe.arrow:SetAllPoints()
 
