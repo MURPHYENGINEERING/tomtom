@@ -1,4 +1,4 @@
-## Interface: 30100
+## Interface: 30200
 ## Title: TomTom
 ## Author: jnwhiteh
 ## Version: wowi:revision

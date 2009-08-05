@@ -1,7 +1,7 @@
 --[[
 Name: Astrolabe
-Revision: $Rev: 104 $
-$Date: 2009-03-28 18:21:44 +0000 (Sat, 28 Mar 2009) $
+Revision: $Rev: 107 $
+$Date: 2009-08-05 08:34:29 +0100 (Wed, 05 Aug 2009) $
 Author(s): Esamynn (esamynn at wowinterface.com)
 Inspired By: Gatherer by Norganna
              MapLibrary by Kristofer Karlsson (krka at kth.se)
@@ -42,7 +42,7 @@ Note:
 -- DO NOT MAKE CHANGES TO THIS LIBRARY WITHOUT FIRST CHANGING THE LIBRARY_VERSION_MAJOR
 -- STRING (to something unique) OR ELSE YOU MAY BREAK OTHER ADDONS THAT USE THIS LIBRARY!!!
 local LIBRARY_VERSION_MAJOR = "Astrolabe-0.4"
-local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 104 $", "(%d+)") or 1)
+local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 107 $", "(%d+)") or 1)
 
 if not DongleStub then error(LIBRARY_VERSION_MAJOR .. " requires DongleStub.") end
 if not DongleStub:IsNewerVersion(LIBRARY_VERSION_MAJOR, LIBRARY_VERSION_MINOR) then return end
@@ -1514,6 +1514,12 @@ WorldMapSize = {
 				width = 5249.998732532693,
 				xOffset = 10327.56786162186,
 				yOffset = 5076.728707808831,
+			},
+			HrothgarsLanding = {
+				height = 2452.093653509858,
+				width = 3677.082560623348,
+				xOffset = 6419.234857391856,
+				yOffset = -187.8757232657943,
 			},
 			HowlingFjord = {
 				height = 4031.265457002443,
