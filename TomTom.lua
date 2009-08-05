@@ -1088,3 +1088,5 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 		return usage()
 	end
 end
+
+-- Fix for curseforge fingerprinting
