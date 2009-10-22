@@ -26,8 +26,12 @@ do
 	until not line
 end
 
+-- Store a reference to the minimap parent
+local minimapParent = Minimap
+
 -- Create a local table used as a frame pool
 local pool = {}
+local all_points = {}
 
 -- Create a mapping from uniqueID to waypoint
 local getuid,resolveuid
@@ -87,6 +91,14 @@ local function rotateArrow(self)
 	self.arrow:SetTexCoord(0.5-sin, 0.5+cos, 0.5+cos, 0.5+sin, 0.5-cos, 0.5-sin, 0.5+sin, 0.5-cos)
 end
 
+function TomTom:ReparentMinimap(minimap)
+    minimapParent = minimap
+    for idx, waypoint in ipairs(all_points) do
+        waypoint:SetParent(minimap)
+    end
+end
+
+
 function TomTom:SetWaypoint(c, z, x, y, callbacks, show_minimap, show_world)
 	-- Try to acquire a waypoint from the frame pool
 	local point = table.remove(pool)
@@ -94,10 +106,13 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks, show_minimap, show_world)
 	if not point then
 		point = {}
 
-		local minimap = CreateFrame("Button", nil, Minimap)
+		local minimap = CreateFrame("Button", nil, minimapParent)
 		minimap:SetHeight(20)
 		minimap:SetWidth(20)
 		minimap:RegisterForClicks("RightButtonUp")
+
+        -- Add to the "All points" table so we can reparent easily
+        table.insert(all_points, minimap)
 
 		minimap.icon = minimap:CreateTexture("BACKGROUND")
 		minimap.icon:SetTexture("Interface\\AddOns\\TomTom\\Images\\GoldGreenDot")

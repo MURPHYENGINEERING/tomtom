@@ -909,6 +909,13 @@ do
 	function Block_OnDragStop(self, button, down)
 		self:StopMovingOrSizing()
 	end
+
+    function Block_OnClick(self, button, down) 
+        local c,z,x,y = Astrolabe:GetCurrentPlayerPosition() 
+        local zone = TomTom:GetMapFile(c, z)	
+        local desc = format("%s: %.2f, %.2f", zone, x*100, y*100) 
+        TomTom:AddZWaypoint(c, z, x*100, y*100, desc) 
+    end 
 end
 
 local function usage()
