@@ -140,6 +140,8 @@ function TomTom:ADDON_LOADED(event, addon)
 		self.waydb.RegisterCallback(self, "OnProfileReset", "ReloadWaypoints")
 
 		self.tooltip = CreateFrame("GameTooltip", "TomTomTooltip", nil, "GameTooltipTemplate")
+        self.tooltip:SetFrameStrata("DIALOG")
+
 		self.dropdown = CreateFrame("Frame", "TomTomDropdown", nil, "UIDropDownMenuTemplate")
 
 		self.waypoints = waypoints
@@ -234,10 +236,10 @@ function TomTom:ShowHideWorldCoords()
 		if not TomTomWorldFrame then
 			TomTomWorldFrame = CreateFrame("Frame", nil, WorldMapFrame)
 			TomTomWorldFrame.Player = TomTomWorldFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-			TomTomWorldFrame.Player:SetPoint("BOTTOM", WorldMapPositioningGuide, "BOTTOM", -100, 11)
+			TomTomWorldFrame.Player:SetPoint("BOTTOMLEFT", WorldMapPositioningGuide, "BOTTOMLEFT", 20, 11)
 
 			TomTomWorldFrame.Cursor = TomTomWorldFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-			TomTomWorldFrame.Cursor:SetPoint("BOTTOM", WorldMapPositioningGuide, "BOTTOM", 100, 11)
+			TomTomWorldFrame.Cursor:SetPoint("BOTTOMLEFT", WorldMapPositioningGuide, "BOTTOMLEFT", 150, 11)
 
 			TomTomWorldFrame:SetScript("OnUpdate", WorldMap_OnUpdate)
 		end
