@@ -136,7 +136,7 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks, show_minimap, show_world)
 		minimap:SetScript("OnEvent", Minimap_OnEvent)
 
         if not TomTomMapOverlay then
-            local overlay = CreateFrame("Frame", "TomTomMapOverlay", WorldMapDetailFrame)
+            local overlay = CreateFrame("Frame", "TomTomMapOverlay", WorldMapButton)
             overlay:SetAllPoints(true)
         end
 
