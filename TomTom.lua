@@ -120,6 +120,10 @@ function TomTom:ADDON_LOADED(event, addon)
 					arrow = false,
 					arrow_throttle = 0.1,
 				},
+                poi = {
+                    enable = true,
+                    modifier = "C",
+                },
 			},
 		}
 
@@ -196,7 +200,7 @@ function TomTom:ReloadOptions()
 	self:ShowHideWorldCoords()
 	self:ShowHideCoordBlock()
 	self:ShowHideCrazyArrow()
-
+    self:EnableDisablePOIIntegration()
 end
 
 function TomTom:ReloadWaypoints()
@@ -1097,5 +1101,3 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 		return usage()
 	end
 end
-
--- Fix for curseforge fingerprinting

@@ -31,5 +31,6 @@ TomTom.lua
 TomTom_Waypoints.lua
 TomTom_CrazyArrow.lua
 TomTom_Corpse.lua
+TomTom_POIIntegration.lua
 
 TomTom_Config.lua

@@ -36,6 +36,8 @@ local function createconfig()
 			TomTom:ShowHideWorldCoords()
 		elseif ns == "arrow" then
 			TomTom:ShowHideCrazyArrow()
+        elseif ns == "poi" then
+            TomTom:EnableDisablePOIIntegration()
 		elseif opt == "otherzone" then
 			TomTom:ReloadWaypoints()
 		elseif info.arg == "minimap.enable" or info.arg == "worldmap.enable" then
@@ -611,9 +613,49 @@ local function createconfig()
 		},
 	}
 
-	options.args.profile = {
+    	options.args.poi = {
 		type = "group",
 		order = 6,
+		name = L["Quest Objectives"],
+		desc = L["Options that alter quest objective integration"],
+		get = get,
+		set = set,
+		args = {
+			desc = {
+				order = 1,
+				type = "description",
+				name = L["TomTom can be configured to set waypoints for the quest objectives that are shown in the watch frame and on the world map.  These options can be used to configure these options."],
+			},      
+			enable = {
+				order = 2,
+				type = "toggle",
+				name = L["Enable quest objective integration"],
+				desc = L["Enables the setting of waypoints when modified-clicking on quest objectives"],
+				width = "double",
+				arg = "poi.enable",
+			},
+            modifier = {
+				type = "select",
+				order = 3,
+				name = L["set waypoint modifier"],
+				desc = L["This setting changes the modifier used by TomTom when right-clicking on a quest objective POI to create a waypoint"],
+				values = {
+					["A"] = "Alt",
+					["C"] = "Ctrl",
+					["S"] = "Shift",
+					["AC"] = "Alt-Ctrl",
+					["AS"] = "Alt-Shift",
+					["CS"] = "Ctrl-Shift",
+					["ACS"] = "Alt-Ctrl-Shift",
+				},
+				arg = "poi.modifier",
+			},
+		},
+	} -- End POI Integration settings
+
+	options.args.profile = {
+		type = "group",
+		order = 7,
 		name = L["Profile Options"],
 		args = {
 			desc = {
@@ -682,6 +724,9 @@ local function createBlizzOptions()
 	config:RegisterOptionsTable("TomTom-Feeds", options.args.feeds)
 	dialog:AddToBlizOptions("TomTom-Feeds", options.args.feeds.name, "TomTom")
 
+    -- POI Options
+	config:RegisterOptionsTable("TomTom-POI", options.args.poi)
+	dialog:AddToBlizOptions("TomTom-POI", options.args.poi.name, "TomTom")
 
 	-- Profile Options
 	local p_options = options.args.profile.args.options
