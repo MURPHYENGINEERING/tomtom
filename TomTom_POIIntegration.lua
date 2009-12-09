@@ -3,7 +3,7 @@ local function POIAnchorToCoord(poiframe)
     local frame = WorldMapDetailFrame
     local width = frame:GetWidth()
     local height = frame:GetHeight()
-    local scale = frame:GetEffectiveScale()
+    local scale = frame:GetScale()
     local cx = (x / scale) / width
     local cy = (-y / scale) / height
 
