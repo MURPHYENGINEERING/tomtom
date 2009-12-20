@@ -240,10 +240,10 @@ function TomTom:ShowHideWorldCoords()
 		if not TomTomWorldFrame then
 			TomTomWorldFrame = CreateFrame("Frame", nil, WorldMapFrame)
 			TomTomWorldFrame.Player = TomTomWorldFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-			TomTomWorldFrame.Player:SetPoint("BOTTOMLEFT", WorldMapPositioningGuide, "BOTTOMLEFT", 20, 11)
+			TomTomWorldFrame.Player:SetPoint("RIGHT", WorldMapPositioningGuide, "BOTTOM", -15, 2)
 
 			TomTomWorldFrame.Cursor = TomTomWorldFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-			TomTomWorldFrame.Cursor:SetPoint("BOTTOMLEFT", WorldMapPositioningGuide, "BOTTOMLEFT", 150, 11)
+			TomTomWorldFrame.Cursor:SetPoint("LEFT", WorldMapPositioningGuide, "BOTTOM", 15, 2)
 
 			TomTomWorldFrame:SetScript("OnUpdate", WorldMap_OnUpdate)
 		end
