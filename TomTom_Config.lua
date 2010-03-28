@@ -219,6 +219,14 @@ local function createconfig()
 				min = 0, max = 150, step = 5,
 				arg = "arrow.arrival",
 			},
+            enablePing = {
+                order = 9.5,
+                type = "toggle",
+                name = L["Play a sound when arriving at a waypoint"],
+                desc = L["When you 'arrive' at a waypoint (this distance is controlled by the 'Arrival Distance' setting in this group) a sound can be played to indicate this.  You can enable or disable this sound using this setting."],
+                width = "double",
+                arg = "arrow.enablePing",
+            },
 			display = {
 				type = "group",
 				name = L["Arrow display"],
@@ -604,7 +612,7 @@ local function createconfig()
 			},
 			corpse_arrow = {
 				type = "toggle",
-				order = 5,
+				order = 6,
 				name = L["Automatically set a waypoint when I die"],
 				desc = L["TomTom can automatically set a waypoint when you die, guiding you back to your corpse"],
 				width = "double",
@@ -629,7 +637,7 @@ local function createconfig()
 			enable = {
 				order = 2,
 				type = "toggle",
-				name = L["Enable quest objective integration"],
+				name = L["Enable quest objective click integration"],
 				desc = L["Enables the setting of waypoints when modified-clicking on quest objectives"],
 				width = "double",
 				arg = "poi.enable",
@@ -649,6 +657,14 @@ local function createconfig()
 					["ACS"] = "Alt-Ctrl-Shift",
 				},
 				arg = "poi.modifier",
+			},
+            enableClosest = {
+				order = 4,
+				type = "toggle",
+				name = L["Enable automatic quest objective waypoints"],
+				desc = L["Enables the automatic setting of quest objective waypoints based on which objective is closest to your current location.  This setting WILL override the setting of manual waypoints."],
+				width = "double",
+				arg = "poi.setClosest",
 			},
 		},
 	} -- End POI Integration settings

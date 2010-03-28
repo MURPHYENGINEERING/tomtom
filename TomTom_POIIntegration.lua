@@ -1,3 +1,7 @@
+local hookEnabled = true;
+local modifier;
+local watchframeHookEnabled = false;
+
 local function POIAnchorToCoord(poiframe)
     local point, relto, relpoint, x, y = poiframe:GetPoint()
     local frame = WorldMapDetailFrame
@@ -20,8 +24,36 @@ local modTbl = {
     S = IsShiftKeyDown,
 }
 
-local hookEnabled = true;
-local modifier;
+local function findQuestFrameFromQuestIndex(questId)
+    -- Try to find the correct quest frame
+    for i = 1, MAX_NUM_QUESTS do
+        local questFrame = _G["WorldMapQuestFrame"..i];
+        if ( not questFrame ) then
+            break
+        elseif ( questFrame.questId == questId ) then
+            return questFrame
+        end
+    end
+end
+
+local function setQuestWaypoint(self)
+    local c, z = GetCurrentMapContinent(), GetCurrentMapZone();
+    local x, y = POIAnchorToCoord(self)
+
+    local qid = self.questId
+
+    local title;
+    if self.quest and self.quest.questLogIndex then
+        title = GetQuestLogTitle(self.quest.questLogIndex)
+    elseif self.questLogIndex then
+        title = GetQuestLogTitle(self.questLogIndex)
+    else
+        title = "Quest #" .. qid .. " POI"
+    end
+
+    local uid = TomTom:AddZWaypoint(c, z, x, y, title)
+    return uid
+end
 
 -- desc, persistent, minimap, world, custom_callbacks, silent, crazy)
 local function poi_OnClick(self, button)
@@ -44,26 +76,16 @@ local function poi_OnClick(self, button)
     end
 
     if self.parentName == "WatchFrameLines" then
-        local questFrame = _G["WorldMapQuestFrame"..self.questLogIndex];
-        local selected = WorldMapQuestScrollChildFrame.selected
-        local poiIcon = selected.poiIcon;
-        self = poiIcon
+        local questFrame = findQuestFrameFromQuestIndex(self.questId)
+        if not questFrame then
+            return
+        else
+            self = questFrame.poiIcon
+        end
     end
-    
-    local c, z = GetCurrentMapContinent(), GetCurrentMapZone();
-    local x, y = POIAnchorToCoord(self)
-
-    local qid = self.questId
-
-    local title;
-    if self.quest.questLogIndex then
-        title = GetQuestLogTitle(self.quest.questLogIndex)
-    else
-        title = "Quest #" .. qid .. " POI"
-    end
-
-    local uid = TomTom:AddZWaypoint(c, z, x, y, title)
-end
+   
+    return setQuestWaypoint(self)
+ end
 
 local hooked = {}
 hooksecurefunc("QuestPOI_DisplayButton", function(parentName, buttonType, buttonIndex, questId)
@@ -77,7 +99,47 @@ hooksecurefunc("QuestPOI_DisplayButton", function(parentName, buttonType, button
       end
 end)
 
+-- This code will enable auto-tracking of closest quest objectives.  To
+-- accomplish this, it hooks the WatchFrame_Update function, and when it
+-- is called, it sets a waypoint to the closest quest id.
+local function updateClosestPOI()
+    local questIndex = GetQuestIndexForWatch(1);
+    if ( questIndex ) then
+        local title, level, questTag, suggestedGroup, isHeader, isCollapsed, isComplete, isDaily, questID = GetQuestLogTitle(questIndex);
+        local requiredMoney = GetQuestLogRequiredMoney(questIndex);			
+        numObjectives = GetNumQuestLeaderBoards(questIndex);
+        if ( isComplete and isComplete < 0 ) then
+            isComplete = false;
+        elseif ( numObjectives == 0 and playerMoney >= requiredMoney ) then
+            isComplete = true;		
+        end			
+
+        -- check filters
+        local filterOK = true;
+        if ( isComplete and bit.band(WATCHFRAME_FILTER_TYPE, WATCHFRAME_FILTER_COMPLETED_QUESTS) ~= WATCHFRAME_FILTER_COMPLETED_QUESTS ) then
+            filterOK = false;
+        elseif ( bit.band(WATCHFRAME_FILTER_TYPE, WATCHFRAME_FILTER_REMOTE_ZONES) ~= WATCHFRAME_FILTER_REMOTE_ZONES and not LOCAL_MAP_QUESTS[questID] ) then
+            filterOK = false;
+        end			
+
+        if filterOK then
+            -- Set a waypoint for this POI, it should be the higehst
+            local questFrame = findQuestFrameFromQuestIndex(questID)
+            if questFrame then
+                setQuestWaypoint(questFrame.poiIcon)
+            end
+        end
+    end
+end
+
+hooksecurefunc("WatchFrame_Update", function()
+    if watchframeHookEnabled then
+        updateClosestPOI()
+    end
+end)
+
 function TomTom:EnableDisablePOIIntegration()
     hookEnabled = TomTom.profile.poi.enable
     modifier = TomTom.profile.poi.modifier
+    watchframeHookEnabled = TomTom.profile.poi.setClosest
 end

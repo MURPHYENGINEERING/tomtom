@@ -90,6 +90,7 @@ function TomTom:ADDON_LOADED(event, addon)
 					title_scale = 1,
 					title_alpha = 1,
 					setclosest = true,
+                    enablePing = false,
 				},
 				minimap = {
 					enable = true,
@@ -123,6 +124,7 @@ function TomTom:ADDON_LOADED(event, addon)
                 poi = {
                     enable = true,
                     modifier = "C",
+                    setClosest = false,
                 },
 			},
 		}
@@ -233,6 +235,17 @@ function TomTom:ZoneChanged()
 	self:ShowHideCoordBlock()
 end
 
+-- Hook some global functions so we know when the world map size changes
+local mapSizedUp = not (WORLDMAP_SETTINGS.size == WORLDMAP_WINDOWED_SIZE);
+hooksecurefunc("WorldMap_ToggleSizeUp", function()
+    mapSizedUp = true
+    TomTom:ShowHideWorldCoords()
+end)
+hooksecurefunc("WorldMap_ToggleSizeDown", function()
+    mapSizedUp = false
+    TomTom:ShowHideWorldCoords()
+end)
+
 function TomTom:ShowHideWorldCoords()
 	-- Bail out if we're not supposed to be showing this frame
 	if self.profile.mapcoords.playerenable or self.db.profile.mapcoords.cursorenable then
@@ -240,15 +253,19 @@ function TomTom:ShowHideWorldCoords()
 		if not TomTomWorldFrame then
 			TomTomWorldFrame = CreateFrame("Frame", nil, WorldMapFrame)
 			TomTomWorldFrame.Player = TomTomWorldFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-			TomTomWorldFrame.Player:SetPoint("RIGHT", WorldMapPositioningGuide, "BOTTOM", -15, 2)
-
 			TomTomWorldFrame.Cursor = TomTomWorldFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-			TomTomWorldFrame.Cursor:SetPoint("LEFT", WorldMapPositioningGuide, "BOTTOM", 15, 2)
-
 			TomTomWorldFrame:SetScript("OnUpdate", WorldMap_OnUpdate)
 		end
 
-		TomTomWorldFrame.Player:Hide()
+        if mapSizedUp then
+            TomTomWorldFrame.Player:SetPoint("RIGHT", WorldMapPositioningGuide, "BOTTOM", -15, 15)
+            TomTomWorldFrame.Cursor:SetPoint("LEFT", WorldMapPositioningGuide, "BOTTOM", 15, 15)
+        else
+            TomTomWorldFrame.Player:SetPoint("RIGHT", WorldMapPositioningGuide, "BOTTOM", -40, 2)
+            TomTomWorldFrame.Cursor:SetPoint("LEFT", WorldMapPositioningGuide, "BOTTOM", -15, 2)
+        end
+
+        TomTomWorldFrame.Player:Hide()
 		TomTomWorldFrame.Cursor:Hide()
 
 		if self.profile.mapcoords.playerenable then
@@ -655,6 +672,12 @@ local function _both_clear_distance(event, uid, range, distance, lastdistance)
 	end
 end
 
+local function _both_ping_arrival(event, uid, range, distance, lastdistance)
+    if TomTom.profile.arrow.enablePing then
+        PlaySoundFile("Interface\\AddOns\\TomTom\\Media\\ping.mp3")
+    end
+end
+
 local function _remove(event, uid)
 	local data = waypoints[uid]
 	local key = string.format("%d:%s", data.coord, data.title or "")
@@ -737,9 +760,22 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, custo
 	end
 
 	local cleardistance = self.profile.persistence.cleardistance
-	if cleardistance > 0 then
-		callbacks.distance[cleardistance] = _both_clear_distance
+    local arrivaldistance = self.profile.arrow.arrival
+
+    if cleardistance == arrivaldistance then
+        callbacks.distance[cleardistance] = function(...)
+            _both_clear_distance(...);
+            _both_ping_arrival(...);
+        end
+    else
+        if cleardistance > 0 then
+            callbacks.distance[cleardistance] = _both_clear_distance
+        end
+        if arrivaldistance > 0 then
+            callbacks.distance[arrivaldistance] = _both_ping_arrival
+        end
 	end
+
 
 	-- Default values
 	if persistent == nil then persistent = self.profile.persistence.savewaypoints end
@@ -797,6 +833,26 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, custo
 	end
 
 	return uid
+end
+
+function TomTom:WaypointExists(c, z, x, y, desc)
+    local coord = self:GetCoord(x / 100, y / 100)
+    local zone = self:GetMapFile(c, z)	
+
+    if not zone then 
+        return
+    end
+
+    if waypoints[zone] then
+        for uid in pairs(waypoints[zone]) do
+            local data = waypoints[uid]
+            if data.title == desc then
+                return true
+            else
+                return false
+            end
+        end
+    end
 end
 
 function TomTom:SetCustomWaypoint(c,z,x,y,callback,minimap,world, silent)
