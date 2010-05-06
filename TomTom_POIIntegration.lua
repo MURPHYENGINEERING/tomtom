@@ -99,6 +99,8 @@ hooksecurefunc("QuestPOI_DisplayButton", function(parentName, buttonType, button
       end
 end)
 
+local setPoints = {}
+
 -- This code will enable auto-tracking of closest quest objectives.  To
 -- accomplish this, it hooks the WatchFrame_Update function, and when it
 -- is called, it sets a waypoint to the closest quest id.
@@ -127,7 +129,11 @@ local function updateClosestPOI()
             -- Set a waypoint for this POI, it should be the higehst
             local questFrame = findQuestFrameFromQuestIndex(questID)
             if questFrame then
-                setQuestWaypoint(questFrame.poiIcon)
+                for idx, uid in ipairs(setPoints) do
+                    TomTom:RemoveWaypoint(uid)
+                end
+                local uid = setQuestWaypoint(questFrame.poiIcon)
+                table.insert(setPoints, uid)
             end
         end
     end
