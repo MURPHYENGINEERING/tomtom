@@ -1,7 +1,7 @@
-## Interface: 30300
+## Interface: 40000
 ## Title: TomTom
 ## Author: jnwhiteh
-## Version: wowi:revision
+## Version: @project-version@ 
 ## Notes: Acts as your portable navigation assistant
 ## Notes-zhCN:一个简单的导航助手。
 ## Notes-ruRU: Удобный портативный навигатор по игровой карте
