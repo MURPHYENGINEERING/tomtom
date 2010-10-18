@@ -173,10 +173,6 @@ function TomTom:ADDON_LOADED(event, addon)
 			local coordFeedFrame = CreateFrame("Frame")
 			local throttle, counter = self.db.profile.feeds.coords_throttle, 0
 
-			function TomTom:UpdateCoordFeedThrottle()
-				throttle = self.db.profile.feeds.coords_throttle
-			end
-
 			coordFeedFrame:SetScript("OnUpdate", function(self, elapsed)
 				counter = counter + elapsed
 				if counter < throttle then
@@ -193,6 +189,10 @@ function TomTom:ADDON_LOADED(event, addon)
 			end)
 		end
 	end
+end
+
+function TomTom:UpdateCoordFeedThrottle()
+    throttle = self.db.profile.feeds.coords_throttle
 end
 
 function TomTom:ReloadOptions()
