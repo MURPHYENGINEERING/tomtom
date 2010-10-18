@@ -26,6 +26,7 @@ Localization.deDE.lua
 Localization.zhCN.lua
 Localization.ruRU.lua
 Localization.zhTW.lua
+Localization.koKR.lua
 
 TomTom.lua
 TomTom_Waypoints.lua
