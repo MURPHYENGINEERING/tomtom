@@ -26,6 +26,7 @@ TomTom = {
 }
 
 if TomTom.version == "wowi:revision" then TomTom.version = "SVN" end
+if TomTom.version == "@project-version@" then TomTom.version = "SCM" end
 
 TomTom.eventFrame:SetScript("OnEvent", function(self, event, ...)
 	local method = TomTom.events[event]
