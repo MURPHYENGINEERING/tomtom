@@ -380,11 +380,12 @@ local function wayframe_OnEvent(self, event, arg1, ...)
 			local feed_crazy = ldb:NewDataObject("TomTom_CrazyArrow", {
 				type = "data source",
 				icon = "Interface\\Addons\\TomTom\\Images\\Arrow",
+				staticIcon = "Interface\\Addons\\TomTom\\Images\\StaticArrow",
 				text = "Crazy",
-				iconR = 1,
-				iconG = 1,
-				iconB = 1,
-				iconCoords = {0, 1, 0, 1},
+				iconR = 0.2,
+				iconG = 1.0,
+				iconB = 0.2,
+				iconCoords = texcoords["1:1"],
 				OnTooltipShow = function(tooltip)
 					local dist = TomTom:GetDistanceToWaypoint(active_point)
 					if dist then
