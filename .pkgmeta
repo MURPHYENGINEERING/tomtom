@@ -4,5 +4,6 @@ tools-used:
     - ace3
     - callbackhandler
     - libstub
+    - astrolabe
 
 enable-nolib-creation: no
