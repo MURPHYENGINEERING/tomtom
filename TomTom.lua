@@ -25,7 +25,7 @@ if TomTom.version == "wowi:revision" then TomTom.version = "SVN" end
 if TomTom.version == "@project-version@" then TomTom.version = "SCM" end
 
 --[[--------------------------------------------------------------------------
---  Astrolabe compatability library 
+--  Astrolabe compatability library
 ----------------------------------------------------------------------------]]
 
 local compat = {}
@@ -230,9 +230,9 @@ function TomTom:ADDON_LOADED(event, addon)
 			coordFeedFrame:SetScript("OnUpdate", function(self, elapsed)
 				counter = counter + elapsed
 				if counter < throttle then
-					return 
+					return
 				end
-				
+
 				counter = 0
 				local c,z,x,y = compat:GetCurrentPlayerPosition()
 				local opt = TomTom.db.profile
@@ -269,7 +269,7 @@ function TomTom:ReloadWaypoints()
 	waypoints = {}
 	self.waypoints = waypoints
 	self.waypointprofile = self.waydb.profile
-	
+
 	for zone,data in pairs(self.waypointprofile) do
 		local c,z = self:GetCZ(zone)
 		local same = (c == pc) and (z == pz)
@@ -494,7 +494,7 @@ local dropdown_info = {
 				local uid = TomTom.dropdown.uid
 				local data = waypoints[uid]
 				TomTom:RemoveWaypoint(uid)
-				--TomTom:PrintF("Removing waypoint %0.2f, %0.2f in %s", data.x, data.y, data.zone) 
+				--TomTom:PrintF("Removing waypoint %0.2f, %0.2f in %s", data.x, data.y, data.zone)
 			end,
 		},
 		{ -- Remove all waypoints from this zone
@@ -652,7 +652,7 @@ end
 
 function TomTom:CHAT_MSG_ADDON(event, prefix, data, channel, sender)
 	if prefix ~= "TOMTOM2" then return end
-	if sender == UnitName("player") then return end 
+	if sender == UnitName("player") then return end
 
 	local zone,coord,title = string.split(":", data)
 	if not title:match("%S") then
@@ -667,7 +667,7 @@ function TomTom:CHAT_MSG_ADDON(event, prefix, data, channel, sender)
 end
 
 --[[-------------------------------------------------------------------
---  Define callback functions 
+--  Define callback functions
 -------------------------------------------------------------------]]--
 local function _minimap_onclick(event, uid, self, button)
 	if TomTom.db.profile.minimap.menu then
@@ -697,7 +697,7 @@ local function _both_tooltip_show(event, tooltip, uid, dist)
 end
 
 local function _minimap_tooltip_show(event, tooltip, uid, dist)
-	if not TomTom.db.profile.minimap.tooltip then 
+	if not TomTom.db.profile.minimap.tooltip then
 		tooltip:Hide()
 		return
 	end
@@ -838,9 +838,9 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, custo
 	if crazy == nil then crazy = self.profile.arrow.autoqueue end
 
 	local coord = self:GetCoord(x / 100, y / 100)
-	local zone = self:GetMapFile(c, z)	
-	
-	if not zone then 
+	local zone = self:GetMapFile(c, z)
+
+	if not zone then
 		return
 	end
 
@@ -891,9 +891,9 @@ end
 
 function TomTom:WaypointExists(c, z, x, y, desc)
     local coord = self:GetCoord(x / 100, y / 100)
-    local zone = self:GetMapFile(c, z)	
+    local zone = self:GetMapFile(c, z)
 
-    if not zone then 
+    if not zone then
         return
     end
 
@@ -1006,7 +1006,7 @@ do
 	end
 end
 
-do 
+do
 	function Block_OnUpdate(self, elapsed)
 		local c,z,x,y = compat:GetCurrentPlayerPosition()
 		local opt = TomTom.db.profile
@@ -1029,12 +1029,12 @@ do
 		self:StopMovingOrSizing()
 	end
 
-    function Block_OnClick(self, button, down) 
-        local c,z,x,y = compat:GetCurrentPlayerPosition() 
-        local zone = TomTom:GetMapFile(c, z)	
-        local desc = format("%s: %.2f, %.2f", zone, x*100, y*100) 
-        TomTom:AddZWaypoint(c, z, x*100, y*100, desc) 
-    end 
+    function Block_OnClick(self, button, down)
+        local c,z,x,y = compat:GetCurrentPlayerPosition()
+        local zone = TomTom:GetMapFile(c, z)
+        local desc = format("%s: %.2f, %.2f", zone, x*100, y*100)
+        TomTom:AddZWaypoint(c, z, x*100, y*100, desc)
+    end
 end
 
 local function usage()
