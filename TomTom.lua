@@ -49,7 +49,7 @@ do
     -- and converts it to a c,z,x,y tuple
     function compat:GetCurrentPlayerPosition()
         local map, floor, x, y = Astrolabe:GetCurrentPlayerPosition()
-        local c, z = mapcz[map]
+        local c, z = unpack(mapcz[map])
         return c, z, x, y
     end
 
@@ -914,6 +914,9 @@ function TomTom:SetCustomWaypoint(c,z,x,y,callback,minimap,world, silent)
 end
 
 do
+    -- Code to convert between a MapFile ane a C,Z tuple
+    -- This no longer can use Astrolabe to build these tables
+
     local Astrolabe = DongleStub("Astrolabe-1.0")
     -- Code taken from HandyNotes, thanks Xinhuan
     ---------------------------------------------------------
@@ -925,28 +928,39 @@ do
         [1] = "Kalimdor",
         [2] = "Azeroth",
         [3] = "Expansion01",
+        [4] = "Northrend",
+        [5] = "TheMaelstromContinent",
     }
+    local mapCZtoFile = {}
+    _G.mc = mapCZtoFile
     local reverseMapFileC = {}
     local reverseMapFileZ = {}
-    for C = 1, #Astrolabe.ContinentList do
-        for Z = 1, #Astrolabe.ContinentList[C] do
-            local mapFile = Astrolabe.ContinentList[C][Z]
-            reverseMapFileC[mapFile] = C
-            reverseMapFileZ[mapFile] = Z
+
+    for cid, zlist in pairs{GetMapContinents()} do
+        for zid, zname in pairs{GetMapZones(cid)} do
+            SetMapZoom(cid, zid)
+            local mapFile = GetMapInfo()
+            reverseMapFileC[mapFile] = cid
+            reverseMapFileZ[mapFile] = zid
+            mapCZtoFile[cid] = mapCZtoFile[cid] or {}
+            mapCZtoFile[cid][zid] = mapCZtoFile[cid][zid] or {}
+            mapCZtoFile[cid][zid] = mapFile
         end
     end
-    for C = -1, 3 do
-        local mapFile = continentMapFile[C]
-        reverseMapFileC[mapFile] = C
+
+    for cid, mapFile in pairs(continentMapFile) do
+        reverseMapFileC[mapFile] = cid
         reverseMapFileZ[mapFile] = 0
+        mapCZtoFile[cid] = mapCZtoFile[cid] or {}
+        mapCZtoFile[cid][0] = mapCZtoFile[cid][0] or {}
+        mapCZtoFile[cid][0] = mapFile
     end
 
     function TomTom:GetMapFile(C, Z)
         if not C or not Z then return end
-        if Z == 0 then
-            return continentMapFile[C]
-        elseif C > 0 then
-            return Astrolabe.ContinentList[C][Z]
+        local c = mapCZtoFile[C]
+        if c then
+            return c[Z]
         end
     end
     function TomTom:GetCZ(mapFile)
