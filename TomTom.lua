@@ -4,11 +4,7 @@
 
 -- Simple localization table for messages
 local L = TomTomLocals
-local Astrolabe = DongleStub("Astrolabe-0.4")
 local ldb = LibStub("LibDataBroker-1.1")
-
--- Speed up minimap updates
-Astrolabe.MinimapUpdateTime = 0.1
 
 -- Create the addon object
 TomTom = {
@@ -27,6 +23,63 @@ TomTom = {
 
 if TomTom.version == "wowi:revision" then TomTom.version = "SVN" end
 if TomTom.version == "@project-version@" then TomTom.version = "SCM" end
+
+--[[--------------------------------------------------------------------------
+--  Astrolabe compatability library 
+----------------------------------------------------------------------------]]
+
+local compat = {}
+TomTom.compat = compat
+
+do
+    local Astrolabe = DongleStub("Astrolabe-1.0")
+
+    -- Create a lookup table from mapID to c,z pairs
+    local mapcz = {}
+    for cid, zlist in ipairs(Astrolabe.ContinentList) do
+        for zid, mapid in pairs(zlist) do
+            mapcz[mapid] = {cid, zid}
+        end
+    end
+
+    -- Speed up minimap updates
+    Astrolabe.MinimapUpdateTime = 0.1
+
+    -- This function takes the mapID return from the Astrolabe function
+    -- and converts it to a c,z,x,y tuple
+    function compat:GetCurrentPlayerPosition()
+        local map, floor, x, y = Astrolabe:GetCurrentPlayerPosition()
+        local c, z = mapcz[map]
+        return c, z, x, y
+    end
+
+    function compat:GetDirectionToIcon(...)
+        return Astrolabe:GetDirectionToIcon(...)
+    end
+
+    function compat:GetDistanceToIcon(...)
+        return Astrolabe:GetDistanceToIcon(...)
+    end
+
+    function compat:RemoveIconFromMinimap(...)
+        return Astrolabe:RemoveIconFromMinimap(...)
+    end
+
+    function compat:IsIconOnEdge(...)
+        return Astrolabe:IsIconOnEdge(...)
+    end
+
+    function compat:PlaceIconOnMinimap(icon, c, z, x, y)
+        local mapId = Astrolabe:GetMapID(c, z)
+        return Astrolabe:PlaceIconOnMinimap(icon, mapId, nil, x, y)
+    end
+
+    function compat:PlaceIconOnWorldMap(frame, icon, c, z, x, y)
+        local mapId = Astrolabe:GetMapID(c, z)
+        return Astrolabe:PlaceIconOnWorldMap(frame, icon, mapId, nil, x, y)
+    end
+
+end
 
 TomTom.eventFrame:SetScript("OnEvent", function(self, event, ...)
 	local method = TomTom.events[event]
@@ -181,7 +234,7 @@ function TomTom:ADDON_LOADED(event, addon)
 				end
 				
 				counter = 0
-				local c,z,x,y = Astrolabe:GetCurrentPlayerPosition()
+				local c,z,x,y = compat:GetCurrentPlayerPosition()
 				local opt = TomTom.db.profile
 
 				if x and y then
@@ -860,42 +913,45 @@ function TomTom:SetCustomWaypoint(c,z,x,y,callback,minimap,world, silent)
 	return self:AddZWaypoint(c, z, x, y, desc, false, minimap, world, callback, silent)
 end
 
--- Code taken from HandyNotes, thanks Xinhuan
----------------------------------------------------------
--- Public functions for plugins to convert between MapFile <-> C,Z
---
-local continentMapFile = {
-	[WORLDMAP_COSMIC_ID] = "Cosmic", -- That constant is -1
-	[0] = "World",
-	[1] = "Kalimdor",
-	[2] = "Azeroth",
-	[3] = "Expansion01",
-}
-local reverseMapFileC = {}
-local reverseMapFileZ = {}
-for C = 1, #Astrolabe.ContinentList do
-	for Z = 1, #Astrolabe.ContinentList[C] do
-		local mapFile = Astrolabe.ContinentList[C][Z]
-		reverseMapFileC[mapFile] = C
-		reverseMapFileZ[mapFile] = Z
-	end
-end
-for C = -1, 3 do
-	local mapFile = continentMapFile[C]
-	reverseMapFileC[mapFile] = C
-	reverseMapFileZ[mapFile] = 0
-end
+do
+    local Astrolabe = DongleStub("Astrolabe-1.0")
+    -- Code taken from HandyNotes, thanks Xinhuan
+    ---------------------------------------------------------
+    -- Public functions for plugins to convert between MapFile <-> C,Z
+    --
+    local continentMapFile = {
+        [WORLDMAP_COSMIC_ID] = "Cosmic", -- That constant is -1
+        [0] = "World",
+        [1] = "Kalimdor",
+        [2] = "Azeroth",
+        [3] = "Expansion01",
+    }
+    local reverseMapFileC = {}
+    local reverseMapFileZ = {}
+    for C = 1, #Astrolabe.ContinentList do
+        for Z = 1, #Astrolabe.ContinentList[C] do
+            local mapFile = Astrolabe.ContinentList[C][Z]
+            reverseMapFileC[mapFile] = C
+            reverseMapFileZ[mapFile] = Z
+        end
+    end
+    for C = -1, 3 do
+        local mapFile = continentMapFile[C]
+        reverseMapFileC[mapFile] = C
+        reverseMapFileZ[mapFile] = 0
+    end
 
-function TomTom:GetMapFile(C, Z)
-	if not C or not Z then return end
-	if Z == 0 then
-		return continentMapFile[C]
-	elseif C > 0 then
-		return Astrolabe.ContinentList[C][Z]
-	end
-end
-function TomTom:GetCZ(mapFile)
-	return reverseMapFileC[mapFile], reverseMapFileZ[mapFile]
+    function TomTom:GetMapFile(C, Z)
+        if not C or not Z then return end
+        if Z == 0 then
+            return continentMapFile[C]
+        elseif C > 0 then
+            return Astrolabe.ContinentList[C][Z]
+        end
+    end
+    function TomTom:GetCZ(mapFile)
+        return reverseMapFileC[mapFile], reverseMapFileZ[mapFile]
+    end
 end
 
 -- Public functions for plugins to convert between coords <--> x,y
@@ -931,7 +987,7 @@ do
 	end
 
 	function WorldMap_OnUpdate(self, elapsed)
-		local c,z,x,y = Astrolabe:GetCurrentPlayerPosition()
+		local c,z,x,y = compat:GetCurrentPlayerPosition()
 		local opt = TomTom.db.profile
 
 		if not x or not y then
@@ -952,7 +1008,7 @@ end
 
 do 
 	function Block_OnUpdate(self, elapsed)
-		local c,z,x,y = Astrolabe:GetCurrentPlayerPosition()
+		local c,z,x,y = compat:GetCurrentPlayerPosition()
 		local opt = TomTom.db.profile
 
 		if not x or not y then
@@ -974,7 +1030,7 @@ do
 	end
 
     function Block_OnClick(self, button, down) 
-        local c,z,x,y = Astrolabe:GetCurrentPlayerPosition() 
+        local c,z,x,y = compat:GetCurrentPlayerPosition() 
         local zone = TomTom:GetMapFile(c, z)	
         local desc = format("%s: %.2f, %.2f", zone, x*100, y*100) 
         TomTom:AddZWaypoint(c, z, x*100, y*100, desc) 
@@ -997,7 +1053,7 @@ for cidx,c in ipairs{GetMapContinents()} do
 end
 
 function TomTom:GetClosestWaypoint()
-	local c,z,x,y = Astrolabe:GetCurrentPlayerPosition()
+	local c,z,x,y = compat:GetCurrentPlayerPosition()
 	local zone = TomTom:GetMapFile(c, z)
 	local closest_uid = nil
 	local closest_dist = nil
@@ -1032,7 +1088,7 @@ end
 SLASH_TOMTOM_WAYBACK1 = "/wayb"
 SLASH_TOMTOM_WAYBACK2 = "/wayback"
 SlashCmdList["TOMTOM_WAYBACK"] = function(msg)
-	local backc,backz,backx,backy = Astrolabe:GetCurrentPlayerPosition()
+	local backc,backz,backx,backy = compat:GetCurrentPlayerPosition()
 	TomTom:AddZWaypoint(backc, backz, backx*100, backy*100, L["Wayback"])
 end
 
@@ -1158,3 +1214,5 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 		return usage()
 	end
 end
+
+

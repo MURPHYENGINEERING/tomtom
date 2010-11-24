@@ -6,7 +6,6 @@
 --    with the artwork.)
 ----------------------------------------------------------------------------]]
 
-local Astrolabe = DongleStub("Astrolabe-0.4")
 local sformat = string.format
 local L = TomTomLocals
 local ldb = LibStub("LibDataBroker-1.1")
