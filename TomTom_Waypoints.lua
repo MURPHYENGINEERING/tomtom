@@ -8,8 +8,8 @@
 --  TomTom:AddZWaypoint() and TomTom:RemoveWaypoint() instead.
 ----------------------------------------------------------------------------]]
 
--- Import Astrolabe for locations
-local Astrolabe = DongleStub("Astrolabe-0.4")
+-- Import compat library
+local compat = TomTom.compat
 
 -- Create a tooltip to be used when mousing over waypoints
 local tooltip = CreateFrame("GameTooltip", "TomTomTooltip", UIParent, "GameTooltipTemplate")
@@ -77,7 +77,7 @@ local rad_135 = math.rad(135)
 local function rotateArrow(self)
 	if self.disabled then return end
 
-	local angle = Astrolabe:GetDirectionToIcon(self)
+	local angle = compat:GetDirectionToIcon(self)
 	if not angle then return self:Hide() end
 	angle = angle + rad_135
 
@@ -185,10 +185,10 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks, show_minimap, show_world)
 	point.uid = getuid(point)
 
 	-- Place the waypoint
-	Astrolabe:PlaceIconOnMinimap(point.minimap, c, z, x, y)
+	compat:PlaceIconOnMinimap(point.minimap, c, z, x, y)
 
 	if show_world then
-		Astrolabe:PlaceIconOnWorldMap(TomTomMapOverlay, point.worldmap, c, z, x, y)
+		compat:PlaceIconOnWorldMap(TomTomMapOverlay, point.worldmap, c, z, x, y)
 	else
 		point.worldmap.disabled = true
 	end
@@ -244,7 +244,7 @@ end
 function TomTom:ClearWaypoint(uid)
 	local point = resolveuid(uid, true)
 	if point then
-		Astrolabe:RemoveIconFromMinimap(point.minimap)
+		compat:RemoveIconFromMinimap(point.minimap)
 		point.minimap:Hide()
 		point.worldmap:Hide()
 
@@ -265,12 +265,12 @@ end
 
 function TomTom:GetDistanceToWaypoint(uid)
 	local point = resolveuid(uid)
-	return point and Astrolabe:GetDistanceToIcon(point.minimap)
+	return point and compat:GetDistanceToIcon(point.minimap)
 end
 
 function TomTom:GetDirectionToWaypoint(uid)
 	local point = resolveuid(uid)
-	return point and Astrolabe:GetDirectionToIcon(point.minimap)
+	return point and compat:GetDirectionToIcon(point.minimap)
 end
 
 do
@@ -334,7 +334,7 @@ do
 	local minimap_count = 0
 
 	function Minimap_OnUpdate(self, elapsed)
-		local dist,x,y = Astrolabe:GetDistanceToIcon(self)
+		local dist,x,y = compat:GetDistanceToIcon(self)
 		local disabled = self.disabled
 
 		if not dist or IsInInstance() then
@@ -349,7 +349,7 @@ do
 		-- Reset the counter
 		minimap_count = 0
 
-		local edge = Astrolabe:IsIconOnEdge(self)
+		local edge = compat:IsIconOnEdge(self)
 		local data = self.point
 		local callbacks = data.callbacks
 
@@ -360,7 +360,7 @@ do
 				self.arrow:Show()
 
 				-- Rotate the icon, as required
-				local angle = Astrolabe:GetDirectionToIcon(self)
+				local angle = compat:GetDirectionToIcon(self)
 				angle = angle + rad_135
 
 				if GetCVar("rotateMinimap") == "1" then
@@ -438,7 +438,7 @@ do
 
 			local data = self.point
 			if data.worldmap and data.show_world and not disabled then
-				local x,y = Astrolabe:PlaceIconOnWorldMap(TomTomMapOverlay, self, data.c, data.z, data.x, data.y)
+				local x,y = compat:PlaceIconOnWorldMap(TomTomMapOverlay, self, data.c, data.z, data.x, data.y)
 				if (x and y and (0 < x and x <= 1) and (0 < y and y <= 1)) then
 					self:Show()
 				else
@@ -454,7 +454,7 @@ do
 		if event == "PLAYER_ENTERING_WORLD" then
 			local data = self.point
 			if data and data.uid and resolveuid(data.uid) then
-				Astrolabe:PlaceIconOnMinimap(self, data.c, data.z, data.x, data.y)
+				compat:PlaceIconOnMinimap(self, data.c, data.z, data.x, data.y)
 			end
 		end
 	end
