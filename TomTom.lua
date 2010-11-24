@@ -49,8 +49,11 @@ do
     -- and converts it to a c,z,x,y tuple
     function compat:GetCurrentPlayerPosition()
         local map, floor, x, y = Astrolabe:GetCurrentPlayerPosition()
-        local c, z = unpack(mapcz[map])
-        return c, z, x, y
+        local cz = mapcz[map]
+        if cz then
+            local c, z = unpack(cz)
+            return c, z, x, y
+        end
     end
 
     function compat:GetDirectionToIcon(...)
