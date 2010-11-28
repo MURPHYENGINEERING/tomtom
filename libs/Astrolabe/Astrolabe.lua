@@ -1,7 +1,7 @@
 --[[
 Name: Astrolabe
-Revision: $Rev: 116 $
-$Date: 2010-11-23 04:59:44 +0000 (Tue, 23 Nov 2010) $
+Revision: $Rev: 118 $
+$Date: 2010-11-28 04:18:59 +0000 (Sun, 28 Nov 2010) $
 Author(s): Esamynn (esamynn at wowinterface.com)
 Inspired By: Gatherer by Norganna
              MapLibrary by Kristofer Karlsson (krka at kth.se)
@@ -42,7 +42,7 @@ Note:
 -- DO NOT MAKE CHANGES TO THIS LIBRARY WITHOUT FIRST CHANGING THE LIBRARY_VERSION_MAJOR
 -- STRING (to something unique) OR ELSE YOU MAY BREAK OTHER ADDONS THAT USE THIS LIBRARY!!!
 local LIBRARY_VERSION_MAJOR = "Astrolabe-1.0"
-local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 116 $", "(%d+)") or 1)
+local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 118 $", "(%d+)") or 1)
 
 if not DongleStub then error(LIBRARY_VERSION_MAJOR .. " requires DongleStub.") end
 if not DongleStub:IsNewerVersion(LIBRARY_VERSION_MAJOR, LIBRARY_VERSION_MINOR) then return end
@@ -1330,6 +1330,22 @@ WorldMapSize = {
 		xOffset = 0,
 		yOffset = 0,
 	},
+	[521] = {
+		{ -- [1]
+			height = 1216.66649,
+			width = 1824.99985,
+			xOffset = 435.33678,
+			yOffset = 2235.80349,
+		},
+	},
+	[529] = {
+		{ -- [1]
+			height = 2191.66598,
+			width = 3287.50074,
+			xOffset = -1804.35279,
+			yOffset = 2062.9701,
+		},
+	},
 	[531] = {
 		height = 774.99991,
 		width = 1162.49961,
@@ -1538,9 +1554,7 @@ for mapID, harvestedData in pairs(Astrolabe.HarvestedMapData) do
 		-- setup the system and systemParent IDs so things don't get confused
 		if not ( next(mapData, nil) ) then
 			mapData = { xOffset = 0, height = 0, yOffset = 0, width = 0 };
-			setmetatable(mapData, zeroData);
-			
-			-- if this is a regluar outside zone map and 
+			-- if this is an outside continent level or world map then throw up an extra warning
 			if ( harvestedData.cont > 0 and harvestedData.zone == 0 ) then
 				printError(("Astrolabe is missing data for world map %s [%d] (%d, %d)."):format(harvestedData.mapName, mapID, harvestedData.cont, harvestedData.zone));
 			end
@@ -1568,11 +1582,28 @@ for mapID, harvestedData in pairs(Astrolabe.HarvestedMapData) do
 				mapData.systemParent = systemData.systemParent;
 			end
 		end
+		
+		-- systemParent sanity checks
+		if ( mapData.system ~= mapData.systemParent ) then
+			if not ( WorldMapSize[mapData.systemParent] and WorldMapSize[mapData.systemParent][mapData.system] ) then
+				printError("Astrolabe detected a child system that the parent doesn't know about.  VERY BAD!!!");
+			end
+		end
+		
 		setmetatable(mapData, zeroData);
 	end
 end
 
-setmetatable(WorldMapSize, zeroData);
+setmetatable(WorldMapSize[0], zeroData); -- special case for World Map
+
+-- make sure we don't have any EXTRA data hanging around
+for mapID, mapData in pairs(WorldMapSize) do
+	if ( getmetatable(mapData) ~= zeroData ) then
+		printError("Astrolabe has hard coded data for an invalid map ID", mapID);
+	end
+end
+
+setmetatable(WorldMapSize, zeroData); -- setup the metatable so that invalid map IDs don't cause Lua errors
 
 -- register this library with AstrolabeMapMonitor, this will cause a full update if PLAYER_LOGIN has already fired
 local AstrolabeMapMonitor = DongleStub("AstrolabeMapMonitor");
