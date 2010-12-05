@@ -1,7 +1,7 @@
 --[[
 Name: Astrolabe
-Revision: $Rev: 121 $
-$Date: 2010-12-04 22:39:19 +0000 (Sat, 04 Dec 2010) $
+Revision: $Rev: 122 $
+$Date: 2010-12-05 00:36:47 +0000 (Sun, 05 Dec 2010) $
 Author(s): Esamynn (esamynn at wowinterface.com)
 Inspired By: Gatherer by Norganna
              MapLibrary by Kristofer Karlsson (krka at kth.se)
@@ -42,7 +42,7 @@ Note:
 -- DO NOT MAKE CHANGES TO THIS LIBRARY WITHOUT FIRST CHANGING THE LIBRARY_VERSION_MAJOR
 -- STRING (to something unique) OR ELSE YOU MAY BREAK OTHER ADDONS THAT USE THIS LIBRARY!!!
 local LIBRARY_VERSION_MAJOR = "Astrolabe-1.0"
-local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 121 $", "(%d+)") or 1)
+local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 122 $", "(%d+)") or 1)
 
 if not DongleStub then error(LIBRARY_VERSION_MAJOR .. " requires DongleStub.") end
 if not DongleStub:IsNewerVersion(LIBRARY_VERSION_MAJOR, LIBRARY_VERSION_MINOR) then return end
@@ -167,8 +167,8 @@ function Astrolabe:ComputeDistance( m1, f1, x1, y1, m2, f2, x2, y2 )
 	argcheck(y2, 9, "number");
 	--]]
 	
-	f1 = f1 or 0;
-	f2 = f2 or 0;
+	f1 = f1 or min(#WorldMapSize[m1], 1);
+	f2 = f2 or min(#WorldMapSize[m2], 1);
 	
 	local dist, xDelta, yDelta;
 	if ( m1 == m2 and f1 == f2 ) then
@@ -234,8 +234,8 @@ function Astrolabe:TranslateWorldMapPosition( M, F, xPos, yPos, nM, nF )
 	argcheck(nF, 7, "number", "nil");
 	--]]
 	
-	F = F or 0;
-	nF = nF or 0;
+	F = F or min(#WorldMapSize[M], 1);
+	nF = nF or min(#WorldMapSize[nM], 1);
 	if ( nM < 0 ) then
 		return;
 	end
@@ -365,14 +365,18 @@ function Astrolabe:GetNumFloors( mapID )
 end
 
 function Astrolabe:GetMapInfo( mapID, mapFloor )
-	mapFloor = mapFloor or 0
-	local mapData = WorldMapSize[mapID]
+	argcheck(mapID, 2, "number");
+	assert(3, mapID >= 0, "GetMapInfo: Illegal map id to mapID: "..mapID);
+	argcheck(mapFloor, 3, "number", "nil");
+	
+	mapFloor = mapFloor or min(#WorldMapSize[mapID], 1);
+	local mapData = WorldMapSize[mapID];
 	local system, systemParent = mapData.system, mapData.systemParent
 	if ( mapFloor ~= 0 ) then
 		mapData = mapData[mapFloor];
 	end
 	if ( mapData ~= zeroData ) then
-		return system, systemParent, mapData.width, mapData.height, mapData.xOffset, mapData.yOffset
+		return system, systemParent, mapData.width, mapData.height, mapData.xOffset, mapData.yOffset;
 	end
 end
 
