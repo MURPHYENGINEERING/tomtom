@@ -43,7 +43,6 @@ do
             SetMapZoom(cid, zid)
             local mapid = GetCurrentMapAreaID()
             mapcz[mapid] = {cid, zid}
-            print(mapid, cid, zid, GetMapInfo())
         end
     end
 
@@ -61,6 +60,11 @@ do
             local c, z = unpack(cz)
             return c, z, x, y
         end
+    end
+
+    function compat:GetCurrentPlayerCoords()
+        local map, floor, x, y = Astrolabe:GetCurrentPlayerPosition()
+        return x, y
     end
 
     function compat:GetDirectionToIcon(...)
@@ -81,12 +85,17 @@ do
 
     function compat:PlaceIconOnMinimap(icon, c, z, x, y)
         local mapId = Astrolabe:GetMapID(c, z)
-        return Astrolabe:PlaceIconOnMinimap(icon, mapId, nil, x, y)
+        local floors = Astrolabe:GetNumFloors(mapId)
+        local floor = floors == 0 and 0 or 1
+        return Astrolabe:PlaceIconOnMinimap(icon, mapId, floor, x, y)
     end
 
     function compat:PlaceIconOnWorldMap(frame, icon, c, z, x, y)
         local mapId = Astrolabe:GetMapID(c, z)
-        return Astrolabe:PlaceIconOnWorldMap(frame, icon, mapId, nil, x, y)
+        local floors = Astrolabe:GetNumFloors(mapId)
+        local floor = floors == 0 and 0 or 1
+
+        return Astrolabe:PlaceIconOnWorldMap(frame, icon, mapId, floor, x, y)
     end
 
 end
@@ -244,7 +253,7 @@ function TomTom:ADDON_LOADED(event, addon)
 				end
 
 				counter = 0
-				local c,z,x,y = compat:GetCurrentPlayerPosition()
+				local x,y = compat:GetCurrentPlayerCoords()
 				local opt = TomTom.db.profile
 
 				if x and y then
@@ -1016,7 +1025,7 @@ do
 	end
 
 	function WorldMap_OnUpdate(self, elapsed)
-		local c,z,x,y = compat:GetCurrentPlayerPosition()
+		local x,y = compat:GetCurrentPlayerCoords()
 		local opt = TomTom.db.profile
 
 		if not x or not y then
@@ -1037,7 +1046,7 @@ end
 
 do
 	function Block_OnUpdate(self, elapsed)
-		local c,z,x,y = compat:GetCurrentPlayerPosition()
+		local x,y = compat:GetCurrentPlayerCoords()
 		local opt = TomTom.db.profile
 
 		if not x or not y then
