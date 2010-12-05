@@ -439,6 +439,8 @@ do
 			local data = self.point
 			if data.worldmap and data.show_world and not disabled then
 				local x,y = compat:PlaceIconOnWorldMap(TomTomMapOverlay, self, data.c, data.z, data.x, data.y)
+                local pdata = TomTom:GetData(data.uid) or {}
+
 				if (x and y and (0 < x and x <= 1) and (0 < y and y <= 1)) then
 					self:Show()
 				else

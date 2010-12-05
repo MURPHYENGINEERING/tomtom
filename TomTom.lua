@@ -34,13 +34,20 @@ TomTom.compat = compat
 do
     local Astrolabe = DongleStub("Astrolabe-1.0")
 
+    local orig = GetCurrentMapAreaID()
+
     -- Create a lookup table from mapID to c,z pairs
     local mapcz = {}
-    for cid, zlist in ipairs(Astrolabe.ContinentList) do
-        for zid, mapid in pairs(zlist) do
+    for cid, zlist in ipairs{GetMapContinents()} do
+        for zid, mapid in ipairs{GetMapZones(cid)} do
+            SetMapZoom(cid, zid)
+            local mapid = GetCurrentMapAreaID()
             mapcz[mapid] = {cid, zid}
+            print(mapid, cid, zid, GetMapInfo())
         end
     end
+
+    SetMapByID(orig)
 
     -- Speed up minimap updates
     Astrolabe.MinimapUpdateTime = 0.1
@@ -628,6 +635,11 @@ end
 function TomTom:InitializeDropdown(uid)
 	self.dropdown.uid = uid
 	UIDropDownMenu_Initialize(self.dropdown, init_dropdown)
+end
+
+function TomTom:GetData(uid)
+    local data = waypoints[uid]
+    return data
 end
 
 function TomTom:UIDIsSaved(uid)

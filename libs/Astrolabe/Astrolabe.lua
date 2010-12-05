@@ -1,7 +1,7 @@
 --[[
 Name: Astrolabe
-Revision: $Rev: 118 $
-$Date: 2010-11-28 04:18:59 +0000 (Sun, 28 Nov 2010) $
+Revision: $Rev: 121 $
+$Date: 2010-12-04 22:39:19 +0000 (Sat, 04 Dec 2010) $
 Author(s): Esamynn (esamynn at wowinterface.com)
 Inspired By: Gatherer by Norganna
              MapLibrary by Kristofer Karlsson (krka at kth.se)
@@ -42,7 +42,7 @@ Note:
 -- DO NOT MAKE CHANGES TO THIS LIBRARY WITHOUT FIRST CHANGING THE LIBRARY_VERSION_MAJOR
 -- STRING (to something unique) OR ELSE YOU MAY BREAK OTHER ADDONS THAT USE THIS LIBRARY!!!
 local LIBRARY_VERSION_MAJOR = "Astrolabe-1.0"
-local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 118 $", "(%d+)") or 1)
+local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 121 $", "(%d+)") or 1)
 
 if not DongleStub then error(LIBRARY_VERSION_MAJOR .. " requires DongleStub.") end
 if not DongleStub:IsNewerVersion(LIBRARY_VERSION_MAJOR, LIBRARY_VERSION_MINOR) then return end
@@ -254,8 +254,6 @@ function Astrolabe:TranslateWorldMapPosition( M, F, xPos, yPos, nM, nF )
 			if ( nF ~= 0 ) then
 				mapData = mapData[nF];
 			end
-			xPos = xPos - mapData.xOffset;
-			yPos = yPos - mapData.yOffset;
 		
 		else
 			-- different continents, same world
@@ -291,6 +289,10 @@ function Astrolabe:TranslateWorldMapPosition( M, F, xPos, yPos, nM, nF )
 			end
 		
 		end
+		-- need to account for the offset in the new system so we can
+		-- correctly translate into 0-1 style coordinates
+		xPos = xPos - mapData.xOffset;
+		yPos = yPos - mapData.yOffset;
 	
 	end
 	
@@ -352,6 +354,13 @@ function Astrolabe:GetMapID(continent, zone)
 	end
 	if ( continent == 0 and zone == 0 ) then
 		return 0;
+	end
+end
+
+function Astrolabe:GetNumFloors( mapID )
+	if ( type(mapID) == "number" ) then
+		local mapData = WorldMapSize[mapID]
+		return #mapData
 	end
 end
 
@@ -1461,7 +1470,7 @@ end
 zeroData = { xOffset = 0, height = 0, yOffset = 0, width = 0, __index = zeroDataFunc };
 setmetatable(zeroData, zeroData);
 
-function printError( ... )
+local function printError( ... )
 	if ( ASTROLABE_VERBOSE) then
 		print(...)
 	end
