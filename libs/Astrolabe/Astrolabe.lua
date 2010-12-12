@@ -1,7 +1,7 @@
 --[[
 Name: Astrolabe
-Revision: $Rev: 122 $
-$Date: 2010-12-05 00:36:47 +0000 (Sun, 05 Dec 2010) $
+Revision: $Rev: 125 $
+$Date: 2010-12-12 05:17:15 +0000 (Sun, 12 Dec 2010) $
 Author(s): Esamynn (esamynn at wowinterface.com)
 Inspired By: Gatherer by Norganna
              MapLibrary by Kristofer Karlsson (krka at kth.se)
@@ -42,7 +42,7 @@ Note:
 -- DO NOT MAKE CHANGES TO THIS LIBRARY WITHOUT FIRST CHANGING THE LIBRARY_VERSION_MAJOR
 -- STRING (to something unique) OR ELSE YOU MAY BREAK OTHER ADDONS THAT USE THIS LIBRARY!!!
 local LIBRARY_VERSION_MAJOR = "Astrolabe-1.0"
-local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 122 $", "(%d+)") or 1)
+local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 125 $", "(%d+)") or 1)
 
 if not DongleStub then error(LIBRARY_VERSION_MAJOR .. " requires DongleStub.") end
 if not DongleStub:IsNewerVersion(LIBRARY_VERSION_MAJOR, LIBRARY_VERSION_MINOR) then return end
@@ -167,6 +167,7 @@ function Astrolabe:ComputeDistance( m1, f1, x1, y1, m2, f2, x2, y2 )
 	argcheck(y2, 9, "number");
 	--]]
 	
+	if not ( m1 and m2 ) then return end;
 	f1 = f1 or min(#WorldMapSize[m1], 1);
 	f2 = f2 or min(#WorldMapSize[m2], 1);
 	
@@ -234,6 +235,7 @@ function Astrolabe:TranslateWorldMapPosition( M, F, xPos, yPos, nM, nF )
 	argcheck(nF, 7, "number", "nil");
 	--]]
 	
+	if not ( M and nM ) then return end;
 	F = F or min(#WorldMapSize[M], 1);
 	nF = nF or min(#WorldMapSize[nM], 1);
 	if ( nM < 0 ) then
@@ -1401,6 +1403,12 @@ WorldMapSize = {
 		xOffset = 0,
 		yOffset = 0,
 	},
+	[626] = {
+		height = 810.41329,
+		width = 1214.58151,
+		xOffset = 0,
+		yOffset = 0,
+	},
 	[640] = {
 		system = 640,
 	},
@@ -1458,8 +1466,20 @@ WorldMapSize = {
 		xOffset = 0,
 		yOffset = 0,
 	},
+	[736] = {
+		height = 868.74697,
+		width = 1302.08448,
+		xOffset = 0,
+		yOffset = 0,
+	},
 	[737] = {
 		system = 737,
+	},
+	[747] = {
+		height = 647.91734,
+		width = 970.83627,
+		xOffset = 0,
+		yOffset = 0,
 	},
 }
 
