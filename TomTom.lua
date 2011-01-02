@@ -1133,7 +1133,12 @@ end
 SLASH_TOMTOM_WAY1 = "/way"
 SLASH_TOMTOM_WAY2 = "/tway"
 SLASH_TOMTOM_WAY3 = "/tomtomway"
+
+local wrongseparator = "(%d)" .. (tonumber("1.1") and "," or ".") .. "(%d)"
+local rightseparator =   "%1" .. (tonumber("1.1") and "." or ",") .. "%2"
+
 SlashCmdList["TOMTOM_WAY"] = function(msg)
+	msg = msg:gsub("(%d)[%.,] (%d)", "%1 %2"):gsub(wrongseparator, rightseparator)
 	local tokens = {}
 	for token in msg:gmatch("%S+") do table.insert(tokens, token) end
 
