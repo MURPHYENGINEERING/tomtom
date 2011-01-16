@@ -779,7 +779,7 @@ function TomTom:AddWaypoint(x, y, desc, persistent, minimap, world, silent)
 		return
 	end
 
-	return self:AddZWaypoint(c, z, x/100, y/100, desc, persistent, minimap, world, nil, silent)
+	return self:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, nil, silent)
 end
 
 function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, custom_callbacks, silent, crazy)
@@ -1111,7 +1111,7 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 			for name,mapId in pairs(nameToMapId) do
                 local lname = name:lower()
 				if lname:match(zone) then
-					table.insert(matches, lname)
+					table.insert(matches, name)
 				end
 			end
 
@@ -1160,7 +1160,7 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
         for name,mapId in pairs(nameToMapId) do
             local lname = name:lower()
             if lname:match(zone) then
-                table.insert(matches, lname)
+                table.insert(matches, name)
             end
         end
 
@@ -1181,7 +1181,9 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 
 		x = tonumber(x)
 		y = tonumber(y)
-		TomTom:AddMFWaypoint(mapId, nil, x, y, desc)
+		TomTom:AddMFWaypoint(mapId, nil, x/100, y/100, {
+            title = desc,
+        })
 	elseif tonumber(tokens[1]) then
 		-- A vanilla set command
 		local x,y,desc = unpack(tokens)
