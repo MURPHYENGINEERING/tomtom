@@ -1,6 +1,6 @@
 --[[--------------------------------------------------------------------------
 --  TomTom - A navigational assistant for World of Warcraft
--- 
+--
 --  CrazyTaxi: A crazy-taxi style arrow used for waypoint navigation.
 --    concept taken from MapNotes2 (Thanks to Mery for the idea, along
 --    with the artwork.)
@@ -85,7 +85,7 @@ local active_point, arrive_distance, showDownArrow, point_title
 function TomTom:SetCrazyArrow(uid, dist, title)
 	active_point = uid
 	arrive_distance = dist
-	point_title = title 
+	point_title = title
 
 	if self.profile.arrow.enable then
 		wayframe.title:SetText(title or "Unknown waypoint")
@@ -112,7 +112,7 @@ local function OnUpdate(self, elapsed)
 
 	-- The only time we cannot calculate the distance is when the waypoint
 	-- is on another continent, or we are in an instance
-	if not dist or IsInInstance() then
+	if not dist then
 		if not TomTom:IsValidWaypoint(active_point) then
 			active_point = nil
 			-- Change the crazy arrow to point at the closest waypoint
@@ -145,7 +145,7 @@ local function OnUpdate(self, elapsed)
 			count = 0
 		end
 
-		cell = count
+		local cell = count
 		local column = cell % 9
 		local row = floor(cell / 9)
 
@@ -172,10 +172,10 @@ local function OnUpdate(self, elapsed)
 		local gr,gg,gb = unpack(TomTom.db.profile.arrow.goodcolor)
 		local mr,mg,mb = unpack(TomTom.db.profile.arrow.middlecolor)
 		local br,bg,bb = unpack(TomTom.db.profile.arrow.badcolor)
-		local r,g,b = ColorGradient(perc, br, bg, bb, mr, mg, mb, gr, gg, gb)		
+		local r,g,b = ColorGradient(perc, br, bg, bb, mr, mg, mb, gr, gg, gb)
 		arrow:SetVertexColor(r,g,b)
 
-		cell = floor(angle / twopi * 108 + 0.5) % 108
+		local cell = floor(angle / twopi * 108 + 0.5) % 108
 		local column = cell % 9
 		local row = floor(cell / 9)
 
@@ -208,11 +208,11 @@ local function OnUpdate(self, elapsed)
 
 		if speed > 0 then
 			local eta = math.abs(dist / speed)
-			tta:SetFormattedText("%01d:%02d", eta / 60, eta % 60) 
+			tta:SetFormattedText("%01d:%02d", eta / 60, eta % 60)
 		else
 			tta:SetText("***")
 		end
-		
+
 		last_distance = dist
 		tta_throttle = 0
 	end
@@ -429,12 +429,12 @@ local function wayframe_OnEvent(self, event, arg1, ...)
 				local gr,gg,gb = unpack(TomTom.db.profile.arrow.goodcolor)
 				local mr,mg,mb = unpack(TomTom.db.profile.arrow.middlecolor)
 				local br,bg,bb = unpack(TomTom.db.profile.arrow.badcolor)
-				local r,g,b = ColorGradient(perc, br, bg, bb, mr, mg, mb, gr, gg, gb)		
+				local r,g,b = ColorGradient(perc, br, bg, bb, mr, mg, mb, gr, gg, gb)
 				feed_crazy.iconR = r
 				feed_crazy.iconG = g
 				feed_crazy.iconB = b
 
-				cell = floor(angle / twopi * 108 + 0.5) % 108
+				local cell = floor(angle / twopi * 108 + 0.5) % 108
 				local column = cell % 9
 				local row = floor(cell / 9)
 
@@ -480,7 +480,7 @@ wayframe:SetScript("OnEvent", wayframe_OnEvent)
 -- into consideration.  This can be accomplished by subtracting
 -- GetPlayerFacing() from the angle before passing it in.
 function TomTom:SetCrazyArrowDirection(angle)
-    cell = floor(angle / twopi * 108 + 0.5) % 108
+    local cell = floor(angle / twopi * 108 + 0.5) % 108
     local column = cell % 9
     local row = floor(cell / 9)
 

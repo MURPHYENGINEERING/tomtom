@@ -83,7 +83,7 @@ local function poi_OnClick(self, button)
             self = questFrame.poiIcon
         end
     end
-   
+
     return setQuestWaypoint(self)
  end
 
@@ -91,7 +91,7 @@ local hooked = {}
 hooksecurefunc("QuestPOI_DisplayButton", function(parentName, buttonType, buttonIndex, questId)
       local buttonName = "poi"..tostring(parentName)..tostring(buttonType).."_"..tostring(buttonIndex);
       local poiButton = _G[buttonName];
-      
+
       if not hooked[buttonName] then
          poiButton:HookScript("OnClick", poi_OnClick)
          poiButton:RegisterForClicks("AnyUp")
@@ -109,13 +109,13 @@ local function updateClosestPOI()
     if ( questIndex ) then
         local title, level, questTag, suggestedGroup, isHeader, isCollapsed, isComplete, isDaily, questID = GetQuestLogTitle(questIndex);
         local playerMoney = GetMoney();
-        local requiredMoney = GetQuestLogRequiredMoney(questIndex);			
-        numObjectives = GetNumQuestLeaderBoards(questIndex);
+        local requiredMoney = GetQuestLogRequiredMoney(questIndex);
+        local numObjectives = GetNumQuestLeaderBoards(questIndex);
         if ( isComplete and isComplete < 0 ) then
             isComplete = false;
         elseif ( numObjectives == 0 and playerMoney >= requiredMoney ) then
-            isComplete = true;		
-        end			
+            isComplete = true;
+        end
 
         -- check filters
         local filterOK = true;
@@ -123,7 +123,7 @@ local function updateClosestPOI()
             filterOK = false;
         elseif ( bit.band(WATCHFRAME_FILTER_TYPE, WATCHFRAME_FILTER_REMOTE_ZONES) ~= WATCHFRAME_FILTER_REMOTE_ZONES and not LOCAL_MAP_QUESTS[questID] ) then
             filterOK = false;
-        end			
+        end
 
         if filterOK then
             -- Set a waypoint for this POI, it should be the higehst

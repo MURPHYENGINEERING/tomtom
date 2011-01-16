@@ -88,8 +88,17 @@ local function createconfig()
 				min = 0, max = 2, step = 1,
 				arg = "block.accuracy",
 			},
+            coords_throttle = {
+				type = "range",
+				order = 5,
+				name = L["Update throttle"],
+				desc = L["Controls the frequency of updates for the coordinate block."],
+				width = "double",
+				min = 0, max = 2.0, step = 0.05,
+				arg = "block.throttle",
+			},
 			display = {
-				order = 4,
+				order = 5,
 				type = "group",
 				inline = true,
 				name = L["Display Settings"],

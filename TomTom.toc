@@ -6,7 +6,7 @@
 ## Notes-zhCN:一个简单的导航助手。
 ## Notes-ruRU: Удобный портативный навигатор по игровой карте
 ## Author: Cladhaire
-## SavedVariables: TomTomDB, TomTomWaypoints
+## SavedVariables: TomTomDB, TomTomWaypoints, TomTomWaypointsMF
 
 ## X-Localizations: enUS, enGB, deDE, zhCN, ruRU, zhTW
 ## X-CompatibleLocales: enUS, enGB, deDE, frFR, esES, esMX, zhCN, zhTW, koKR, ruRU
@@ -20,6 +20,7 @@ libs\AceEvent-3.0\AceEvent-3.0.xml
 libs\AceDB-3.0\AceDB-3.0.xml
 libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
 libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+libs\LibMapData-1.0\library.lua
 
 Localization.enUS.lua
 Localization.deDE.lua

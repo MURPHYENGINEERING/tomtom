@@ -8,8 +8,7 @@
 --  TomTom:AddZWaypoint() and TomTom:RemoveWaypoint() instead.
 ----------------------------------------------------------------------------]]
 
--- Import compat library
-local compat = TomTom.compat
+local astrolabe = DongleStub("Astrolabe-1.0")
 
 -- Create a tooltip to be used when mousing over waypoints
 local tooltip = CreateFrame("GameTooltip", "TomTomTooltip", UIParent, "GameTooltipTemplate")
@@ -33,39 +32,6 @@ local minimapParent = Minimap
 local pool = {}
 local all_points = {}
 
--- Create a mapping from uniqueID to waypoint
-local getuid,resolveuid
-do
-	local uidmap = {}
-	local uid = 0
-	function getuid(obj)
-		-- Ensure the object doesn't already have a uid mapping
-		for k,v in pairs(uidmap) do
-			if obj == v then
-				error("Attempt to re-use an object without clearing identifier")
-			end
-		end
-
-		-- Establish the new mapping
-		uid = uid + 1
-
-		uidmap[uid] = obj
-
-		return uid
-	end
-
-	function resolveuid(uid, remove)
-		-- Return the object that corresponds to the UID
-		local obj = uidmap[uid]
-
-		if remove then
-			uidmap[uid] = nil
-		end
-
-		return obj
-	end
-end
-
 -- Local declarations
 local Minimap_OnEnter,Minimap_OnLeave,Minimap_OnUpdate,Minimap_OnClick,Minimap_OnEvent
 local Arrow_OnUpdate
@@ -77,7 +43,7 @@ local rad_135 = math.rad(135)
 local function rotateArrow(self)
 	if self.disabled then return end
 
-	local angle = compat:GetDirectionToIcon(self)
+	local angle = astrolabe:GetDirectionToIcon(self)
 	if not angle then return self:Hide() end
 	angle = angle + rad_135
 
@@ -98,12 +64,15 @@ function TomTom:ReparentMinimap(minimap)
     end
 end
 
+local waypointMap = {}
 
-function TomTom:SetWaypoint(c, z, x, y, callbacks, show_minimap, show_world)
+function TomTom:SetWaypoint(waypoint, callbacks, show_minimap, show_world)
+    local m, f, x, y = unpack(waypoint)
+
 	-- Try to acquire a waypoint from the frame pool
 	local point = table.remove(pool)
 
-	if not point then
+    if not point then
 		point = {}
 
 		local minimap = CreateFrame("Button", nil, minimapParent)
@@ -127,7 +96,7 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks, show_minimap, show_world)
 		minimap.arrow:SetWidth(40)
 		minimap.arrow:Hide()
 
-		-- Add the behavior scripts 
+		-- Add the behavior scripts
 		minimap:SetScript("OnEnter", Minimap_OnEnter)
 		minimap:SetScript("OnLeave", Minimap_OnLeave)
 		minimap:SetScript("OnUpdate", Minimap_OnUpdate)
@@ -158,8 +127,10 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks, show_minimap, show_world)
 		point.minimap = minimap
 	end
 
-	point.c = c
-	point.z = z
+    waypointMap[waypoint] = point
+
+	point.m = m
+	point.f = f
 	point.x = x
 	point.y = y
 	point.show_world = show_world
@@ -182,13 +153,13 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks, show_minimap, show_world)
 	-- Link the actual frames back to the waypoint object
 	point.minimap.point = point
 	point.worldmap.point = point
-	point.uid = getuid(point)
+	point.uid = waypoint
 
 	-- Place the waypoint
-	compat:PlaceIconOnMinimap(point.minimap, c, z, x, y)
+	astrolabe:PlaceIconOnMinimap(point.minimap, m, f, x, y)
 
 	if show_world then
-		compat:PlaceIconOnWorldMap(TomTomMapOverlay, point.worldmap, c, z, x, y)
+		astrolabe:PlaceIconOnWorldMap(TomTomMapOverlay, point.worldmap, m, f, x, y)
 	else
 		point.worldmap.disabled = true
 	end
@@ -205,17 +176,10 @@ function TomTom:SetWaypoint(c, z, x, y, callbacks, show_minimap, show_world)
 		point.minimap.disabled = false
 		rotateArrow(point.minimap)
 	end
-
-	return point.uid
-end
-
-function TomTom:IsValidWaypoint(uid)
-	local obj = resolveuid(uid, false)
-	return obj and true or false
 end
 
 function TomTom:HideWaypoint(uid, minimap, worldmap)
-	local point = resolveuid(uid)
+    local point = waypointMap[uid]
 	if point then
 		if minimap then
 			point.minimap.disabled = true
@@ -224,13 +188,13 @@ function TomTom:HideWaypoint(uid, minimap, worldmap)
 
 		if worldmap then
 			point.worldmap.disabled = true
-			point.worldmap:Hide()		
+			point.worldmap:Hide()
 		end
 	end
 end
 
 function TomTom:ShowWaypoint(uid)
-	local point = resolveuid(uid)
+	local point = waypointMap[uid]
 	if point then
 		point.minimap.disabled = not point.data.show_minimap
 		point.minimap:Show()
@@ -242,9 +206,9 @@ end
 
 -- This function removes the waypoint from the active set
 function TomTom:ClearWaypoint(uid)
-	local point = resolveuid(uid, true)
+    local point = waypointMap[uid]
 	if point then
-		compat:RemoveIconFromMinimap(point.minimap)
+		astrolabe:RemoveIconFromMinimap(point.minimap)
 		point.minimap:Hide()
 		point.worldmap:Hide()
 
@@ -264,13 +228,13 @@ function TomTom:ClearWaypoint(uid)
 end
 
 function TomTom:GetDistanceToWaypoint(uid)
-	local point = resolveuid(uid)
-	return point and compat:GetDistanceToIcon(point.minimap)
+    local point = waypointMap[uid]
+	return point and astrolabe:GetDistanceToIcon(point.minimap)
 end
 
 function TomTom:GetDirectionToWaypoint(uid)
-	local point = resolveuid(uid)
-	return point and compat:GetDirectionToIcon(point.minimap)
+	local point = waypointMap[uid]
+	return point and astrolabe:GetDirectionToIcon(point.minimap)
 end
 
 do
@@ -334,10 +298,10 @@ do
 	local minimap_count = 0
 
 	function Minimap_OnUpdate(self, elapsed)
-		local dist,x,y = compat:GetDistanceToIcon(self)
+		local dist,x,y = astrolabe:GetDistanceToIcon(self)
 		local disabled = self.disabled
 
-		if not dist or IsInInstance() then
+		if not dist then
 			self:Hide()
 			return
 		end
@@ -349,7 +313,7 @@ do
 		-- Reset the counter
 		minimap_count = 0
 
-		local edge = compat:IsIconOnEdge(self)
+		local edge = astrolabe:IsIconOnEdge(self)
 		local data = self.point
 		local callbacks = data.callbacks
 
@@ -360,7 +324,7 @@ do
 				self.arrow:Show()
 
 				-- Rotate the icon, as required
-				local angle = compat:GetDirectionToIcon(self)
+				local angle = astrolabe:GetDirectionToIcon(self)
 				angle = angle + rad_135
 
 				if GetCVar("rotateMinimap") == "1" then
@@ -423,7 +387,7 @@ do
 					callback("distance", data.uid, distance, dist, data.lastdist)
 				end
 				data.state = newstate
-			end	
+			end
 
 			-- Update the last distance with the current distance
 			data.lastdist = dist
@@ -437,9 +401,9 @@ do
 			end
 
 			local data = self.point
-			if data.worldmap and data.show_world and not disabled then
-				local x,y = compat:PlaceIconOnWorldMap(TomTomMapOverlay, self, data.c, data.z, data.x, data.y)
-                local pdata = TomTom:GetData(data.uid) or {}
+			if data.worldmap and data.show_world and not self.disabled then
+				local x,y = astrolabe:PlaceIconOnWorldMap(TomTomMapOverlay, self, data.m, data.f, data.x, data.y)
+                local pdata = data.uid
 
 				if (x and y and (0 < x and x <= 1) and (0 < y and y <= 1)) then
 					self:Show()
@@ -455,8 +419,8 @@ do
 	function Minimap_OnEvent(self, event, ...)
 		if event == "PLAYER_ENTERING_WORLD" then
 			local data = self.point
-			if data and data.uid and resolveuid(data.uid) then
-				compat:PlaceIconOnMinimap(self, data.c, data.z, data.x, data.y)
+			if data and data.uid and waypointMap[data.uid] then
+				astrolabe:PlaceIconOnMinimap(self, data.m, data.f, data.x, data.y)
 			end
 		end
 	end
