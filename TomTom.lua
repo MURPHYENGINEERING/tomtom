@@ -215,7 +215,7 @@ function TomTom:GetKeyArgs(m, f, x, y, title)
         f = floors == 0 and 0 or 1
     end
 
-    return string.format("%d:%d:%d:%d:%s", m, f, x, y, tostring(title))
+    return string.format("%d:%d:%d:%d:%s", m, f, x*10e8, y*10e8, tostring(title))
 end
 
 local flipFixFrame = CreateFrame("Frame", "TomTomMapFlipFixFrame", UIParent)
