@@ -1057,8 +1057,10 @@ end
 SLASH_TOMTOM_WAYBACK1 = "/wayb"
 SLASH_TOMTOM_WAYBACK2 = "/wayback"
 SlashCmdList["TOMTOM_WAYBACK"] = function(msg)
-	local backc,backz,backx,backy = TomTom:GetCurrentPlayerPosition()
-	TomTom:AddZWaypoint(backc, backz, backx, backy, L["Wayback"])
+	local backm,backf,backx,backy = TomTom:GetCurrentPlayerPosition()
+	TomTom:AddMFWaypoint(backm, backf, backx, backy, {
+        title = L["Wayback"],
+    })
 end
 
 SLASH_TOMTOM_WAY1 = "/way"
