@@ -1008,7 +1008,9 @@ do
         local m,f,x,y = TomTom:GetCurrentPlayerPosition()
         local zoneName = lmd:MapLocalize(m,f)
         local desc = format("%s: %.2f, %.2f", zoneName, x*100, y*100)
-        TomTom:AddZWaypoint(m, f, x, y, desc)
+        TomTom:AddMFWaypoint(m, f, x, y, {
+            title = desc,
+        })
     end
 end
 
