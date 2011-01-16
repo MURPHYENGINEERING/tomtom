@@ -122,7 +122,7 @@ function TomTom:ADDON_LOADED(event, addon)
 					arrow_throttle = 0.1,
 				},
                 poi = {
-                    enable = true,
+                    enable = false,
                     modifier = "C",
                     setClosest = false,
                 },
