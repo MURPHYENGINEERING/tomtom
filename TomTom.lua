@@ -800,12 +800,6 @@ end
 function TomTom:AddMFWaypoint(m, f, x, y, opts)
     opts = opts or {}
 
-    print("AddMFWaypoint", m, f, x, y, opts and opts.title)
-    if opts then
-        for k,v in pairs(opts) do
-            print("option:", k, v)
-        end
-    end
 	local callbacks
 	if opts.custom_callbacks then
 		callbacks = opts.custom_callbacks
