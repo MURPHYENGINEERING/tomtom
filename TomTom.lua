@@ -322,12 +322,15 @@ function TomTom:ShowHideWorldCoords()
 			TomTomWorldFrame:SetScript("OnUpdate", WorldMap_OnUpdate)
 		end
 
+        TomTomWorldFrame.Player:ClearAllPoints()
+        TomTomWorldFrame.Cursor:ClearAllPoints()
+
         if mapSizedUp then
             TomTomWorldFrame.Player:SetPoint("RIGHT", WorldMapPositioningGuide, "BOTTOM", -15, 15)
             TomTomWorldFrame.Cursor:SetPoint("LEFT", WorldMapPositioningGuide, "BOTTOM", 15, 15)
         else
-            TomTomWorldFrame.Player:SetPoint("RIGHT", WorldMapPositioningGuide, "BOTTOM", -40, 2)
-            TomTomWorldFrame.Cursor:SetPoint("LEFT", WorldMapPositioningGuide, "BOTTOM", -15, 2)
+            TomTomWorldFrame.Player:SetPoint("LEFT", WorldMapPositioningGuide, "BOTTOMLEFT", 25, 2)
+            TomTomWorldFrame.Cursor:SetPoint("LEFT", WorldMapPositioningGuide, "BOTTOMLEFT", 140, 2)
         end
 
         TomTomWorldFrame.Player:Hide()
