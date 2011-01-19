@@ -1,5 +1,7 @@
 --[[--------------------------------------------------------------------------
 --  TomTom by Cladhaire <cladhaire@gmail.com>
+--
+--  All Rights Reserved
 ----------------------------------------------------------------------------]]
 
 -- Simple localization table for messages
@@ -289,7 +291,7 @@ function TomTom:ReloadWaypoints()
                 persistent = waypoint.persistent,
                 minimap = minimap,
                 world = world,
-                custom_callbacks = nil,
+                callbacks = nil,
                 silent = true,
             })
 		end
@@ -782,7 +784,7 @@ function TomTom:AddWaypoint(x, y, desc, persistent, minimap, world, silent)
 	return self:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, nil, silent)
 end
 
-function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, custom_callbacks, silent, crazy)
+function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, callbacks, silent, crazy)
     -- Convert the c,z,x,y tuple to m,f,x,y and pass the work off to AddMFWaypoint()
     local mapId, floor = astrolabe:GetMapID(c, z)
     if not mapId then
@@ -794,7 +796,7 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, custo
         persistent = persistent,
         minimap = minimap,
         world = world,
-        custom_callbacks = custom_callbacks,
+        callbacks = callbacks,
         silent = silent,
         crazy = crazy,
     })
@@ -804,8 +806,8 @@ function TomTom:AddMFWaypoint(m, f, x, y, opts)
     opts = opts or {}
 
 	local callbacks
-	if opts.custom_callbacks then
-		callbacks = opts.custom_callbacks
+	if opts.callbacks then
+		callbacks = opts.callbacks
 	else
 		callbacks = {
 			minimap = {
