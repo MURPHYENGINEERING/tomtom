@@ -1197,10 +1197,15 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 		if desc then
 			desc = table.concat(tokens, " ", 3)
 		end
+        x = tonumber(x)
+        y = tonumber(y)
 
-		x = tonumber(x)
-		y = tonumber(y)
-		TomTom:AddWaypoint(x, y, desc)
+        local m, f = TomTom:GetCurrentPlayerPosition()
+        if m and x and y then
+           TomTom:AddMFWaypoint(m, f, x, y, {
+                title = desc
+            })
+        end
 	else
 		return usage()
 	end
