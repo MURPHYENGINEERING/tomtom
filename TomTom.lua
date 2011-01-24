@@ -1089,12 +1089,11 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 	for token in msg:gmatch("%S+") do table.insert(tokens, token) end
 
 	-- Lower the first token
-	if tokens[1] then
-		tokens[1] = tokens[1]:lower()
-	end
+    local ltoken = tokens[1] and tokens[1]:lower()
 
-	if tokens[1] == "reset" then
-		if tokens[2] == "all" then
+	if ltoken == "reset" then
+        local ltoken2 = tokens[2] and tokens[2]:lower()
+		if ltoken2 == "all" then
 			if TomTom.db.profile.general.confirmremoveall then
 				StaticPopup_Show("TOMTOM_REMOVE_ALL_CONFIRM")
 			else
@@ -1105,12 +1104,12 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 		elseif tokens[2] then
 			-- Reset the named zone
 			local zone = table.concat(tokens, " ", 2)
+            -- Find a fuzzy match for the zone
 
-			-- Find a fuzzy match for the zone
 			local matches = {}
-			lzone = zone:lower():gsub("[%L%S%D]", "")
+			lzone = zone:lower():gsub("^[%l%s%d]", "")
 
-			for name,mapId in pairs(nameToMapId) do
+			for name, mapId in pairs(nameToMapId) do
                 local lname = name:lower()
 				if lname:match(lzone) then
 					table.insert(matches, name)
@@ -1126,24 +1125,30 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 
 				ChatFrame1:AddMessage(string.format(L["Found multiple matches for zone '%s'.  Did you mean: %s"], zone, table.concat(matches, ", ")))
 				return
-			end
+            elseif #matches == 0 then
+                local msg = string.format(L["Could not find any matches for zone %s."], zone)
+                ChatFrame1:AddMessage(msg)
+            end
 
             local zoneName = matches[1]
             local mapId = nameToMapId[zoneName]
 
-			if waypoints[mapId] then
-				for key, uid in pairs(waypoints[mapId]) do
-					TomTom:RemoveWaypoint(uid)
-				end
-			else
-				ChatFrame1:AddMessage(L["There were no waypoints to remove in %s"]:format(zoneName))
-			end
-		end
-	elseif tokens[1] and not tonumber(tokens[1]) then
-		-- Find the first numeric token
-		local zoneEnd = 1
-		for idx = 1, #tokens do
-			local token = tokens[idx]
+            local numRemoved = 0
+            if waypoints[mapId] then
+                for key, uid in pairs(waypoints[mapId]) do
+                    TomTom:RemoveWaypoint(uid)
+                    numRemoved = numRemoved + 1
+                end
+                ChatFrame1:AddMessage(L["Removed %d waypoints from %s"]:format(numRemoved, zoneName))
+            else
+                ChatFrame1:AddMessage(L["There were no waypoints to remove in %s"]:format(zoneName))
+            end
+        end
+    elseif tokens[1] and not tonumber(tokens[1]) then
+        -- Find the first numeric token
+        local zoneEnd
+        for idx = 1, #tokens do
+            local token = tokens[idx]
 			if tonumber(token) then
 				-- We've encountered a number, so the zone name must have
 				-- ended at the prior token
@@ -1151,9 +1156,14 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 			end
 		end
 
+        if not zoneEnd then
+            usage()
+            return
+        end
+
 		-- This is a waypoint set, with a zone before the coords
-		local zone = table.concat(tokens, " ", 1, zoneEnd)
-		local x,y,desc = select(zoneEnd + 1, unpack(tokens))
+		local zone = table.concat(tokens, " ", 1, zoneEnd - 1)
+		local x,y,desc = select(zoneEnd, unpack(tokens))
 
 		if desc then desc = table.concat(tokens, " ", zoneEnd + 3) end
 
@@ -1176,17 +1186,21 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 			local msg = string.format(L["Found multiple matches for zone '%s'.  Did you mean: %s"], zone, table.concat(matches, ", "))
 			ChatFrame1:AddMessage(msg)
 			return
-		end
+        elseif #matches == 0 then
+            local msg = string.format(L["Could not find any matches for zone %s."], zone)
+            ChatFrame1:AddMessage(msg)
+        end
 
 		-- There was only one match, so proceed
 		local zoneName = matches[1]
         local mapId = nameToMapId[zoneName]
 
-		if not x or not tonumber(x) then
-			return usage()
-		elseif not y or not tonumber(y) then
-			return usage()
-		end
+        x = x and tonumber(x)
+        y = y and tonumber(y)
+
+        if not x or not y then
+            return usage()
+        end
 
 		x = tonumber(x)
 		y = tonumber(y)
