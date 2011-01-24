@@ -1157,7 +1157,7 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 
         -- Find a fuzzy match for the zone
         local matches = {}
-        zone = zone:lower():gsub("[%L]", "")
+        zone = zone:lower():gsub("[^%l%s%d]", "")
 
         for name,mapId in pairs(nameToMapId) do
             local lname = name:lower()
