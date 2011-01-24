@@ -93,6 +93,10 @@ function TomTom:SetCrazyArrow(uid, dist, title)
 	end
 end
 
+function TomTom:IsCrazyArrowEmpty()
+    return not active_point
+end
+
 local status = wayframe.status
 local tta = wayframe.tta
 local arrow = wayframe.arrow
