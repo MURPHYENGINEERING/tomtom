@@ -1129,6 +1129,7 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
             elseif #matches == 0 then
                 local msg = string.format(L["Could not find any matches for zone %s."], zone)
                 ChatFrame1:AddMessage(msg)
+                return
             end
 
             local zoneName = matches[1]
@@ -1190,6 +1191,7 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
         elseif #matches == 0 then
             local msg = string.format(L["Could not find any matches for zone %s."], zone)
             ChatFrame1:AddMessage(msg)
+            return
         end
 
 		-- There was only one match, so proceed
