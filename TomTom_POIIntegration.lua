@@ -1,22 +1,6 @@
-local hookEnabled = true;
-local modifier;
-local watchframeHookEnabled = false;
-
-local function POIAnchorToCoord(poiframe)
-    local point, relto, relpoint, x, y = poiframe:GetPoint()
-    local frame = WorldMapDetailFrame
-    local width = frame:GetWidth()
-    local height = frame:GetHeight()
-    local scale = frame:GetScale() / poiframe:GetScale()
-    local cx = (x / scale) / width
-    local cy = (-y / scale) / height
-
-    if cx < 0 or cx > 1 or cy < 0 or cy > 1 then
-        return nil, nil
-    end
-
-    return cx * 100, cy * 100
-end
+local enableClicks = true       -- True if waypoint-clicking is enabled to set points
+local enableClosest = true      -- True if 'Automatic' quest waypoints are enabled
+local modifier                  -- A string representing click-modifiers "CAS", etc.
 
 local modTbl = {
     C = IsControlKeyDown,
@@ -24,45 +8,140 @@ local modTbl = {
     S = IsShiftKeyDown,
 }
 
-local function findQuestFrameFromQuestIndex(questId)
-    -- Try to find the correct quest frame
-    for i = 1, MAX_NUM_QUESTS do
-        local questFrame = _G["WorldMapQuestFrame"..i];
-        if ( not questFrame ) then
-            break
-        elseif ( questFrame.questId == questId ) then
-            return questFrame
-        end
-    end
-end
+local astrolabe = DongleStub("Astrolabe-1.0")
 
-local function setQuestWaypoint(self)
-    local c, z = GetCurrentMapContinent(), GetCurrentMapZone();
-    local x, y = POIAnchorToCoord(self)
+-- This function and the related events/hooks are used to automatically
+-- update the crazy arrow to the closest quest waypoint.
+local lastWaypoint
+local scanning          -- This function is not re-entrant, stop that
 
-    local qid = self.questId
-
-    local title;
-    if self.quest and self.quest.questLogIndex then
-        title = GetQuestLogTitle(self.quest.questLogIndex)
-    elseif self.questLogIndex then
-        title = GetQuestLogTitle(self.questLogIndex)
-    else
-        title = "Quest #" .. qid .. " POI"
-    end
-
-    local uid = TomTom:AddZWaypoint(c, z, x, y, title)
-    return uid
-end
-
--- desc, persistent, minimap, world, custom_callbacks, silent, crazy)
-local function poi_OnClick(self, button)
-    -- Are we enabled?
-    if not hookEnabled then
+local function ObjectivesChanged()
+    -- This function should only run if enableClosest is set
+    if not enableClosest then
         return
     end
 
-    -- Is this the right button/modifier?
+    -- This function may be called while we are processing this function
+    -- so stop that from happening.
+    if scanning then
+        return
+    else
+        scanning = true
+    end
+
+    local map, floor = GetCurrentMapAreaID()
+    local floors = astrolabe:GetNumFloors(map)
+    floor = floors == 0 and 0 or 1
+
+    local px, py = GetPlayerMapPosition("player")
+
+    -- Bail out if we can't get the player's position
+    if not px or not py or px <= 0 or py <= 0 then
+        scanning = false
+        return
+    end
+
+    -- THIS CVAR MUST BE CHANGED BACK!
+    local cvar = GetCVarBool("questPOI")
+    SetCVar("questPOI", 1)
+
+    local closest
+    local closestdist = math.huge
+
+    -- This function relies on the above CVar being set, and updates the icon
+    -- position information so it can be queries via the API
+    QuestPOIUpdateIcons()
+
+    -- Scan through every quest that is tracked, and find the closest one
+    local watchIndex = 1
+    while true do
+        local questIndex = GetQuestIndexForWatch(watchIndex)
+
+        if not questIndex then
+            break
+        end
+
+        local qid = select(9, GetQuestLogTitle(questIndex))
+        local completed, x, y, objective = QuestPOIGetIconInfo(qid)
+
+        if x and y then
+            local dist, xd, yd = astrolabe:ComputeDistance(map, floor, px, py, map, floor, x, y)
+            if dist < closestdist then
+                closest = watchIndex
+            end
+        end
+        watchIndex = watchIndex + 1
+    end
+
+    if closest then
+        local questIndex = GetQuestIndexForWatch(closest)
+        local title = GetQuestLogTitle(questIndex)
+        local qid = select(9, GetQuestLogTitle(questIndex))
+        local completed, x, y, objective = QuestPOIGetIconInfo(qid)
+
+        if completed then
+            title = "Turn in: " .. title
+        end
+
+        local setWaypoint = true
+        if lastWaypoint then
+            -- This is a hack that relies on the UID format, do not use this
+            -- in your addons, please.
+            local pm, pf, px, py = unpack(lastWaypoint)
+            if map == pm and floor == pf and x == px and y == py and lastWaypoint.title == title then
+                -- This is the same waypoint, do nothing
+                setWaypoint = false
+            else
+                -- This is a new waypoint, clear the previous one
+                TomTom:RemoveWaypoint(lastWaypoint)
+            end
+        end
+
+        if setWaypoint then
+            -- Set the new waypoint
+            lastWaypoint = TomTom:AddMFWaypoint(map, floor, x, y, {
+                title = title,
+                persistent = false,
+            })
+
+            -- Check and see if the Crazy arrow is empty, and use it if so
+            if TomTom:IsCrazyArrowEmpty() then
+                TomTom:SetCrazyArrow(lastWaypoint, TomTom.profile.arrow.arrival, title)
+            end
+        end
+    else
+        -- No closest waypoint was found, so remove one if its already set
+        if lastWaypoint then
+            TomTom:RemoveWaypoint(lastWaypoint)
+            lastWaypoint = nil
+        end
+    end
+
+    SetCVar("questPOI", cvar and 1 or 0)
+    scanning = false
+end
+
+local eventFrame = CreateFrame("Frame")
+eventFrame:RegisterEvent("QUEST_POI_UPDATE")
+eventFrame:RegisterEvent("QUEST_LOG_UPDATE")
+hooksecurefunc("WatchFrame_Update", function(self)
+    ObjectivesChanged()
+end)
+
+eventFrame:SetScript("OnEvent", function(self, event, ...)
+    if event == "QUEST_POI_UPDATE" then
+        ObjectivesChanged()
+    elseif event == "QUEST_LOG_UPDATE" then
+        ObjectivesChanged()
+    end
+end)
+
+local poiclickwaypoints = {}
+local function poi_OnClick(self, button)
+    if not enableClicks then
+        return
+    end
+
     if button == "RightButton" then
         for i = 1, #modifier do
             local mod = modifier:sub(i, i)
@@ -75,17 +154,43 @@ local function poi_OnClick(self, button)
         return
     end
 
-    if self.parentName == "WatchFrameLines" then
-        local questFrame = findQuestFrameFromQuestIndex(self.questId)
-        if not questFrame then
-            return
-        else
-            self = questFrame.poiIcon
+    -- Run our logic, and set a waypoint for this button
+    local m, f = GetCurrentMapAreaID()
+
+    local questIndex = self.quest and self.quest.questLogIndex
+    if not questIndex and self.index then
+        questIndex = GetQuestIndexForWatch(self.index)
+    end
+
+    if not questIndex then
+        return
+    end
+
+    local title = GetQuestLogTitle(questIndex)
+    local qid = select(9, GetQuestLogTitle(questIndex))
+    local completed, x, y, objective = QuestPOIGetIconInfo(qid)
+    if completed then
+        title = "Turn in: " .. title
+    end
+
+    local key = TomTom:GetKeyArgs(m, f, x, y, title)
+
+    local alreadySet = false
+    if poiclickwaypoints[key] then
+        local uid = poiclickwaypoints[key]
+        -- Check to see if it has been removed by the user
+        if TomTom:IsValidWaypoint(uid) then
+            alreadySet = true
         end
     end
 
-    return setQuestWaypoint(self)
- end
+    if not alreadySet then
+        local uid = TomTom:AddMFWaypoint(m, f, x, y, {
+            title = title,
+        })
+        poiclickwaypoints[key] = uid
+    end
+end
 
 local hooked = {}
 hooksecurefunc("QuestPOI_DisplayButton", function(parentName, buttonType, buttonIndex, questId)
@@ -97,56 +202,27 @@ hooksecurefunc("QuestPOI_DisplayButton", function(parentName, buttonType, button
          poiButton:RegisterForClicks("AnyUp")
          hooked[buttonName] = true
       end
-end)
 
-local setPoints = {}
+      -- Check to see if there is a swap button
+      local swapName = "poi" .. parentName .. "_Swap"
+      local swapButton = _G[swapName]
 
--- This code will enable auto-tracking of closest quest objectives.  To
--- accomplish this, it hooks the WatchFrame_Update function, and when it
--- is called, it sets a waypoint to the closest quest id.
-local function updateClosestPOI()
-    local questIndex = GetQuestIndexForWatch(1);
-    if ( questIndex ) then
-        local title, level, questTag, suggestedGroup, isHeader, isCollapsed, isComplete, isDaily, questID = GetQuestLogTitle(questIndex);
-        local playerMoney = GetMoney();
-        local requiredMoney = GetQuestLogRequiredMoney(questIndex);
-        local numObjectives = GetNumQuestLeaderBoards(questIndex);
-        if ( isComplete and isComplete < 0 ) then
-            isComplete = false;
-        elseif ( numObjectives == 0 and playerMoney >= requiredMoney ) then
-            isComplete = true;
-        end
-
-        -- check filters
-        local filterOK = true;
-        if ( isComplete and bit.band(WATCHFRAME_FILTER_TYPE, WATCHFRAME_FILTER_COMPLETED_QUESTS) ~= WATCHFRAME_FILTER_COMPLETED_QUESTS ) then
-            filterOK = false;
-        elseif ( bit.band(WATCHFRAME_FILTER_TYPE, WATCHFRAME_FILTER_REMOTE_ZONES) ~= WATCHFRAME_FILTER_REMOTE_ZONES and not LOCAL_MAP_QUESTS[questID] ) then
-            filterOK = false;
-        end
-
-        if filterOK then
-            -- Set a waypoint for this POI, it should be the higehst
-            local questFrame = findQuestFrameFromQuestIndex(questID)
-            if questFrame then
-                for idx, uid in ipairs(setPoints) do
-                    TomTom:RemoveWaypoint(uid)
-                end
-                local uid = setQuestWaypoint(questFrame.poiIcon)
-                table.insert(setPoints, uid)
-            end
-        end
-    end
-end
-
-hooksecurefunc("WatchFrame_Update", function()
-    if watchframeHookEnabled then
-        updateClosestPOI()
-    end
+      if not hooked[swapName] and swapButton then
+          swapButton:HookScript("OnClick", poi_OnClick)
+          swapButton:RegisterForClicks("AnyUp")
+          hooked[swapName] = true
+      end
 end)
 
 function TomTom:EnableDisablePOIIntegration()
-    hookEnabled = TomTom.profile.poi.enable
+    enableClicks= TomTom.profile.poi.enable
     modifier = TomTom.profile.poi.modifier
-    watchframeHookEnabled = TomTom.profile.poi.setClosest
+    enableClosest = TomTom.profile.poi.setClosest
+
+    if not enableClosest and lastWaypoint then
+        TomTom:RemoveWaypoint(lastWaypoint)
+        lastWaypoint = nil
+    elseif enableClosest then
+        ObjectivesChanged()
+    end
 end
