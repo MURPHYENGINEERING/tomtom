@@ -802,6 +802,7 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, callb
     })
 end
 
+-- TAG: AddCode
 function TomTom:AddMFWaypoint(m, f, x, y, opts)
     opts = opts or {}
 
