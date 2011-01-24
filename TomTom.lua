@@ -1223,7 +1223,7 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 
         local m, f = TomTom:GetCurrentPlayerPosition()
         if m and x and y then
-           TomTom:AddMFWaypoint(m, f, x, y, {
+           TomTom:AddMFWaypoint(m, f, x/100, y/100, {
                 title = desc
             })
         end
