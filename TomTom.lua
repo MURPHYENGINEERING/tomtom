@@ -1108,23 +1108,23 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 
 			-- Find a fuzzy match for the zone
 			local matches = {}
-			zone = zone:lower():gsub("[%L]", "")
+			lzone = zone:lower():gsub("[%L%S%D]", "")
 
 			for name,mapId in pairs(nameToMapId) do
                 local lname = name:lower()
-				if lname:match(zone) then
+				if lname:match(lzone) then
 					table.insert(matches, name)
 				end
 			end
 
 			if #matches > 5 then
-				local msg = string.format(L["Found %d possible matches for zone %s.  Please be more specific"], #matches, tokens[2])
+				local msg = string.format(L["Found %d possible matches for zone %s.  Please be more specific"], #matches, zone)
 				ChatFrame1:AddMessage(msg)
 				return
 			elseif #matches > 1 then
 				table.sort(matches)
 
-				ChatFrame1:AddMessage(string.format(L["Found multiple matches for zone '%s'.  Did you mean: %s"], tokens[2], table.concat(matches, ", ")))
+				ChatFrame1:AddMessage(string.format(L["Found multiple matches for zone '%s'.  Did you mean: %s"], zone, table.concat(matches, ", ")))
 				return
 			end
 
@@ -1142,10 +1142,12 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 	elseif tokens[1] and not tonumber(tokens[1]) then
 		-- Find the first numeric token
 		local zoneEnd = 1
-		for idx,token in ipairs(tokens) do
+		for idx = 1, #tokens do
+			local token = tokens[idx]
 			if tonumber(token) then
+				-- We've encountered a number, so the zone name must have
+				-- ended at the prior token
 				zoneEnd = idx - 1
-				break
 			end
 		end
 
@@ -1157,21 +1159,26 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 
         -- Find a fuzzy match for the zone
         local matches = {}
-        zone = zone:lower():gsub("[^%l%s%d]", "")
+        lzone = zone:lower():gsub("[^%l%s%d]", "")
 
         for name,mapId in pairs(nameToMapId) do
             local lname = name:lower()
-            if lname:match(zone) then
+            if lname:match(lzone) then
                 table.insert(matches, name)
             end
         end
 
-		if #matches ~= 1 then
-				local msg = string.format(L["Found %d possible matches for zone %s.  Please be more specific"], #matches, tokens[1])
-				ChatFrame1:AddMessage(msg)
+		if #matches > 5 then
+			local msg = string.format(L["Found %d possible matches for zone %s.  Please be more specific"], #matches, zone)
+			ChatFrame1:AddMessage(msg)
+			return
+		elseif #matches > 1 then
+			local msg = string.format(L["Found multiple matches for zone '%s'.  Did you mean: %s"], zone, table.concat(matches, ", "))
+			ChatFrame1:AddMessage(msg)
 			return
 		end
 
+		-- There was only one match, so proceed
 		local zoneName = matches[1]
         local mapId = nameToMapId[zoneName]
 
