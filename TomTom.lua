@@ -124,9 +124,10 @@ function TomTom:ADDON_LOADED(event, addon)
 					arrow_throttle = 0.1,
 				},
                 poi = {
-                    enable = false,
+                    enable = true,
                     modifier = "C",
-                    setClosest = false,
+                    setClosest = true,
+                    arrival = 0,
                 },
 			},
 		}
@@ -829,6 +830,14 @@ function TomTom:AddMFWaypoint(m, f, x, y, opts)
 	local cleardistance = self.profile.persistence.cleardistance
     local arrivaldistance = self.profile.arrow.arrival
 
+    -- Allow both of these to be overridde by options
+    if opts.cleardistance then
+        cleardistance = opts.cleardistance
+    end
+    if opts.arrivaldistance then
+        arrivaldistance = opts.arrivaldistance
+    end
+
     if cleardistance == arrivaldistance then
         callbacks.distance[cleardistance] = function(...)
             _both_clear_distance(...);
@@ -880,7 +889,7 @@ function TomTom:AddMFWaypoint(m, f, x, y, opts)
     -- No need to convert x and y because they're already 0-1 instead of 0-100
 	self:SetWaypoint(uid, callbacks, opts.minimap, opts.world)
 	if opts.crazy then
-		self:SetCrazyArrow(uid, self.profile.arrow.arrival, opts.title)
+		self:SetCrazyArrow(uid, arrivaldistance, opts.title)
 	end
 
     waypoints[m] = waypoints[m] or {}

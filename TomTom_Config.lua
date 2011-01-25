@@ -675,6 +675,14 @@ local function createconfig()
 				width = "double",
 				arg = "poi.setClosest",
 			},
+			arrival = {
+				order = 5,
+				type = "range",
+				name = L["\"Arrival Distance\""],
+				desc = L["This setting will control the distance at which the waypoint arrow switches to a downwards arrow, indicating you have arrived at your destination"],
+				min = 0, max = 150, step = 5,
+				arg = "poi.arrival",
+			},
 		},
 	} -- End POI Integration settings
 

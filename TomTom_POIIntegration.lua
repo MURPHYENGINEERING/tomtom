@@ -102,11 +102,12 @@ local function ObjectivesChanged()
             lastWaypoint = TomTom:AddMFWaypoint(map, floor, x, y, {
                 title = title,
                 persistent = false,
+                arrivaldistance = TomTom.profile.poi.arrival,
             })
 
             -- Check and see if the Crazy arrow is empty, and use it if so
             if TomTom:IsCrazyArrowEmpty() then
-                TomTom:SetCrazyArrow(lastWaypoint, TomTom.profile.arrow.arrival, title)
+                TomTom:SetCrazyArrow(lastWaypoint, TomTom.profile.poi.arrival, title)
             end
         end
     else
@@ -187,6 +188,7 @@ local function poi_OnClick(self, button)
     if not alreadySet then
         local uid = TomTom:AddMFWaypoint(m, f, x, y, {
             title = title,
+            arrivaldistance = TomTom.profile.poi.arrival,
         })
         poiclickwaypoints[key] = uid
     end
