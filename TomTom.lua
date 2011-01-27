@@ -1093,6 +1093,9 @@ end
 local wrongseparator = "(%d)" .. (tonumber("1.1") and "," or ".") .. "(%d)"
 local rightseparator =   "%1" .. (tonumber("1.1") and "." or ",") .. "%2"
 
+-- Make comparison only lowercase letters and numbers
+local function lowergsub(s) return s:lower():gsub("^[%a%d]", "") end
+
 SlashCmdList["TOMTOM_WAY"] = function(msg)
 	msg = msg:gsub("(%d)[%.,] (%d)", "%1 %2"):gsub(wrongseparator, rightseparator)
 	local tokens = {}
@@ -1117,10 +1120,10 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
             -- Find a fuzzy match for the zone
 
 			local matches = {}
-			lzone = zone:lower():gsub("^[%l%s%d]", "")
+			lzone = lowergsub(zone)
 
 			for name, mapId in pairs(nameToMapId) do
-                local lname = name:lower()
+                local lname = lowergsub(name)
 				if lname:match(lzone) then
 					table.insert(matches, name)
 				end
@@ -1180,10 +1183,10 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 
         -- Find a fuzzy match for the zone
         local matches = {}
-        lzone = zone:lower():gsub("[^%l%s%d]", "")
+        lzone = lowergsub(zone)
 
         for name,mapId in pairs(nameToMapId) do
-            local lname = name:lower()
+            local lname = lowergsub(name)
             if lname:match(lzone) then
                 table.insert(matches, name)
             end
