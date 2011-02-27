@@ -242,7 +242,7 @@ end
 
 function TomTom:GetCurrentPlayerPosition()
     -- Try to get the position without 'flipping' the map
-    local m, f, x, y = astrolabe:GetUnitPosition("player", false)
+    local m, f, x, y = astrolabe:GetUnitPosition("player", true)
     if m and x and y and not (x <= 0 or y <= 0) then
         local floors = astrolabe:GetNumFloors(m)
         local floor = floors == 0 and 0 or 1
