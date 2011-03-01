@@ -293,18 +293,19 @@ local dropdown_info = {
 				TomTom:RemoveWaypoint(uid)
 			end,
 		},
-		{
-			-- Remove all waypoints from this zone
-			text = L["Remove all waypoints from this zone"],
-			func = function()
-				local uid = active_point
-				local waypoints = TomTom.waypoints
-				local data = waypoints[uid]
-				for uid in pairs(waypoints[data.zone]) do
-					TomTom:RemoveWaypoint(uid)
-				end
-			end,
-		},
+        {
+            -- Remove all waypoints from this zone
+            text = L["Remove all waypoints from this zone"],
+            func = function()
+                local uid = active_point
+                local data = uid
+                local mapId = data[1]
+                for key, waypoint in pairs(TomTom.waypoints[mapId]) do
+                    TomTom:RemoveWaypoint(waypoint)
+                end
+
+            end,
+        },
 		{
 			-- Remove all waypoints
 			text = L["Remove all waypoints"],
