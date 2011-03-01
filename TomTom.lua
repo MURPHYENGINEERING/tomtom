@@ -1159,6 +1159,14 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
             end
         end
     elseif tokens[1] and not tonumber(tokens[1]) then
+        -- Example: /way Elwynn Forest 34.2 50.7 Party in the forest!
+        -- tokens[1] = Elwynn
+        -- tokens[2] = Forest
+        -- tokens[3] = 34.2
+        -- tokens[4] = 50.7
+        -- tokens[5] = Party
+        -- ...
+        --
         -- Find the first numeric token
         local zoneEnd
         for idx = 1, #tokens do
@@ -1167,6 +1175,7 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 				-- We've encountered a number, so the zone name must have
 				-- ended at the prior token
 				zoneEnd = idx - 1
+                break
 			end
 		end
 
@@ -1176,8 +1185,8 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
         end
 
 		-- This is a waypoint set, with a zone before the coords
-		local zone = table.concat(tokens, " ", 1, zoneEnd - 1)
-		local x,y,desc = select(zoneEnd, unpack(tokens))
+		local zone = table.concat(tokens, " ", 1, zoneEnd)
+		local x,y,desc = select(zoneEnd + 1, unpack(tokens))
 
 		if desc then desc = table.concat(tokens, " ", zoneEnd + 3) end
 
