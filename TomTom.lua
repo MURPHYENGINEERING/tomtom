@@ -663,7 +663,7 @@ function TomTom:CHAT_MSG_ADDON(event, prefix, data, channel, sender)
 	end
 
     local zoneName = lmd:MapLocalize(m)
-	self:AddMFWaypoint(m, f, x, y, title)
+	self:AddMFWaypoint(m, f, x, y, {title = title})
 	local msg = string.format(L["|cffffff78TomTom|r: Added '%s' (sent from %s) to zone %s"], title, sender, zoneName)
 	ChatFrame1:AddMessage(msg)
 end
