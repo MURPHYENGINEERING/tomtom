@@ -68,6 +68,7 @@ local function ObjectivesChanged()
             local dist, xd, yd = astrolabe:ComputeDistance(map, floor, px, py, map, floor, x, y)
             if dist < closestdist then
                 closest = watchIndex
+                closestdist = dist
             end
         end
         watchIndex = watchIndex + 1
