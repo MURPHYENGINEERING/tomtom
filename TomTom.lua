@@ -126,7 +126,7 @@ function TomTom:ADDON_LOADED(event, addon)
                 poi = {
                     enable = true,
                     modifier = "C",
-                    setClosest = true,
+                    setClosest = false,
                     arrival = 0,
                 },
 			},
