@@ -276,7 +276,7 @@ function TomTom:ReloadWaypoints()
 	self.waypoints = waypoints
 	self.waypointprofile = self.waydb.profile
 
-    local cm, cf, cx, cy = astrolabe:GetCurrentPlayerPosition()
+    local cm, cf, cx, cy = TomTom:GetCurrentPlayerPosition()
 
 	for mapId,data in pairs(self.waypointprofile) do
 		local same = mapId == cm
@@ -997,7 +997,7 @@ do
         if bcounter > TomTom.profile.block.throttle then
             bcounter = bcounter - TomTom.profile.block.throttle
 
-            local m,f,x,y = astrolabe:GetCurrentPlayerPosition()
+            local m,f,x,y = TomTom:GetCurrentPlayerPosition()
 
             local opt = TomTom.db.profile
             if not x or not y then
