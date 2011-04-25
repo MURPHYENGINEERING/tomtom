@@ -41,7 +41,7 @@ Note:
 -- WARNING!!!
 -- DO NOT MAKE CHANGES TO THIS LIBRARY WITHOUT FIRST CHANGING THE LIBRARY_VERSION_MAJOR
 -- STRING (to something unique) OR ELSE YOU MAY BREAK OTHER ADDONS THAT USE THIS LIBRARY!!!
-local LIBRARY_VERSION_MAJOR = "Astrolabe-1.0"
+local LIBRARY_VERSION_MAJOR = "TTAstrolabe-1.0"
 local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 125 $", "(%d+)") or 1)
 
 if not DongleStub then error(LIBRARY_VERSION_MAJOR .. " requires DongleStub.") end
@@ -326,11 +326,13 @@ function Astrolabe:GetUnitPosition( unit, noMapChange )
 			end
 		end
 		local M, F = GetCurrentMapAreaID(), GetCurrentMapDungeonLevel();
-		if ( M ~= lastMapID or F ~= lastFloor ) then
-			-- set map zoom back to what it was before
-			SetMapByID(lastMapID);
-			SetDungeonMapLevel(lastFloor);
-		end
+        -- This code has been commented out to give slightly better behaviour
+        -- when getting the players position (jnw)
+		-- if ( M ~= lastMapID or F ~= lastFloor ) then
+		-- 	-- set map zoom back to what it was before
+		-- 	SetMapByID(lastMapID);
+		-- 	SetDungeonMapLevel(lastFloor);
+		-- end
 		return M, F, x, y;
 	end
 	return GetCurrentMapAreaID(), GetCurrentMapDungeonLevel(), x, y;
@@ -1639,5 +1641,5 @@ end
 setmetatable(WorldMapSize, zeroData); -- setup the metatable so that invalid map IDs don't cause Lua errors
 
 -- register this library with AstrolabeMapMonitor, this will cause a full update if PLAYER_LOGIN has already fired
-local AstrolabeMapMonitor = DongleStub("AstrolabeMapMonitor");
+local AstrolabeMapMonitor = DongleStub("TTAstrolabeMapMonitor");
 AstrolabeMapMonitor:RegisterAstrolabeLibrary(Astrolabe, LIBRARY_VERSION_MAJOR);
