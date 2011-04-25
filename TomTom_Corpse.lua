@@ -12,13 +12,51 @@ eventFrame:RegisterEvent("PLAYER_DEAD")
 eventFrame:RegisterEvent("PLAYER_UNGHOST")
 eventFrame:Hide()
 
-local c,z,x,y,uid
+local astrolabe = DongleStub("TTAstrolabe-1.0")
+
+-- Local variables to store map, floor, x, y and uid or corpse waypoint
+local m,f,x,y,uid
+
+local function StartCorpseSearch()
+	if not IsInInstance() then
+		eventFrame:Show()
+	end
+end
+
+local function ClearCorpseArrow()
+	if uid then
+		TomTom:RemoveWaypoint(uid)
+		m,f,x,y,uid = nil, nil, nil, nil, nil
+	end
+end
+
 local function GetCorpseLocation()
+    -- If the player isn't dead or a ghost, drop out
+    if not UnitIsDeadOrGhost("player") then
+        if m or f or x or y then
+            ClearCorpseArrow()
+        end
+    end
+
 	-- Cache the result so we don't scan the maps multiple times
-	if c and z and x and y then
-		return c, z, x, y
+	if m and f and x and y then
+		return m, f, x, y
 	end
 
+    --  See if the player corpse is on the current map
+    local om = GetCurrentMapAreaID()
+    local of = GetCurrentMapDungeonLevel()
+
+    local cx, cy = GetCorpseMapPosition()
+    if cx ~= 0 and cy ~= 0 then
+        m = om
+        f = of
+        x = cx
+        y = cy
+    end
+
+    -- Scan the continent maps to see if we can find the player's corpse
+    local c
 	local oc,oz = GetCurrentMapContinent(), GetCurrentMapZone()
 
 	for i=1,select("#", GetMapContinents()) do
@@ -36,9 +74,10 @@ local function GetCorpseLocation()
 			SetMapZoom(c, i)
 			local cx,cy = GetCorpseMapPosition()
 			if cx > 0 and cy > 0 then
-				x = cx
-				y = cy
-				z = i
+                m = GetCurrentMapAreaID()
+                f = GetCurrentMapDungeonLevel()
+                x = cx
+                y = cy
 				break
 			end
 		end
@@ -47,28 +86,18 @@ local function GetCorpseLocation()
 	-- Restore the map to its previous zoom level
 	SetMapZoom(oc, oz)
 
-	if c and z and x and y then
-		return c,z,x,y
+	if m and f and x and y then
+		return m,f,x,y
 	end
 end
 
 local function SetCorpseArrow()
-	if c and z and x and y and c > 0 and z > 0 and x > 0 and y > 0 then
-		uid = TomTom:AddZWaypoint(c, z, x*100, y*100, L["My Corpse"], false, true, true, nil, true, true)
+	if m and f and x and y then
+		uid = TomTom:AddMFWaypoint(m, f, x, y, {
+            title = L["My Corpse"],
+            persistent = false,
+        })
 		return uid
-	end
-end
-
-local function StartCorpseSearch()
-	if not IsInInstance() then
-		eventFrame:Show()
-	end
-end
-
-local function ClearCorpseArrow()
-	if uid then
-		TomTom:RemoveWaypoint(uid)
-		c,z,x,y,uid = nil, nil, nil, nil, nil
 	end
 end
 
@@ -108,11 +137,11 @@ eventFrame:SetScript("OnEvent", function(self, event, arg1, ...)
 	elseif event == "PLAYER_DEAD" then
 		-- Cheat a bit and avoid the map flipping
 		SetMapToCurrentZone()
-		c = GetCurrentMapContinent()
-		z = GetCurrentMapZone()
-		if not IsInInstance() then
-			x,y = GetPlayerMapPosition("player")
-		end
+        m = GetCurrentMapAreaID()
+        f = GetCurrentMapDungeonLevel()
+        if not IsInInstance() then
+            x,y = GetPlayerMapPosition("player")
+        end
 		StartCorpseSearch()
 	elseif event == "PLAYER_UNGHOST" then
 		ClearCorpseArrow()
