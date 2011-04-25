@@ -12,27 +12,27 @@ local lmd = LibStub("LibMapData-1.0")
 
 -- Create the addon object
 TomTom = {
-	events = {},
-	eventFrame = CreateFrame("Frame"),
-	RegisterEvent = function(self, event, method)
-		self.eventFrame:RegisterEvent(event)
-		self.events[event] = method or event
-	end,
-	UnregisterEvent = function(self, event)
-		self.eventFrame:UnregisterEvent(event)
-		self.events[event] = nil
-	end,
-	version = GetAddOnMetadata("TomTom", "Version")
+    events = {},
+    eventFrame = CreateFrame("Frame"),
+    RegisterEvent = function(self, event, method)
+        self.eventFrame:RegisterEvent(event)
+        self.events[event] = method or event
+    end,
+    UnregisterEvent = function(self, event)
+        self.eventFrame:UnregisterEvent(event)
+        self.events[event] = nil
+    end,
+    version = GetAddOnMetadata("TomTom", "Version")
 }
 
 if TomTom.version == "wowi:revision" then TomTom.version = "SVN" end
 if TomTom.version == "@project-version@" then TomTom.version = "SCM" end
 
 TomTom.eventFrame:SetScript("OnEvent", function(self, event, ...)
-	local method = TomTom.events[event]
-	if method and TomTom[method] then
-		TomTom[method](TomTom, event, ...)
-	end
+    local method = TomTom.events[event]
+    if method and TomTom[method] then
+        TomTom[method](TomTom, event, ...)
+    end
 end)
 
 TomTom:RegisterEvent("ADDON_LOADED")
@@ -48,158 +48,158 @@ local RoundCoords
 local waypoints = {}
 
 function TomTom:ADDON_LOADED(event, addon)
-	if addon == "TomTom" then
-		self:UnregisterEvent("ADDON_LOADED")
-		self.defaults = {
-			profile = {
-				general = {
-					confirmremoveall = true,
-					announce = false,
-					corpse_arrow = true,
-				},
-				block = {
-					enable = true,
-					accuracy = 2,
-					bordercolor = {1, 0.8, 0, 0.8},
-					bgcolor = {0, 0, 0, 0.4},
-					lock = false,
-					height = 30,
-					width = 100,
-					fontsize = 12,
+    if addon == "TomTom" then
+        self:UnregisterEvent("ADDON_LOADED")
+        self.defaults = {
+            profile = {
+                general = {
+                    confirmremoveall = true,
+                    announce = false,
+                    corpse_arrow = true,
+                },
+                block = {
+                    enable = true,
+                    accuracy = 2,
+                    bordercolor = {1, 0.8, 0, 0.8},
+                    bgcolor = {0, 0, 0, 0.4},
+                    lock = false,
+                    height = 30,
+                    width = 100,
+                    fontsize = 12,
                     throttle = 0.2,
-				},
-				mapcoords = {
-					playerenable = true,
-					playeraccuracy = 2,
-					cursorenable = true,
-					cursoraccuracy = 2,
-				},
-				arrow = {
-					enable = true,
-					goodcolor = {0, 1, 0},
-					badcolor = {1, 0, 0},
-					middlecolor = {1, 1, 0},
-					arrival = 15,
-					lock = false,
-					noclick = false,
-					showtta = true,
-					autoqueue = true,
-					menu = true,
-					scale = 1.0,
-					alpha = 1.0,
-					title_width = 0,
-					title_height = 0,
-					title_scale = 1,
-					title_alpha = 1,
-					setclosest = true,
+                },
+                mapcoords = {
+                    playerenable = true,
+                    playeraccuracy = 2,
+                    cursorenable = true,
+                    cursoraccuracy = 2,
+                },
+                arrow = {
+                    enable = true,
+                    goodcolor = {0, 1, 0},
+                    badcolor = {1, 0, 0},
+                    middlecolor = {1, 1, 0},
+                    arrival = 15,
+                    lock = false,
+                    noclick = false,
+                    showtta = true,
+                    autoqueue = true,
+                    menu = true,
+                    scale = 1.0,
+                    alpha = 1.0,
+                    title_width = 0,
+                    title_height = 0,
+                    title_scale = 1,
+                    title_alpha = 1,
+                    setclosest = true,
                     enablePing = false,
-				},
-				minimap = {
-					enable = true,
-					otherzone = true,
-					tooltip = true,
-					menu = true,
-				},
-				worldmap = {
-					enable = true,
-					tooltip = true,
-					otherzone = true,
-					clickcreate = true,
-					menu = true,
-					create_modifier = "C",
-				},
-				comm = {
-					enable = true,
-					prompt = false,
-				},
-				persistence = {
-					cleardistance = 10,
-					savewaypoints = true,
-				},
-				feeds = {
-					coords = false,
-					coords_throttle = 0.3,
-					coords_accuracy = 2,
-					arrow = false,
-					arrow_throttle = 0.1,
-				},
+                },
+                minimap = {
+                    enable = true,
+                    otherzone = true,
+                    tooltip = true,
+                    menu = true,
+                },
+                worldmap = {
+                    enable = true,
+                    tooltip = true,
+                    otherzone = true,
+                    clickcreate = true,
+                    menu = true,
+                    create_modifier = "C",
+                },
+                comm = {
+                    enable = true,
+                    prompt = false,
+                },
+                persistence = {
+                    cleardistance = 10,
+                    savewaypoints = true,
+                },
+                feeds = {
+                    coords = false,
+                    coords_throttle = 0.3,
+                    coords_accuracy = 2,
+                    arrow = false,
+                    arrow_throttle = 0.1,
+                },
                 poi = {
                     enable = true,
                     modifier = "C",
                     setClosest = false,
                     arrival = 0,
                 },
-			},
-		}
+            },
+        }
 
-		self.waydefaults = {
+        self.waydefaults = {
             global = {
                 converted = {
                     ["*"] = {},
                 },
             },
-			profile = {
-				["*"] = {},
-			},
-		}
+            profile = {
+                ["*"] = {},
+            },
+        }
 
-		self.db = LibStub("AceDB-3.0"):New("TomTomDB", self.defaults, "Default")
-		self.waydb = LibStub("AceDB-3.0"):New("TomTomWaypointsMF", self.waydefaults)
+        self.db = LibStub("AceDB-3.0"):New("TomTomDB", self.defaults, "Default")
+        self.waydb = LibStub("AceDB-3.0"):New("TomTomWaypointsMF", self.waydefaults)
 
-		self.db.RegisterCallback(self, "OnProfileChanged", "ReloadOptions")
-		self.db.RegisterCallback(self, "OnProfileCopied", "ReloadOptions")
-		self.db.RegisterCallback(self, "OnProfileReset", "ReloadOptions")
-		self.waydb.RegisterCallback(self, "OnProfileChanged", "ReloadWaypoints")
-		self.waydb.RegisterCallback(self, "OnProfileCopied", "ReloadWaypoints")
-		self.waydb.RegisterCallback(self, "OnProfileReset", "ReloadWaypoints")
+        self.db.RegisterCallback(self, "OnProfileChanged", "ReloadOptions")
+        self.db.RegisterCallback(self, "OnProfileCopied", "ReloadOptions")
+        self.db.RegisterCallback(self, "OnProfileReset", "ReloadOptions")
+        self.waydb.RegisterCallback(self, "OnProfileChanged", "ReloadWaypoints")
+        self.waydb.RegisterCallback(self, "OnProfileCopied", "ReloadWaypoints")
+        self.waydb.RegisterCallback(self, "OnProfileReset", "ReloadWaypoints")
 
-		self.tooltip = CreateFrame("GameTooltip", "TomTomTooltip", nil, "GameTooltipTemplate")
+        self.tooltip = CreateFrame("GameTooltip", "TomTomTooltip", nil, "GameTooltipTemplate")
         self.tooltip:SetFrameStrata("DIALOG")
 
-		self.dropdown = CreateFrame("Frame", "TomTomDropdown", nil, "UIDropDownMenuTemplate")
+        self.dropdown = CreateFrame("Frame", "TomTomDropdown", nil, "UIDropDownMenuTemplate")
 
         -- Both the waypoints and waypointprofile tables are going to contain subtables for each
         -- of the mapids that might exist. Under these will be a hash of key/waypoint pairs consisting
         -- of the waypoints for the given map file.
-		self.waypoints = waypoints
-		self.waypointprofile = self.waydb.profile
+        self.waypoints = waypoints
+        self.waypointprofile = self.waydb.profile
 
-		self:RegisterEvent("PLAYER_LEAVING_WORLD")
-		self:RegisterEvent("CHAT_MSG_ADDON")
+        self:RegisterEvent("PLAYER_LEAVING_WORLD")
+        self:RegisterEvent("CHAT_MSG_ADDON")
 
-		self:ReloadOptions()
-		self:ReloadWaypoints()
+        self:ReloadOptions()
+        self:ReloadWaypoints()
 
-		if self.db.profile.feeds.coords then
-			-- Create a data feed for coordinates
-			local feed_coords = ldb:NewDataObject("TomTom_Coords", {
-				type = "data source",
-				icon = "Interface\\Icons\\INV_Misc_Map_01",
-				text = "",
-			})
+        if self.db.profile.feeds.coords then
+            -- Create a data feed for coordinates
+            local feed_coords = ldb:NewDataObject("TomTom_Coords", {
+                type = "data source",
+                icon = "Interface\\Icons\\INV_Misc_Map_01",
+                text = "",
+            })
 
-			local coordFeedFrame = CreateFrame("Frame")
-			local throttle, counter = self.db.profile.feeds.coords_throttle, 0
+            local coordFeedFrame = CreateFrame("Frame")
+            local throttle, counter = self.db.profile.feeds.coords_throttle, 0
             function TomTom:_privateupdatecoordthrottle(x)
                 throttle = x
             end
 
-			coordFeedFrame:SetScript("OnUpdate", function(self, elapsed)
-				counter = counter + elapsed
-				if counter < throttle then
-					return
-				end
+            coordFeedFrame:SetScript("OnUpdate", function(self, elapsed)
+                counter = counter + elapsed
+                if counter < throttle then
+                    return
+                end
 
-				counter = 0
+                counter = 0
                 local m, f, x, y = TomTom:GetCurrentPlayerPosition()
 
-				if x and y then
+                if x and y then
                     local opt = TomTom.db.profile.feeds
-					feed_coords.text = string.format("%s", RoundCoords(x, y, opt.coords_accuracy))
-				end
-			end)
-		end
-	end
+                    feed_coords.text = string.format("%s", RoundCoords(x, y, opt.coords_accuracy))
+                end
+            end)
+        end
+    end
 end
 
 -- Some utility functions that can pack/unpack data from a waypoint
@@ -251,12 +251,12 @@ function TomTom:GetCurrentPlayerPosition()
 end
 
 function TomTom:ReloadOptions()
-	-- This handles the reloading of all options
-	self.profile = self.db.profile
+    -- This handles the reloading of all options
+    self.profile = self.db.profile
 
-	self:ShowHideWorldCoords()
-	self:ShowHideCoordBlock()
-	self:ShowHideCrazyArrow()
+    self:ShowHideWorldCoords()
+    self:ShowHideCoordBlock()
+    self:ShowHideCrazyArrow()
     self:EnableDisablePOIIntegration()
 end
 
@@ -272,17 +272,17 @@ end
 function TomTom:ReloadWaypoints()
     self:ClearAllWaypoints()
 
-	waypoints = {}
-	self.waypoints = waypoints
-	self.waypointprofile = self.waydb.profile
+    waypoints = {}
+    self.waypoints = waypoints
+    self.waypointprofile = self.waydb.profile
 
     local cm, cf, cx, cy = TomTom:GetCurrentPlayerPosition()
 
-	for mapId,data in pairs(self.waypointprofile) do
-		local same = mapId == cm
-		local minimap = self.profile.minimap.enable and (self.profile.minimap.otherzone or same)
-		local world = self.profile.worldmap.enable and (self.profile.worldmap.otherzone or same)
-		for key,waypoint in pairs(data) do
+    for mapId,data in pairs(self.waypointprofile) do
+        local same = mapId == cm
+        local minimap = self.profile.minimap.enable and (self.profile.minimap.otherzone or same)
+        local world = self.profile.worldmap.enable and (self.profile.worldmap.otherzone or same)
+        for key,waypoint in pairs(data) do
             local m,f,x,y = unpack(waypoint)
             local title = waypoint.title
 
@@ -295,8 +295,8 @@ function TomTom:ReloadWaypoints()
                 callbacks = nil,
                 silent = true,
             })
-		end
-	end
+        end
+    end
 end
 
 function TomTom:UpdateCoordFeedThrottle()
@@ -315,15 +315,15 @@ hooksecurefunc("WorldMap_ToggleSizeDown", function()
 end)
 
 function TomTom:ShowHideWorldCoords()
-	-- Bail out if we're not supposed to be showing this frame
-	if self.profile.mapcoords.playerenable or self.db.profile.mapcoords.cursorenable then
-		-- Create the frame if it doesn't exist
-		if not TomTomWorldFrame then
-			TomTomWorldFrame = CreateFrame("Frame", nil, WorldMapFrame)
-			TomTomWorldFrame.Player = TomTomWorldFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-			TomTomWorldFrame.Cursor = TomTomWorldFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-			TomTomWorldFrame:SetScript("OnUpdate", WorldMap_OnUpdate)
-		end
+    -- Bail out if we're not supposed to be showing this frame
+    if self.profile.mapcoords.playerenable or self.db.profile.mapcoords.cursorenable then
+        -- Create the frame if it doesn't exist
+        if not TomTomWorldFrame then
+            TomTomWorldFrame = CreateFrame("Frame", nil, WorldMapFrame)
+            TomTomWorldFrame.Player = TomTomWorldFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+            TomTomWorldFrame.Cursor = TomTomWorldFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+            TomTomWorldFrame:SetScript("OnUpdate", WorldMap_OnUpdate)
+        end
 
         TomTomWorldFrame.Player:ClearAllPoints()
         TomTomWorldFrame.Cursor:ClearAllPoints()
@@ -337,113 +337,113 @@ function TomTom:ShowHideWorldCoords()
         end
 
         TomTomWorldFrame.Player:Hide()
-		TomTomWorldFrame.Cursor:Hide()
+        TomTomWorldFrame.Cursor:Hide()
 
-		if self.profile.mapcoords.playerenable then
-			TomTomWorldFrame.Player:Show()
-		end
+        if self.profile.mapcoords.playerenable then
+            TomTomWorldFrame.Player:Show()
+        end
 
-		if self.profile.mapcoords.cursorenable then
-			TomTomWorldFrame.Cursor:Show()
-		end
+        if self.profile.mapcoords.cursorenable then
+            TomTomWorldFrame.Cursor:Show()
+        end
 
-		-- Show the frame
-		TomTomWorldFrame:Show()
-	elseif TomTomWorldFrame then
-		TomTomWorldFrame:Hide()
-	end
+        -- Show the frame
+        TomTomWorldFrame:Show()
+    elseif TomTomWorldFrame then
+        TomTomWorldFrame:Hide()
+    end
 end
 
 function TomTom:ShowHideCoordBlock()
-	-- Bail out if we're not supposed to be showing this frame
-	if self.profile.block.enable then
-		-- Create the frame if it doesn't exist
-		if not TomTomBlock then
-			-- Create the coordinate display
-			TomTomBlock = CreateFrame("Button", "TomTomBlock", UIParent)
-			TomTomBlock:SetWidth(120)
-			TomTomBlock:SetHeight(32)
-			TomTomBlock:SetToplevel(1)
-			TomTomBlock:SetFrameStrata("LOW")
-			TomTomBlock:SetMovable(true)
-			TomTomBlock:EnableMouse(true)
-			TomTomBlock:SetClampedToScreen()
-			TomTomBlock:RegisterForDrag("LeftButton")
-			TomTomBlock:RegisterForClicks("RightButtonUp")
-			TomTomBlock:SetPoint("TOP", Minimap, "BOTTOM", -20, -10)
+    -- Bail out if we're not supposed to be showing this frame
+    if self.profile.block.enable then
+        -- Create the frame if it doesn't exist
+        if not TomTomBlock then
+            -- Create the coordinate display
+            TomTomBlock = CreateFrame("Button", "TomTomBlock", UIParent)
+            TomTomBlock:SetWidth(120)
+            TomTomBlock:SetHeight(32)
+            TomTomBlock:SetToplevel(1)
+            TomTomBlock:SetFrameStrata("LOW")
+            TomTomBlock:SetMovable(true)
+            TomTomBlock:EnableMouse(true)
+            TomTomBlock:SetClampedToScreen()
+            TomTomBlock:RegisterForDrag("LeftButton")
+            TomTomBlock:RegisterForClicks("RightButtonUp")
+            TomTomBlock:SetPoint("TOP", Minimap, "BOTTOM", -20, -10)
 
-			TomTomBlock.Text = TomTomBlock:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-			TomTomBlock.Text:SetJustifyH("CENTER")
-			TomTomBlock.Text:SetPoint("CENTER", 0, 0)
+            TomTomBlock.Text = TomTomBlock:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            TomTomBlock.Text:SetJustifyH("CENTER")
+            TomTomBlock.Text:SetPoint("CENTER", 0, 0)
 
-			TomTomBlock:SetBackdrop({
-				bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
-				edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-				edgeSize = 16,
-				insets = {left = 4, right = 4, top = 4, bottom = 4},
-			})
-			TomTomBlock:SetBackdropColor(0,0,0,0.4)
-			TomTomBlock:SetBackdropBorderColor(1,0.8,0,0.8)
+            TomTomBlock:SetBackdrop({
+                bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+                edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+                edgeSize = 16,
+                insets = {left = 4, right = 4, top = 4, bottom = 4},
+            })
+            TomTomBlock:SetBackdropColor(0,0,0,0.4)
+            TomTomBlock:SetBackdropBorderColor(1,0.8,0,0.8)
 
-			-- Set behavior scripts
-			TomTomBlock:SetScript("OnUpdate", Block_OnUpdate)
-			TomTomBlock:SetScript("OnClick", Block_OnClick)
-			TomTomBlock:SetScript("OnEnter", Block_OnEnter)
-			TomTomBlock:SetScript("OnLeave", Block_OnLeave)
-			TomTomBlock:SetScript("OnDragStop", Block_OnDragStop)
-			TomTomBlock:SetScript("OnDragStart", Block_OnDragStart)
-		end
-		-- Show the frame
-		TomTomBlock:Show()
+            -- Set behavior scripts
+            TomTomBlock:SetScript("OnUpdate", Block_OnUpdate)
+            TomTomBlock:SetScript("OnClick", Block_OnClick)
+            TomTomBlock:SetScript("OnEnter", Block_OnEnter)
+            TomTomBlock:SetScript("OnLeave", Block_OnLeave)
+            TomTomBlock:SetScript("OnDragStop", Block_OnDragStop)
+            TomTomBlock:SetScript("OnDragStart", Block_OnDragStart)
+        end
+        -- Show the frame
+        TomTomBlock:Show()
 
-		local opt = self.profile.block
+        local opt = self.profile.block
 
-		-- Update the backdrop color, and border color
-		TomTomBlock:SetBackdropColor(unpack(opt.bgcolor))
-		TomTomBlock:SetBackdropBorderColor(unpack(opt.bordercolor))
+        -- Update the backdrop color, and border color
+        TomTomBlock:SetBackdropColor(unpack(opt.bgcolor))
+        TomTomBlock:SetBackdropBorderColor(unpack(opt.bordercolor))
 
-		-- Update the height and width
-		TomTomBlock:SetHeight(opt.height)
-		TomTomBlock:SetWidth(opt.width)
+        -- Update the height and width
+        TomTomBlock:SetHeight(opt.height)
+        TomTomBlock:SetWidth(opt.width)
 
-		-- Update the font size
-		local font,height = TomTomBlock.Text:GetFont()
-		TomTomBlock.Text:SetFont(font, opt.fontsize, select(3, TomTomBlock.Text:GetFont()))
+        -- Update the font size
+        local font,height = TomTomBlock.Text:GetFont()
+        TomTomBlock.Text:SetFont(font, opt.fontsize, select(3, TomTomBlock.Text:GetFont()))
 
-	elseif TomTomBlock then
-		TomTomBlock:Hide()
-	end
+    elseif TomTomBlock then
+        TomTomBlock:Hide()
+    end
 end
 
 -- Hook the WorldMap OnClick
 local world_click_verify = {
-	["A"] = function() return IsAltKeyDown() end,
-	["C"] = function() return IsControlKeyDown() end,
-	["S"] = function() return IsShiftKeyDown() end,
+    ["A"] = function() return IsAltKeyDown() end,
+    ["C"] = function() return IsControlKeyDown() end,
+    ["S"] = function() return IsShiftKeyDown() end,
 }
 
 local origScript = WorldMapButton_OnClick
 WorldMapButton_OnClick = function(self, ...)
-	local mouseButton, button = ...
-	if mouseButton == "RightButton" then
-		-- Check for all the modifiers that are currently set
-		for mod in TomTom.db.profile.worldmap.create_modifier:gmatch("[ACS]") do
-			if not world_click_verify[mod] or not world_click_verify[mod]() then
+    local mouseButton, button = ...
+    if mouseButton == "RightButton" then
+        -- Check for all the modifiers that are currently set
+        for mod in TomTom.db.profile.worldmap.create_modifier:gmatch("[ACS]") do
+            if not world_click_verify[mod] or not world_click_verify[mod]() then
                 return origScript and origScript(self, ...) or true
-			end
-		end
+            end
+        end
 
         local m,f = GetCurrentMapAreaID()
-		local x,y = GetCurrentCursorPosition()
+        local x,y = GetCurrentCursorPosition()
 
-		if not m then
-			return origScript and origScript(self, ...) or true
-		end
+        if not m then
+            return origScript and origScript(self, ...) or true
+        end
 
-		local uid = TomTom:AddMFWaypoint(m,f,x,y)
-	else
-		return origScript and origScript(self, ...) or true
-	end
+        local uid = TomTom:AddMFWaypoint(m,f,x,y)
+    else
+        return origScript and origScript(self, ...) or true
+    end
 end
 
 if WorldMapButton:GetScript("OnMouseUp") == origScript then
@@ -451,18 +451,18 @@ if WorldMapButton:GetScript("OnMouseUp") == origScript then
 end
 
 local function WaypointCallback(event, arg1, arg2, arg3)
-	if event == "OnDistanceArrive" then
-		TomTom:ClearWaypoint(arg1)
-	elseif event == "OnTooltipShown" then
-		local tooltip = arg1
-		if arg3 then
-			tooltip:SetText(L["TomTom waypoint"])
-			tooltip:AddLine(string.format(L["%s yards away"], math.floor(arg2)), 1, 1 ,1)
-			tooltip:Show()
-		else
-			tooltip.lines[2]:SetFormattedText(L["%s yards away"], math.floor(arg2), 1, 1, 1)
-		end
-	end
+    if event == "OnDistanceArrive" then
+        TomTom:ClearWaypoint(arg1)
+    elseif event == "OnTooltipShown" then
+        local tooltip = arg1
+        if arg3 then
+            tooltip:SetText(L["TomTom waypoint"])
+            tooltip:AddLine(string.format(L["%s yards away"], math.floor(arg2)), 1, 1 ,1)
+            tooltip:Show()
+        else
+            tooltip.lines[2]:SetFormattedText(L["%s yards away"], math.floor(arg2), 1, 1, 1)
+        end
+    end
 end
 
 --[[-------------------------------------------------------------------
@@ -470,265 +470,265 @@ end
 -------------------------------------------------------------------]]--
 
 StaticPopupDialogs["TOMTOM_REMOVE_ALL_CONFIRM"] = {
-	text = L["Are you sure you would like to remove ALL TomTom waypoints?"],
-	button1 = L["Yes"],
-	button2 = L["No"],
-	OnAccept = function()
-		TomTom.waydb:ResetProfile()
-		TomTom:ReloadWaypoints()
-	end,
-	timeout = 30,
-	whileDead = 1,
-	hideOnEscape = 1,
+    text = L["Are you sure you would like to remove ALL TomTom waypoints?"],
+    button1 = L["Yes"],
+    button2 = L["No"],
+    OnAccept = function()
+        TomTom.waydb:ResetProfile()
+        TomTom:ReloadWaypoints()
+    end,
+    timeout = 30,
+    whileDead = 1,
+    hideOnEscape = 1,
 }
 
 local dropdown_info = {
-	-- Define level one elements here
-	[1] = {
-		{ -- Title
-			text = L["Waypoint Options"],
-			isTitle = 1,
-		},
-		{
-			-- set as crazy arrow
-			text = L["Set as waypoint arrow"],
-			func = function()
-				local uid = TomTom.dropdown.uid
-                local data = uid
-				TomTom:SetCrazyArrow(uid, TomTom.profile.arrow.arrival, data.title or L["TomTom waypoint"])
-			end,
-		},
-		{
-			-- Send waypoint
-			text = L["Send waypoint to"],
-			hasArrow = true,
-			value = "send",
-		},
-		{ -- Remove waypoint
-			text = L["Remove waypoint"],
-			func = function()
-				local uid = TomTom.dropdown.uid
-				local data = uid
-                TomTom:RemoveWaypoint(uid)
-				--TomTom:PrintF("Removing waypoint %0.2f, %0.2f in %s", data.x, data.y, data.zone)
-			end,
-		},
-		{ -- Remove all waypoints from this zone
-			text = L["Remove all waypoints from this zone"],
-			func = function()
-				local uid = TomTom.dropdown.uid
-				local data = uid
-                local mapId = data[1]
-				for key, waypoint in pairs(waypoints[mapId]) do
-					TomTom:RemoveWaypoint(waypoint)
-				end
-			end,
-		},
-		{ -- Remove ALL waypoints
-			text = L["Remove all waypoints"],
-			func = function()
-				if TomTom.db.profile.general.confirmremoveall then
-					StaticPopup_Show("TOMTOM_REMOVE_ALL_CONFIRM")
-				else
-					StaticPopupDialogs["TOMTOM_REMOVE_ALL_CONFIRM"].OnAccept()
-					return
-				end
-			end,
-		},
-		{ -- Save this waypoint
-			text = L["Save this waypoint between sessions"],
-			checked = function()
-				return TomTom:UIDIsSaved(TomTom.dropdown.uid)
-			end,
-			func = function()
-                -- Add/remove it from the SV file
-                local uid = TomTom.dropdown.uid
-                local data = waypoints[uid]
-                if data then
-                    local key = TomTom:GetKey(data)
-                    local mapId = data[1]
+    -- Define level one elements here
+    [1] = {
+        { -- Title
+        text = L["Waypoint Options"],
+        isTitle = 1,
+    },
+    {
+        -- set as crazy arrow
+        text = L["Set as waypoint arrow"],
+        func = function()
+            local uid = TomTom.dropdown.uid
+            local data = uid
+            TomTom:SetCrazyArrow(uid, TomTom.profile.arrow.arrival, data.title or L["TomTom waypoint"])
+        end,
+    },
+    {
+        -- Send waypoint
+        text = L["Send waypoint to"],
+        hasArrow = true,
+        value = "send",
+    },
+    { -- Remove waypoint
+    text = L["Remove waypoint"],
+    func = function()
+        local uid = TomTom.dropdown.uid
+        local data = uid
+        TomTom:RemoveWaypoint(uid)
+        --TomTom:PrintF("Removing waypoint %0.2f, %0.2f in %s", data.x, data.y, data.zone)
+    end,
+},
+{ -- Remove all waypoints from this zone
+text = L["Remove all waypoints from this zone"],
+func = function()
+    local uid = TomTom.dropdown.uid
+    local data = uid
+    local mapId = data[1]
+    for key, waypoint in pairs(waypoints[mapId]) do
+        TomTom:RemoveWaypoint(waypoint)
+    end
+end,
+        },
+        { -- Remove ALL waypoints
+        text = L["Remove all waypoints"],
+        func = function()
+            if TomTom.db.profile.general.confirmremoveall then
+                StaticPopup_Show("TOMTOM_REMOVE_ALL_CONFIRM")
+            else
+                StaticPopupDialogs["TOMTOM_REMOVE_ALL_CONFIRM"].OnAccept()
+                return
+            end
+        end,
+    },
+    { -- Save this waypoint
+    text = L["Save this waypoint between sessions"],
+    checked = function()
+        return TomTom:UIDIsSaved(TomTom.dropdown.uid)
+    end,
+    func = function()
+        -- Add/remove it from the SV file
+        local uid = TomTom.dropdown.uid
+        local data = waypoints[uid]
+        if data then
+            local key = TomTom:GetKey(data)
+            local mapId = data[1]
 
-                    if mapId then
-                        if UIDIsSavedTomTom.waypointprofile[mapId][key] then
-                            TomTom.waypointprofile[mapId][key] = nil
-                        else
-                            TomTom.waypointprofile[mapId][key] = data
-                        end
-                    end
+            if mapId then
+                if UIDIsSavedTomTom.waypointprofile[mapId][key] then
+                    TomTom.waypointprofile[mapId][key] = nil
+                else
+                    TomTom.waypointprofile[mapId][key] = data
                 end
-			end,
-		},
-	},
-	[2] = {
-		send = {
-			{
-				-- Title
-				text = L["Waypoint communication"],
-				isTitle = true,
-			},
-			{
-				-- Party
-				text = L["Send to party"],
-				func = function()
-					TomTom:SendWaypoint(TomTom.dropdown.uid, "PARTY")
-				end
-			},
-			{
-				-- Raid
-				text = L["Send to raid"],
-				func = function()
-					TomTom:SendWaypoint(TomTom.dropdown.uid, "RAID")
-				end
-			},
-			{
-				-- Battleground
-				text = L["Send to battleground"],
-				func = function()
-					TomTom:SendWaypoint(TomTom.dropdown.uid, "BATTLEGROUND")
-				end
-			},
-			{
-				-- Guild
-				text = L["Send to guild"],
-				func = function()
-					TomTom:SendWaypoint(TomTom.dropdown.uid, "GUILD")
-				end
-			},
-		},
-	},
+            end
+        end
+    end,
+},
+    },
+    [2] = {
+        send = {
+            {
+                -- Title
+                text = L["Waypoint communication"],
+                isTitle = true,
+            },
+            {
+                -- Party
+                text = L["Send to party"],
+                func = function()
+                    TomTom:SendWaypoint(TomTom.dropdown.uid, "PARTY")
+                end
+            },
+            {
+                -- Raid
+                text = L["Send to raid"],
+                func = function()
+                    TomTom:SendWaypoint(TomTom.dropdown.uid, "RAID")
+                end
+            },
+            {
+                -- Battleground
+                text = L["Send to battleground"],
+                func = function()
+                    TomTom:SendWaypoint(TomTom.dropdown.uid, "BATTLEGROUND")
+                end
+            },
+            {
+                -- Guild
+                text = L["Send to guild"],
+                func = function()
+                    TomTom:SendWaypoint(TomTom.dropdown.uid, "GUILD")
+                end
+            },
+        },
+    },
 }
 
 local function init_dropdown(self, level)
-	-- Make sure level is set to 1, if not supplied
-	level = level or 1
+    -- Make sure level is set to 1, if not supplied
+    level = level or 1
 
-	-- Get the current level from the info table
-	local info = dropdown_info[level]
+    -- Get the current level from the info table
+    local info = dropdown_info[level]
 
-	-- If a value has been set, try to find it at the current level
-	if level > 1 and UIDROPDOWNMENU_MENU_VALUE then
-		if info[UIDROPDOWNMENU_MENU_VALUE] then
-			info = info[UIDROPDOWNMENU_MENU_VALUE]
-		end
-	end
+    -- If a value has been set, try to find it at the current level
+    if level > 1 and UIDROPDOWNMENU_MENU_VALUE then
+        if info[UIDROPDOWNMENU_MENU_VALUE] then
+            info = info[UIDROPDOWNMENU_MENU_VALUE]
+        end
+    end
 
-	-- Add the buttons to the menu
-	for idx,entry in ipairs(info) do
-		if type(entry.checked) == "function" then
-			-- Make this button dynamic
-			local new = {}
-			for k,v in pairs(entry) do new[k] = v end
-			new.checked = new.checked()
-			entry = new
-		else
-			entry.checked = nil
-		end
+    -- Add the buttons to the menu
+    for idx,entry in ipairs(info) do
+        if type(entry.checked) == "function" then
+            -- Make this button dynamic
+            local new = {}
+            for k,v in pairs(entry) do new[k] = v end
+            new.checked = new.checked()
+            entry = new
+        else
+            entry.checked = nil
+        end
 
-		UIDropDownMenu_AddButton(entry, level)
-	end
+        UIDropDownMenu_AddButton(entry, level)
+    end
 end
 
 function TomTom:InitializeDropdown(uid)
-	self.dropdown.uid = uid
-	UIDropDownMenu_Initialize(self.dropdown, init_dropdown)
+    self.dropdown.uid = uid
+    UIDropDownMenu_Initialize(self.dropdown, init_dropdown)
 end
 
 function TomTom:UIDIsSaved(uid)
-	local data = uid
-	if data then
+    local data = uid
+    if data then
         local key = TomTom:GetKey(data)
         local mapId = data[1]
 
         if data then
             return not not TomTom.waypointprofile[mapId][key]
         end
-	end
-	return false
+    end
+    return false
 end
 
 function TomTom:SendWaypoint(uid, channel)
-	local data = uid
+    local data = uid
     local m, f, x, y = unpack(data)
-	local msg = string.format("%d:%d:%f:%f:%s", m, f, x, y, data.title or "")
-	SendAddonMessage("TOMTOM3", msg, channel)
+    local msg = string.format("%d:%d:%f:%f:%s", m, f, x, y, data.title or "")
+    SendAddonMessage("TOMTOM3", msg, channel)
 end
 
 function TomTom:CHAT_MSG_ADDON(event, prefix, data, channel, sender)
-	if prefix ~= "TOMTOM3" then return end
-	if sender == UnitName("player") then return end
+    if prefix ~= "TOMTOM3" then return end
+    if sender == UnitName("player") then return end
 
-	local m,f,x,y,title = string.split(":", data)
-	if not title:match("%S") then
-		title = string.format(L["Waypoint from %s"], sender)
-	end
+    local m,f,x,y,title = string.split(":", data)
+    if not title:match("%S") then
+        title = string.format(L["Waypoint from %s"], sender)
+    end
 
     local zoneName = lmd:MapLocalize(m)
-	self:AddMFWaypoint(m, f, x, y, {title = title})
-	local msg = string.format(L["|cffffff78TomTom|r: Added '%s' (sent from %s) to zone %s"], title, sender, zoneName)
-	ChatFrame1:AddMessage(msg)
+    self:AddMFWaypoint(m, f, x, y, {title = title})
+    local msg = string.format(L["|cffffff78TomTom|r: Added '%s' (sent from %s) to zone %s"], title, sender, zoneName)
+    ChatFrame1:AddMessage(msg)
 end
 
 --[[-------------------------------------------------------------------
 --  Define callback functions
 -------------------------------------------------------------------]]--
 local function _minimap_onclick(event, uid, self, button)
-	if TomTom.db.profile.minimap.menu then
-		TomTom:InitializeDropdown(uid)
-		ToggleDropDownMenu(1, nil, TomTom.dropdown, "cursor", 0, 0)
-	end
+    if TomTom.db.profile.minimap.menu then
+        TomTom:InitializeDropdown(uid)
+        ToggleDropDownMenu(1, nil, TomTom.dropdown, "cursor", 0, 0)
+    end
 end
 
 local function _world_onclick(event, uid, self, button)
-	if TomTom.db.profile.worldmap.menu then
-		TomTom:InitializeDropdown(uid)
-		ToggleDropDownMenu(1, nil, TomTom.dropdown, "cursor", 0, 0)
-	end
+    if TomTom.db.profile.worldmap.menu then
+        TomTom:InitializeDropdown(uid)
+        ToggleDropDownMenu(1, nil, TomTom.dropdown, "cursor", 0, 0)
+    end
 end
 
 local function _both_tooltip_show(event, tooltip, uid, dist)
-	local data = uid
+    local data = uid
 
-	tooltip:SetText(data.title or L["TomTom waypoint"])
-	if dist and tonumber(dist) then
-		tooltip:AddLine(string.format(L["%s yards away"], math.floor(dist)), 1, 1, 1)
-	else
-		tooltip:AddLine(L["Unknown distance"])
-	end
+    tooltip:SetText(data.title or L["TomTom waypoint"])
+    if dist and tonumber(dist) then
+        tooltip:AddLine(string.format(L["%s yards away"], math.floor(dist)), 1, 1, 1)
+    else
+        tooltip:AddLine(L["Unknown distance"])
+    end
     local m,f,x,y = unpack(data)
     local zoneName = lmd:MapLocalize(m)
 
-	tooltip:AddLine(string.format(L["%s (%.2f, %.2f)"], zoneName, x*100, y*100), 0.7, 0.7, 0.7)
-	tooltip:Show()
+    tooltip:AddLine(string.format(L["%s (%.2f, %.2f)"], zoneName, x*100, y*100), 0.7, 0.7, 0.7)
+    tooltip:Show()
 end
 
 local function _minimap_tooltip_show(event, tooltip, uid, dist)
-	if not TomTom.db.profile.minimap.tooltip then
-		tooltip:Hide()
-		return
-	end
-	return _both_tooltip_show(event, tooltip, uid, dist)
+    if not TomTom.db.profile.minimap.tooltip then
+        tooltip:Hide()
+        return
+    end
+    return _both_tooltip_show(event, tooltip, uid, dist)
 end
 
 local function _world_tooltip_show(event, tooltip, uid, dist)
-	if not TomTom.db.profile.worldmap.tooltip then
-		tooltip:Hide()
-		return
-	end
-	return _both_tooltip_show(event, tooltip, uid, dist)
+    if not TomTom.db.profile.worldmap.tooltip then
+        tooltip:Hide()
+        return
+    end
+    return _both_tooltip_show(event, tooltip, uid, dist)
 end
 
 local function _both_tooltip_update(event, tooltip, uid, dist)
-	if dist and tonumber(dist) then
-		tooltip.lines[2]:SetFormattedText(L["%s yards away"], math.floor(dist), 1, 1, 1)
-	else
-		tooltip.lines[2]:SetText(L["Unknown distance"])
-	end
+    if dist and tonumber(dist) then
+        tooltip.lines[2]:SetFormattedText(L["%s yards away"], math.floor(dist), 1, 1, 1)
+    else
+        tooltip.lines[2]:SetText(L["Unknown distance"])
+    end
 end
 
 local function _both_clear_distance(event, uid, range, distance, lastdistance)
-	if not UnitOnTaxi("player") then
-		TomTom:RemoveWaypoint(uid)
-	end
+    if not UnitOnTaxi("player") then
+        TomTom:RemoveWaypoint(uid)
+    end
 end
 
 local function _both_ping_arrival(event, uid, range, distance, lastdistance)
@@ -738,51 +738,51 @@ local function _both_ping_arrival(event, uid, range, distance, lastdistance)
 end
 
 local function _remove(event, uid)
-	local data = uid
+    local data = uid
     local key = TomTom:GetKey(data)
     local mapId = data[1]
-	local sv = TomTom.waypointprofile[mapId]
+    local sv = TomTom.waypointprofile[mapId]
 
     if sv and sv[key] then
         sv[key] = nil
     end
 
-	-- Remove this entry from the waypoints table
-	if waypoints[mapId] then
-		waypoints[mapId][key] = nil
-	end
+    -- Remove this entry from the waypoints table
+    if waypoints[mapId] then
+        waypoints[mapId][key] = nil
+    end
 end
 
 local function noop() end
 
 function TomTom:RemoveWaypoint(uid)
-	local data = uid
-	self:ClearWaypoint(uid)
+    local data = uid
+    self:ClearWaypoint(uid)
 
     local key = TomTom:GetKey(data)
     local mapId = data[1]
-	local sv = TomTom.waypointprofile[mapId]
+    local sv = TomTom.waypointprofile[mapId]
 
     if sv and sv[key] then
         sv[key] = nil
     end
 
-	-- Remove this entry from the waypoints table
-	if waypoints[mapId] then
-		waypoints[mapId][key] = nil
-	end
+    -- Remove this entry from the waypoints table
+    if waypoints[mapId] then
+        waypoints[mapId][key] = nil
+    end
 end
 
 -- TODO: Make this not suck
 function TomTom:AddWaypoint(x, y, desc, persistent, minimap, world, silent)
-	local c,z = GetCurrentMapContinent(), GetCurrentMapZone()
+    local c,z = GetCurrentMapContinent(), GetCurrentMapZone()
 
-	if not c or not z or c < 1 then
-		--self:Print("Cannot find a valid zone to place the coordinates")
-		return
-	end
+    if not c or not z or c < 1 then
+        --self:Print("Cannot find a valid zone to place the coordinates")
+        return
+    end
 
-	return self:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, nil, silent)
+    return self:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, nil, silent)
 end
 
 function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, callbacks, silent, crazy)
@@ -807,27 +807,27 @@ end
 function TomTom:AddMFWaypoint(m, f, x, y, opts)
     opts = opts or {}
 
-	local callbacks
-	if opts.callbacks then
-		callbacks = opts.callbacks
-	else
-		callbacks = {
-			minimap = {
-				onclick = _minimap_onclick,
-				tooltip_show = _minimap_tooltip_show,
-				tooltip_update = _both_tooltip_update,
-			},
-			world = {
-				onclick = _world_onclick,
-				tooltip_show = _world_tooltip_show,
-				tooltip_update = _both_tooltip_show,
-			},
-			distance = {
-			},
-		}
-	end
+    local callbacks
+    if opts.callbacks then
+        callbacks = opts.callbacks
+    else
+        callbacks = {
+            minimap = {
+                onclick = _minimap_onclick,
+                tooltip_show = _minimap_tooltip_show,
+                tooltip_update = _both_tooltip_update,
+            },
+            world = {
+                onclick = _world_onclick,
+                tooltip_show = _world_tooltip_show,
+                tooltip_update = _both_tooltip_show,
+            },
+            distance = {
+            },
+        }
+    end
 
-	local cleardistance = self.profile.persistence.cleardistance
+    local cleardistance = self.profile.persistence.cleardistance
     local arrivaldistance = self.profile.arrow.arrival
 
     -- Allow both of these to be overridde by options
@@ -850,19 +850,19 @@ function TomTom:AddMFWaypoint(m, f, x, y, opts)
         if arrivaldistance > 0 then
             callbacks.distance[arrivaldistance] = _both_ping_arrival
         end
-	end
+    end
 
-	-- Default values
-	if opts.persistent == nil then opts.persistent = self.profile.persistence.savewaypoints end
-	if opts.minimap == nil then opts.minimap = self.profile.minimap.enable end
-	if opts.world == nil then opts.world = self.profile.worldmap.enable end
-	if opts.crazy == nil then opts.crazy = self.profile.arrow.autoqueue end
+    -- Default values
+    if opts.persistent == nil then opts.persistent = self.profile.persistence.savewaypoints end
+    if opts.minimap == nil then opts.minimap = self.profile.minimap.enable end
+    if opts.world == nil then opts.world = self.profile.worldmap.enable end
+    if opts.crazy == nil then opts.crazy = self.profile.arrow.autoqueue end
 
     local zoneName = lmd:MapLocalize(m)
 
     if not astrolabe:GetMapInfo(m) then
-		return
-	end
+        return
+    end
 
     -- Get the default map floor, if necessary
     if not f then
@@ -870,7 +870,7 @@ function TomTom:AddMFWaypoint(m, f, x, y, opts)
         f = floors == 0 and 0 or 1
     end
 
-	-- Ensure there isn't already a waypoint at this location
+    -- Ensure there isn't already a waypoint at this location
     local key = self:GetKey({m, f, x, y, title = opts.title})
     if waypoints[m] and waypoints[m][key] then
         return waypoints[m][key]
@@ -887,28 +887,28 @@ function TomTom:AddMFWaypoint(m, f, x, y, opts)
     end
 
     -- No need to convert x and y because they're already 0-1 instead of 0-100
-	self:SetWaypoint(uid, callbacks, opts.minimap, opts.world)
-	if opts.crazy then
-		self:SetCrazyArrow(uid, arrivaldistance, opts.title)
-	end
+    self:SetWaypoint(uid, callbacks, opts.minimap, opts.world)
+    if opts.crazy then
+        self:SetCrazyArrow(uid, arrivaldistance, opts.title)
+    end
 
     waypoints[m] = waypoints[m] or {}
     waypoints[m][key] = uid
 
-	-- If this is a persistent waypoint, then add it to the waypoints table
-	if opts.persistent then
+    -- If this is a persistent waypoint, then add it to the waypoints table
+    if opts.persistent then
         self.waypointprofile[m][key] = uid
-	end
+    end
 
-	if not opts.silent and self.profile.general.announce then
-		local ctxt = RoundCoords(x, y, 2)
+    if not opts.silent and self.profile.general.announce then
+        local ctxt = RoundCoords(x, y, 2)
         local desc = opts.desc and opts.desc or ""
         local sep = opts.desc and " - " or ""
         local msg = string.format(L["|cffffff78TomTom:|r Added a waypoint (%s%s%s) in %s"], desc, sep, ctxt, zoneName)
-		ChatFrame1:AddMessage(msg)
-	end
+        ChatFrame1:AddMessage(msg)
+    end
 
-	return uid
+    return uid
 end
 
 -- Check to see if a given uid/waypoint is actually set somewhere
@@ -937,7 +937,7 @@ function TomTom:WaypointExists(c, z, x, y, desc)
 end
 
 function TomTom:SetCustomWaypoint(c,z,x,y,callback,minimap,world,silent)
-	return self:AddZWaypoint(c, z, x, y, nil, false, minimap, world, callback, silent)
+    return self:AddZWaypoint(c, z, x, y, nil, false, minimap, world, callback, silent)
 end
 
 function TomTom:SetCustomMFWaypoint(m, f, x, y, opts)
@@ -947,52 +947,52 @@ function TomTom:SetCustomMFWaypoint(m, f, x, y, opts)
 end
 
 do
-	-- Code courtesy ckknight
-	function GetCurrentCursorPosition()
-		local x, y = GetCursorPosition()
-		local left, top = WorldMapDetailFrame:GetLeft(), WorldMapDetailFrame:GetTop()
-		local width = WorldMapDetailFrame:GetWidth()
-		local height = WorldMapDetailFrame:GetHeight()
-		local scale = WorldMapDetailFrame:GetEffectiveScale()
-		local cx = (x/scale - left) / width
-		local cy = (top - y/scale) / height
+    -- Code courtesy ckknight
+    function GetCurrentCursorPosition()
+        local x, y = GetCursorPosition()
+        local left, top = WorldMapDetailFrame:GetLeft(), WorldMapDetailFrame:GetTop()
+        local width = WorldMapDetailFrame:GetWidth()
+        local height = WorldMapDetailFrame:GetHeight()
+        local scale = WorldMapDetailFrame:GetEffectiveScale()
+        local cx = (x/scale - left) / width
+        local cy = (top - y/scale) / height
 
-		if cx < 0 or cx > 1 or cy < 0 or cy > 1 then
-			return nil, nil
-		end
+        if cx < 0 or cx > 1 or cy < 0 or cy > 1 then
+            return nil, nil
+        end
 
-		return cx, cy
-	end
+        return cx, cy
+    end
 
-	local coord_fmt = "%%.%df, %%.%df"
-	function RoundCoords(x,y,prec)
-		local fmt = coord_fmt:format(prec, prec)
-		return fmt:format(x*100, y*100)
-	end
+    local coord_fmt = "%%.%df, %%.%df"
+    function RoundCoords(x,y,prec)
+        local fmt = coord_fmt:format(prec, prec)
+        return fmt:format(x*100, y*100)
+    end
 
-	function WorldMap_OnUpdate(self, elapsed)
-		local m,f,x,y = TomTom:GetCurrentPlayerPosition()
-		local opt = TomTom.db.profile
+    function WorldMap_OnUpdate(self, elapsed)
+        local m,f,x,y = TomTom:GetCurrentPlayerPosition()
+        local opt = TomTom.db.profile
 
-		if not x or not y then
-			self.Player:SetText("Player: ---")
-		else
-			self.Player:SetFormattedText("Player: %s", RoundCoords(x, y, opt.mapcoords.playeraccuracy))
-		end
+        if not x or not y then
+            self.Player:SetText("Player: ---")
+        else
+            self.Player:SetFormattedText("Player: %s", RoundCoords(x, y, opt.mapcoords.playeraccuracy))
+        end
 
-		local cX, cY = GetCurrentCursorPosition()
+        local cX, cY = GetCurrentCursorPosition()
 
-		if not cX or not cY then
-			self.Cursor:SetText("Cursor: ---")
-		else
-			self.Cursor:SetFormattedText("Cursor: %s", RoundCoords(cX, cY, opt.mapcoords.cursoraccuracy))
-		end
-	end
+        if not cX or not cY then
+            self.Cursor:SetText("Cursor: ---")
+        else
+            self.Cursor:SetFormattedText("Cursor: %s", RoundCoords(cX, cY, opt.mapcoords.cursoraccuracy))
+        end
+    end
 end
 
 do
     local bcounter = 0
-	function Block_OnUpdate(self, elapsed)
+    function Block_OnUpdate(self, elapsed)
         bcounter = bcounter + elapsed
         if bcounter > TomTom.profile.block.throttle then
             bcounter = bcounter - TomTom.profile.block.throttle
@@ -1009,15 +1009,15 @@ do
         end
     end
 
-	function Block_OnDragStart(self, button, down)
-		if not TomTom.db.profile.block.lock then
-			self:StartMoving()
-		end
-	end
+    function Block_OnDragStart(self, button, down)
+        if not TomTom.db.profile.block.lock then
+            self:StartMoving()
+        end
+    end
 
-	function Block_OnDragStop(self, button, down)
-		self:StopMovingOrSizing()
-	end
+    function Block_OnDragStop(self, button, down)
+        self:StopMovingOrSizing()
+    end
 
     function Block_OnClick(self, button, down)
         local m,f,x,y = TomTom:GetCurrentPlayerPosition()
@@ -1030,50 +1030,50 @@ do
 end
 
 local function usage()
-	ChatFrame1:AddMessage(L["|cffffff78TomTom |r/way |cffffff78Usage:|r"])
-	ChatFrame1:AddMessage(L["|cffffff78/way <x> <y> [desc]|r - Adds a waypoint at x,y with descrtiption desc"])
-	ChatFrame1:AddMessage(L["|cffffff78/way <zone> <x> <y> [desc]|r - Adds a waypoint at x,y in zone with description desc"])
-	ChatFrame1:AddMessage(L["|cffffff78/way reset all|r - Resets all waypoints"])
-	ChatFrame1:AddMessage(L["|cffffff78/way reset <zone>|r - Resets all waypoints in zone"])
+    ChatFrame1:AddMessage(L["|cffffff78TomTom |r/way |cffffff78Usage:|r"])
+    ChatFrame1:AddMessage(L["|cffffff78/way <x> <y> [desc]|r - Adds a waypoint at x,y with descrtiption desc"])
+    ChatFrame1:AddMessage(L["|cffffff78/way <zone> <x> <y> [desc]|r - Adds a waypoint at x,y in zone with description desc"])
+    ChatFrame1:AddMessage(L["|cffffff78/way reset all|r - Resets all waypoints"])
+    ChatFrame1:AddMessage(L["|cffffff78/way reset <zone>|r - Resets all waypoints in zone"])
 end
 
 function TomTom:GetClosestWaypoint()
     local m,f,x,y = self:GetCurrentPlayerPosition()
-	local closest_waypoint = nil
-	local closest_dist = nil
-	if waypoints[m] then
-		for key, waypoint in pairs(waypoints[m]) do
+    local closest_waypoint = nil
+    local closest_dist = nil
+    if waypoints[m] then
+        for key, waypoint in pairs(waypoints[m]) do
             local dist, x, y = TomTom:GetDistanceToWaypoint(waypoint) 
-			if (dist and closest_dist == nil) or (dist and dist < closest_dist) then
-				closest_dist = dist
-				closest_waypoint = waypoint
-			end
-		end
-	end
-	if closest_dist then
-		return closest_waypoint
-	end
+            if (dist and closest_dist == nil) or (dist and dist < closest_dist) then
+                closest_dist = dist
+                closest_waypoint = waypoint
+            end
+        end
+    end
+    if closest_dist then
+        return closest_waypoint
+    end
 end
 
 function TomTom:SetClosestWaypoint()
-	local uid = self:GetClosestWaypoint()
-	if uid then
-		local data = uid
-		TomTom:SetCrazyArrow(uid, TomTom.profile.arrow.arrival, data.title)
-	end
+    local uid = self:GetClosestWaypoint()
+    if uid then
+        local data = uid
+        TomTom:SetCrazyArrow(uid, TomTom.profile.arrow.arrival, data.title)
+    end
 end
 
 SLASH_TOMTOM_CLOSEST_WAYPOINT1 = "/cway"
 SLASH_TOMTOM_CLOSEST_WAYPOINT2 = "/closestway"
 SlashCmdList["TOMTOM_CLOSEST_WAYPOINT"] = function(msg)
-	TomTom:SetClosestWaypoint()
+    TomTom:SetClosestWaypoint()
 end
 
 SLASH_TOMTOM_WAYBACK1 = "/wayb"
 SLASH_TOMTOM_WAYBACK2 = "/wayback"
 SlashCmdList["TOMTOM_WAYBACK"] = function(msg)
-	local backm,backf,backx,backy = TomTom:GetCurrentPlayerPosition()
-	TomTom:AddMFWaypoint(backm, backf, backx, backy, {
+    local backm,backf,backx,backy = TomTom:GetCurrentPlayerPosition()
+    TomTom:AddMFWaypoint(backm, backf, backx, backy, {
         title = L["Wayback"],
     })
 end
@@ -1097,47 +1097,47 @@ local rightseparator =   "%1" .. (tonumber("1.1") and "." or ",") .. "%2"
 local function lowergsub(s) return s:lower():gsub("^[%a%d]", "") end
 
 SlashCmdList["TOMTOM_WAY"] = function(msg)
-	msg = msg:gsub("(%d)[%.,] (%d)", "%1 %2"):gsub(wrongseparator, rightseparator)
-	local tokens = {}
-	for token in msg:gmatch("%S+") do table.insert(tokens, token) end
+    msg = msg:gsub("(%d)[%.,] (%d)", "%1 %2"):gsub(wrongseparator, rightseparator)
+    local tokens = {}
+    for token in msg:gmatch("%S+") do table.insert(tokens, token) end
 
-	-- Lower the first token
+    -- Lower the first token
     local ltoken = tokens[1] and tokens[1]:lower()
 
-	if ltoken == "reset" then
+    if ltoken == "reset" then
         local ltoken2 = tokens[2] and tokens[2]:lower()
-		if ltoken2 == "all" then
-			if TomTom.db.profile.general.confirmremoveall then
-				StaticPopup_Show("TOMTOM_REMOVE_ALL_CONFIRM")
-			else
-				StaticPopupDialogs["TOMTOM_REMOVE_ALL_CONFIRM"].OnAccept()
-				return
-			end
+        if ltoken2 == "all" then
+            if TomTom.db.profile.general.confirmremoveall then
+                StaticPopup_Show("TOMTOM_REMOVE_ALL_CONFIRM")
+            else
+                StaticPopupDialogs["TOMTOM_REMOVE_ALL_CONFIRM"].OnAccept()
+                return
+            end
 
-		elseif tokens[2] then
-			-- Reset the named zone
-			local zone = table.concat(tokens, " ", 2)
+        elseif tokens[2] then
+            -- Reset the named zone
+            local zone = table.concat(tokens, " ", 2)
             -- Find a fuzzy match for the zone
 
-			local matches = {}
-			lzone = lowergsub(zone)
+            local matches = {}
+            lzone = lowergsub(zone)
 
-			for name, mapId in pairs(nameToMapId) do
+            for name, mapId in pairs(nameToMapId) do
                 local lname = lowergsub(name)
-				if lname:match(lzone) then
-					table.insert(matches, name)
-				end
-			end
+                if lname:match(lzone) then
+                    table.insert(matches, name)
+                end
+            end
 
-			if #matches > 5 then
-				local msg = string.format(L["Found %d possible matches for zone %s.  Please be more specific"], #matches, zone)
-				ChatFrame1:AddMessage(msg)
-				return
-			elseif #matches > 1 then
-				table.sort(matches)
+            if #matches > 5 then
+                local msg = string.format(L["Found %d possible matches for zone %s.  Please be more specific"], #matches, zone)
+                ChatFrame1:AddMessage(msg)
+                return
+            elseif #matches > 1 then
+                table.sort(matches)
 
-				ChatFrame1:AddMessage(string.format(L["Found multiple matches for zone '%s'.  Did you mean: %s"], zone, table.concat(matches, ", ")))
-				return
+                ChatFrame1:AddMessage(string.format(L["Found multiple matches for zone '%s'.  Did you mean: %s"], zone, table.concat(matches, ", ")))
+                return
             elseif #matches == 0 then
                 local msg = string.format(L["Could not find any matches for zone %s."], zone)
                 ChatFrame1:AddMessage(msg)
@@ -1171,24 +1171,24 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
         local zoneEnd
         for idx = 1, #tokens do
             local token = tokens[idx]
-			if tonumber(token) then
-				-- We've encountered a number, so the zone name must have
-				-- ended at the prior token
-				zoneEnd = idx - 1
+            if tonumber(token) then
+                -- We've encountered a number, so the zone name must have
+                -- ended at the prior token
+                zoneEnd = idx - 1
                 break
-			end
-		end
+            end
+        end
 
         if not zoneEnd then
             usage()
             return
         end
 
-		-- This is a waypoint set, with a zone before the coords
-		local zone = table.concat(tokens, " ", 1, zoneEnd)
-		local x,y,desc = select(zoneEnd + 1, unpack(tokens))
+        -- This is a waypoint set, with a zone before the coords
+        local zone = table.concat(tokens, " ", 1, zoneEnd)
+        local x,y,desc = select(zoneEnd + 1, unpack(tokens))
 
-		if desc then desc = table.concat(tokens, " ", zoneEnd + 3) end
+        if desc then desc = table.concat(tokens, " ", zoneEnd + 3) end
 
         -- Find a fuzzy match for the zone
         local matches = {}
@@ -1201,22 +1201,22 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
             end
         end
 
-		if #matches > 5 then
-			local msg = string.format(L["Found %d possible matches for zone %s.  Please be more specific"], #matches, zone)
-			ChatFrame1:AddMessage(msg)
-			return
-		elseif #matches > 1 then
-			local msg = string.format(L["Found multiple matches for zone '%s'.  Did you mean: %s"], zone, table.concat(matches, ", "))
-			ChatFrame1:AddMessage(msg)
-			return
+        if #matches > 5 then
+            local msg = string.format(L["Found %d possible matches for zone %s.  Please be more specific"], #matches, zone)
+            ChatFrame1:AddMessage(msg)
+            return
+        elseif #matches > 1 then
+            local msg = string.format(L["Found multiple matches for zone '%s'.  Did you mean: %s"], zone, table.concat(matches, ", "))
+            ChatFrame1:AddMessage(msg)
+            return
         elseif #matches == 0 then
             local msg = string.format(L["Could not find any matches for zone %s."], zone)
             ChatFrame1:AddMessage(msg)
             return
         end
 
-		-- There was only one match, so proceed
-		local zoneName = matches[1]
+        -- There was only one match, so proceed
+        local zoneName = matches[1]
         local mapId = nameToMapId[zoneName]
 
         x = x and tonumber(x)
@@ -1226,32 +1226,32 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
             return usage()
         end
 
-		x = tonumber(x)
-		y = tonumber(y)
-		TomTom:AddMFWaypoint(mapId, nil, x/100, y/100, {
+        x = tonumber(x)
+        y = tonumber(y)
+        TomTom:AddMFWaypoint(mapId, nil, x/100, y/100, {
             title = desc,
         })
-	elseif tonumber(tokens[1]) then
-		-- A vanilla set command
-		local x,y,desc = unpack(tokens)
-		if not x or not tonumber(x) then
-			return usage()
-		elseif not y or not tonumber(y) then
-			return usage()
-		end
-		if desc then
-			desc = table.concat(tokens, " ", 3)
-		end
+    elseif tonumber(tokens[1]) then
+        -- A vanilla set command
+        local x,y,desc = unpack(tokens)
+        if not x or not tonumber(x) then
+            return usage()
+        elseif not y or not tonumber(y) then
+            return usage()
+        end
+        if desc then
+            desc = table.concat(tokens, " ", 3)
+        end
         x = tonumber(x)
         y = tonumber(y)
 
         local m, f = TomTom:GetCurrentPlayerPosition()
         if m and x and y then
-           TomTom:AddMFWaypoint(m, f, x/100, y/100, {
+            TomTom:AddMFWaypoint(m, f, x/100, y/100, {
                 title = desc
             })
         end
-	else
-		return usage()
-	end
+    else
+        return usage()
+    end
 end

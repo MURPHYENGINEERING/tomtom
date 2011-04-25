@@ -197,24 +197,24 @@ end
 
 local hooked = {}
 hooksecurefunc("QuestPOI_DisplayButton", function(parentName, buttonType, buttonIndex, questId)
-      local buttonName = "poi"..tostring(parentName)..tostring(buttonType).."_"..tostring(buttonIndex);
-      local poiButton = _G[buttonName];
+    local buttonName = "poi"..tostring(parentName)..tostring(buttonType).."_"..tostring(buttonIndex);
+    local poiButton = _G[buttonName];
 
-      if not hooked[buttonName] then
-         poiButton:HookScript("OnClick", poi_OnClick)
-         poiButton:RegisterForClicks("AnyUp")
-         hooked[buttonName] = true
-      end
+    if not hooked[buttonName] then
+        poiButton:HookScript("OnClick", poi_OnClick)
+        poiButton:RegisterForClicks("AnyUp")
+        hooked[buttonName] = true
+    end
 
-      -- Check to see if there is a swap button
-      local swapName = "poi" .. parentName .. "_Swap"
-      local swapButton = _G[swapName]
+    -- Check to see if there is a swap button
+    local swapName = "poi" .. parentName .. "_Swap"
+    local swapButton = _G[swapName]
 
-      if not hooked[swapName] and swapButton then
-          swapButton:HookScript("OnClick", poi_OnClick)
-          swapButton:RegisterForClicks("AnyUp")
-          hooked[swapName] = true
-      end
+    if not hooked[swapName] and swapButton then
+        swapButton:HookScript("OnClick", poi_OnClick)
+        swapButton:RegisterForClicks("AnyUp")
+        hooked[swapName] = true
+    end
 end)
 
 function TomTom:EnableDisablePOIIntegration()
