@@ -8,6 +8,7 @@ local modTbl = {
     S = IsShiftKeyDown,
 }
 
+local L = TomTomLocals
 local astrolabe = DongleStub("TTAstrolabe-1.0")
 
 -- This function and the related events/hooks are used to automatically
@@ -160,12 +161,18 @@ local function poi_OnClick(self, button)
     local m, f = GetCurrentMapAreaID()
 
     local questIndex = self.quest and self.quest.questLogIndex
-    if not questIndex and self.index then
-        questIndex = GetQuestIndexForWatch(self.index)
+    if not questIndex and self.questId then
+        -- Lookup the questIndex for the given questId
+        for idx = 1, GetNumQuestLogEntries(), 1 do
+            local qid = select(9, GetQuestLogTitle(idx))
+            if qid == self.questId then
+                questIndex = idx
+            end
+        end
     end
 
-    if not questIndex then
-        return
+    if not questIndex and self.index then
+        questIndex = GetQuestIndexForWatch(self.index)
     end
 
     local title = GetQuestLogTitle(questIndex)
@@ -173,6 +180,13 @@ local function poi_OnClick(self, button)
     local completed, x, y, objective = QuestPOIGetIconInfo(qid)
     if completed then
         title = "Turn in: " .. title
+    end
+
+    if not x or not y then
+        -- No coordinate information for this quest/objective
+        local header = "|cFF33FF99TomTom|r"
+        print(L["%s: No coordinate information found for '%s' at this map level"]:format(header, title))
+        return
     end
 
     local key = TomTom:GetKeyArgs(m, f, x, y, title)
