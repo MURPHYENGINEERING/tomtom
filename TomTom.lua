@@ -1124,7 +1124,11 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 
             for name, mapId in pairs(nameToMapId) do
                 local lname = lowergsub(name)
-                if lname:match(lzone) then
+                if lname == lzone then
+                    -- We have an exact match
+                    matches = {name}
+                    break
+                elseif lname:match(lzone) then
                     table.insert(matches, name)
                 end
             end
@@ -1196,7 +1200,11 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 
         for name,mapId in pairs(nameToMapId) do
             local lname = lowergsub(name)
-            if lname:match(lzone) then
+            if lname == lzone then
+                -- We have an exact match
+                matches = {name}
+                break
+            elseif lname:match(lzone) then
                 table.insert(matches, name)
             end
         end
