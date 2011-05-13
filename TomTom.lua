@@ -902,8 +902,8 @@ function TomTom:AddMFWaypoint(m, f, x, y, opts)
 
     if not opts.silent and self.profile.general.announce then
         local ctxt = RoundCoords(x, y, 2)
-        local desc = opts.desc and opts.desc or ""
-        local sep = opts.desc and " - " or ""
+        local desc = opts.title and opts.title or ""
+        local sep = opts.title and " - " or ""
         local msg = string.format(L["|cffffff78TomTom:|r Added a waypoint (%s%s%s) in %s"], desc, sep, ctxt, zoneName)
         ChatFrame1:AddMessage(msg)
     end
