@@ -224,6 +224,7 @@ function TomTom:ClearWaypoint(uid)
         point.dlist = nil
         point.uid = nil
         table.insert(pool, point)
+        waypointMap[uid] = nil
     end
 end
 
