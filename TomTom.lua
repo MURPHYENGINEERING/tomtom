@@ -10,32 +10,8 @@ local ldb = LibStub("LibDataBroker-1.1")
 local astrolabe = DongleStub("TTAstrolabe-1.0")
 local lmd = LibStub("LibMapData-1.0")
 
--- Create the addon object
-TomTom = {
-    events = {},
-    eventFrame = CreateFrame("Frame"),
-    RegisterEvent = function(self, event, method)
-        self.eventFrame:RegisterEvent(event)
-        self.events[event] = method or event
-    end,
-    UnregisterEvent = function(self, event)
-        self.eventFrame:UnregisterEvent(event)
-        self.events[event] = nil
-    end,
-    version = GetAddOnMetadata("TomTom", "Version")
-}
-
-if TomTom.version == "wowi:revision" then TomTom.version = "SVN" end
-if TomTom.version == "@project-version@" then TomTom.version = "SCM" end
-
-TomTom.eventFrame:SetScript("OnEvent", function(self, event, ...)
-    local method = TomTom.events[event]
-    if method and TomTom[method] then
-        TomTom[method](TomTom, event, ...)
-    end
-end)
-
-TomTom:RegisterEvent("ADDON_LOADED")
+local addonName, addon = ...
+local TomTom = addon
 
 -- Local definitions
 local GetCurrentCursorPosition
@@ -47,158 +23,155 @@ local RoundCoords
 
 local waypoints = {}
 
-function TomTom:ADDON_LOADED(event, addon)
-    if addon == "TomTom" then
-        self:UnregisterEvent("ADDON_LOADED")
-        self.defaults = {
-            profile = {
-                general = {
-                    confirmremoveall = true,
-                    announce = false,
-                    corpse_arrow = true,
-                },
-                block = {
-                    enable = true,
-                    accuracy = 2,
-                    bordercolor = {1, 0.8, 0, 0.8},
-                    bgcolor = {0, 0, 0, 0.4},
-                    lock = false,
-                    height = 30,
-                    width = 100,
-                    fontsize = 12,
-                    throttle = 0.2,
-                },
-                mapcoords = {
-                    playerenable = true,
-                    playeraccuracy = 2,
-                    cursorenable = true,
-                    cursoraccuracy = 2,
-                },
-                arrow = {
-                    enable = true,
-                    goodcolor = {0, 1, 0},
-                    badcolor = {1, 0, 0},
-                    middlecolor = {1, 1, 0},
-                    arrival = 15,
-                    lock = false,
-                    noclick = false,
-                    showtta = true,
-                    autoqueue = true,
-                    menu = true,
-                    scale = 1.0,
-                    alpha = 1.0,
-                    title_width = 0,
-                    title_height = 0,
-                    title_scale = 1,
-                    title_alpha = 1,
-                    setclosest = true,
-                    enablePing = false,
-                },
-                minimap = {
-                    enable = true,
-                    otherzone = true,
-                    tooltip = true,
-                    menu = true,
-                },
-                worldmap = {
-                    enable = true,
-                    tooltip = true,
-                    otherzone = true,
-                    clickcreate = true,
-                    menu = true,
-                    create_modifier = "C",
-                },
-                comm = {
-                    enable = true,
-                    prompt = false,
-                },
-                persistence = {
-                    cleardistance = 10,
-                    savewaypoints = true,
-                },
-                feeds = {
-                    coords = false,
-                    coords_throttle = 0.3,
-                    coords_accuracy = 2,
-                    arrow = false,
-                    arrow_throttle = 0.1,
-                },
-                poi = {
-                    enable = true,
-                    modifier = "C",
-                    setClosest = false,
-                    arrival = 0,
-                },
+function TomTom:Initialize(event, addon)
+    self.defaults = {
+        profile = {
+            general = {
+                confirmremoveall = true,
+                announce = false,
+                corpse_arrow = true,
             },
-        }
+            block = {
+                enable = true,
+                accuracy = 2,
+                bordercolor = {1, 0.8, 0, 0.8},
+                bgcolor = {0, 0, 0, 0.4},
+                lock = false,
+                height = 30,
+                width = 100,
+                fontsize = 12,
+                throttle = 0.2,
+            },
+            mapcoords = {
+                playerenable = true,
+                playeraccuracy = 2,
+                cursorenable = true,
+                cursoraccuracy = 2,
+            },
+            arrow = {
+                enable = true,
+                goodcolor = {0, 1, 0},
+                badcolor = {1, 0, 0},
+                middlecolor = {1, 1, 0},
+                arrival = 15,
+                lock = false,
+                noclick = false,
+                showtta = true,
+                autoqueue = true,
+                menu = true,
+                scale = 1.0,
+                alpha = 1.0,
+                title_width = 0,
+                title_height = 0,
+                title_scale = 1,
+                title_alpha = 1,
+                setclosest = true,
+                enablePing = false,
+            },
+            minimap = {
+                enable = true,
+                otherzone = true,
+                tooltip = true,
+                menu = true,
+            },
+            worldmap = {
+                enable = true,
+                tooltip = true,
+                otherzone = true,
+                clickcreate = true,
+                menu = true,
+                create_modifier = "C",
+            },
+            comm = {
+                enable = true,
+                prompt = false,
+            },
+            persistence = {
+                cleardistance = 10,
+                savewaypoints = true,
+            },
+            feeds = {
+                coords = false,
+                coords_throttle = 0.3,
+                coords_accuracy = 2,
+                arrow = false,
+                arrow_throttle = 0.1,
+            },
+            poi = {
+                enable = true,
+                modifier = "C",
+                setClosest = false,
+                arrival = 0,
+            },
+        },
+    }
 
-        self.waydefaults = {
-            global = {
-                converted = {
-                    ["*"] = {},
-                },
-            },
-            profile = {
+    self.waydefaults = {
+        global = {
+            converted = {
                 ["*"] = {},
             },
-        }
+        },
+        profile = {
+            ["*"] = {},
+        },
+    }
 
-        self.db = LibStub("AceDB-3.0"):New("TomTomDB", self.defaults, "Default")
-        self.waydb = LibStub("AceDB-3.0"):New("TomTomWaypointsMF", self.waydefaults)
+    self.db = LibStub("AceDB-3.0"):New("TomTomDB", self.defaults, "Default")
+    self.waydb = LibStub("AceDB-3.0"):New("TomTomWaypointsMF", self.waydefaults)
 
-        self.db.RegisterCallback(self, "OnProfileChanged", "ReloadOptions")
-        self.db.RegisterCallback(self, "OnProfileCopied", "ReloadOptions")
-        self.db.RegisterCallback(self, "OnProfileReset", "ReloadOptions")
-        self.waydb.RegisterCallback(self, "OnProfileChanged", "ReloadWaypoints")
-        self.waydb.RegisterCallback(self, "OnProfileCopied", "ReloadWaypoints")
-        self.waydb.RegisterCallback(self, "OnProfileReset", "ReloadWaypoints")
+    self.db.RegisterCallback(self, "OnProfileChanged", "ReloadOptions")
+    self.db.RegisterCallback(self, "OnProfileCopied", "ReloadOptions")
+    self.db.RegisterCallback(self, "OnProfileReset", "ReloadOptions")
+    self.waydb.RegisterCallback(self, "OnProfileChanged", "ReloadWaypoints")
+    self.waydb.RegisterCallback(self, "OnProfileCopied", "ReloadWaypoints")
+    self.waydb.RegisterCallback(self, "OnProfileReset", "ReloadWaypoints")
 
-        self.tooltip = CreateFrame("GameTooltip", "TomTomTooltip", nil, "GameTooltipTemplate")
-        self.tooltip:SetFrameStrata("DIALOG")
+    self.tooltip = CreateFrame("GameTooltip", "TomTomTooltip", nil, "GameTooltipTemplate")
+    self.tooltip:SetFrameStrata("DIALOG")
 
-        self.dropdown = CreateFrame("Frame", "TomTomDropdown", nil, "UIDropDownMenuTemplate")
+    self.dropdown = CreateFrame("Frame", "TomTomDropdown", nil, "UIDropDownMenuTemplate")
 
-        -- Both the waypoints and waypointprofile tables are going to contain subtables for each
-        -- of the mapids that might exist. Under these will be a hash of key/waypoint pairs consisting
-        -- of the waypoints for the given map file.
-        self.waypoints = waypoints
-        self.waypointprofile = self.waydb.profile
+    -- Both the waypoints and waypointprofile tables are going to contain subtables for each
+    -- of the mapids that might exist. Under these will be a hash of key/waypoint pairs consisting
+    -- of the waypoints for the given map file.
+    self.waypoints = waypoints
+    self.waypointprofile = self.waydb.profile
 
-        self:RegisterEvent("PLAYER_LEAVING_WORLD")
-        self:RegisterEvent("CHAT_MSG_ADDON")
+    self:RegisterEvent("PLAYER_LEAVING_WORLD")
+    self:RegisterEvent("CHAT_MSG_ADDON")
 
-        self:ReloadOptions()
-        self:ReloadWaypoints()
+    self:ReloadOptions()
+    self:ReloadWaypoints()
 
-        if self.db.profile.feeds.coords then
-            -- Create a data feed for coordinates
-            local feed_coords = ldb:NewDataObject("TomTom_Coords", {
-                type = "data source",
-                icon = "Interface\\Icons\\INV_Misc_Map_01",
-                text = "",
-            })
+    if self.db.profile.feeds.coords then
+        -- Create a data feed for coordinates
+        local feed_coords = ldb:NewDataObject("TomTom_Coords", {
+            type = "data source",
+            icon = "Interface\\Icons\\INV_Misc_Map_01",
+            text = "",
+        })
 
-            local coordFeedFrame = CreateFrame("Frame")
-            local throttle, counter = self.db.profile.feeds.coords_throttle, 0
-            function TomTom:_privateupdatecoordthrottle(x)
-                throttle = x
+        local coordFeedFrame = CreateFrame("Frame")
+        local throttle, counter = self.db.profile.feeds.coords_throttle, 0
+        function TomTom:_privateupdatecoordthrottle(x)
+            throttle = x
+        end
+
+        coordFeedFrame:SetScript("OnUpdate", function(self, elapsed)
+            counter = counter + elapsed
+            if counter < throttle then
+                return
             end
 
-            coordFeedFrame:SetScript("OnUpdate", function(self, elapsed)
-                counter = counter + elapsed
-                if counter < throttle then
-                    return
-                end
+            counter = 0
+            local m, f, x, y = TomTom:GetCurrentPlayerPosition()
 
-                counter = 0
-                local m, f, x, y = TomTom:GetCurrentPlayerPosition()
-
-                if x and y then
-                    local opt = TomTom.db.profile.feeds
-                    feed_coords.text = string.format("%s", RoundCoords(x, y, opt.coords_accuracy))
-                end
-            end)
-        end
+            if x and y then
+                local opt = TomTom.db.profile.feeds
+                feed_coords.text = string.format("%s", RoundCoords(x, y, opt.coords_accuracy))
+            end
+        end)
     end
 end
 

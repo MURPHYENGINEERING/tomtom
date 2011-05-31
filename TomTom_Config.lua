@@ -720,19 +720,6 @@ local options
 local function createBlizzOptions()
 	options = createconfig()
 
-	config:RegisterOptionsTable("TomTom-Bliz", {
-		name = L["TomTom"],
-		type = "group",
-		args = {
-			help = {
-				type = "description",
-				name = "TomTom is a simple navigation assistant",
-			},
-		},
-	})
-	dialog:SetDefaultSize("TomTom-Bliz", 600, 400)
-	dialog:AddToBlizOptions("TomTom-Bliz", "TomTom")
-
 	-- General Options
 	config:RegisterOptionsTable("TomTom-General", options.args.general)
 	local blizzPanel = dialog:AddToBlizOptions("TomTom-General", options.args.general.name, "TomTom")
