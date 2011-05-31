@@ -32,7 +32,7 @@ local function ObjectivesChanged()
 
     local map, floor = GetCurrentMapAreaID()
     local floors = astrolabe:GetNumFloors(map)
-    floor = floors == 0 and 0 or 1
+    floor = floor and floor or (floors == 0 and 0 or 1)
 
     local px, py = GetPlayerMapPosition("player")
 
