@@ -88,7 +88,7 @@ function TomTom:SetCrazyArrow(uid, dist, title)
 	point_title = title
 
 	if self.profile.arrow.enable then
-		wayframe.title:SetText(title or "Unknown waypoint")
+		wayframe.title:SetText(title or L["Unknown waypoint"])
 		wayframe:Show()
 	end
 end
@@ -445,7 +445,7 @@ local function wayframe_OnEvent(self, event, arg1, ...)
 
 				local key = column .. ":" .. row
 				feed_crazy.iconCoords = texcoords[key]
-				feed_crazy.text = point_title or "Unknown waypoint"
+				feed_crazy.text = point_title or L["Unknown waypoint"]
 			end)
 		end
 	end

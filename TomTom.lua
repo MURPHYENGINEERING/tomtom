@@ -1004,12 +1004,31 @@ do
     end
 end
 
+function TomTom:DebugListWaypoints()
+    local m,f,x,y = self:GetCurrentPlayerPosition()
+    local ctxt = RoundCoords(x, y, 2)
+    local czone = lmd:MapLocalize(m)
+    self:Printf(L["You are at (%s) in '%s' (map: %d, floor: %d)"], ctxt, czone or "UNKNOWN", m, f)
+    if waypoints[m] then
+        for key, wp in pairs(waypoints[m]) do
+            local ctxt = RoundCoords(wp[3], wp[4], 2)
+            local desc = wp.title and wp.title or L["Unknown waypoint"]
+            local indent = "   "
+            self:Printf(L["%s%s - %s (map: %d, floor: %d)"], indent, desc, ctxt, wp[1], wp[2])
+        end
+    else
+        local indent = "   "
+        self:Printf(L["%sNo waypoints in this zone"], indent)
+    end
+end
+
 local function usage()
     ChatFrame1:AddMessage(L["|cffffff78TomTom |r/way |cffffff78Usage:|r"])
     ChatFrame1:AddMessage(L["|cffffff78/way <x> <y> [desc]|r - Adds a waypoint at x,y with descrtiption desc"])
     ChatFrame1:AddMessage(L["|cffffff78/way <zone> <x> <y> [desc]|r - Adds a waypoint at x,y in zone with description desc"])
     ChatFrame1:AddMessage(L["|cffffff78/way reset all|r - Resets all waypoints"])
     ChatFrame1:AddMessage(L["|cffffff78/way reset <zone>|r - Resets all waypoints in zone"])
+    ChatFrame1:AddMessage(L["|cffffff78/way list|r - Lists active waypoints in current zone"])
 end
 
 function TomTom:GetClosestWaypoint()
@@ -1079,7 +1098,10 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
     -- Lower the first token
     local ltoken = tokens[1] and tokens[1]:lower()
 
-    if ltoken == "reset" then
+    if ltoken == "list" then
+        TomTom:DebugListWaypoints()
+        return
+    elseif ltoken == "reset" then
         local ltoken2 = tokens[2] and tokens[2]:lower()
         if ltoken2 == "all" then
             if TomTom.db.profile.general.confirmremoveall then
