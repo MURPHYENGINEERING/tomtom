@@ -2,7 +2,7 @@
 	Library contains a dataset for Map file names and floors giving the raw map data
 	it also has a few functions to help determine distance and directions.
 --]]
-local MAJOR, MINOR = "LibMapData-1.0", tonumber("84") or 999
+local MAJOR, MINOR = "LibMapData-1.0", tonumber("87") or 999
 assert(LibStub, MAJOR.." requires LibStub")
 
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
@@ -61,6 +61,10 @@ do
 	setmetatable(mapData, { __index = function(t, k) if k then DEFAULT_CHAT_FRAME:AddMessage("LibMapData-1.0 is missing data for "..k) end; return emptyMaps end })
 	setmetatable(idToMap, { __index = function(t, k) if k then DEFAULT_CHAT_FRAME:AddMessage("LibMapData-1.0 is missing data for area id "..k) end; return k end})
 	setmetatable(mapToLocal, { __index = function(t,k) if k then DEFAULT_CHAT_FRAME:AddMessage("LibMapData-1.0 is missing localized data for "..k) end; return k end})
+		mapData[795] = { 
+			['floors'] = 0, ['name'] = "MoltenFront", ['rzti'] = 861, ['map_type'] = 0, ['continent'] = 0, ['transform'] = 0,
+			[1] = {1189.58331298828,793.749938964844,-933.333312988281,1702.08325195312,256.25,908.333312988281},
+		}
 		mapData[758] = { 
 			['floors'] = 3, ['name'] = "TheBastionofTwilight", ['rzti'] = 671, ['map_type'] = 2, ['continent'] = 0, ['transform'] = 0,
 			[1] = { 1078.33499908447,718.889984130859,1184.7705078125,-899.846984863281,106.435508728027,-180.957000732422 },
@@ -104,6 +108,16 @@ do
 		mapData[481] = { 
 			['floors'] = 0, ['name'] = "ShattrathCity", ['rzti'] = 530, ['map_type'] = 0, ['continent'] = 3, ['transform'] = 1,
 			[1] = {1306.25,870.833374023438,-6135.2587890625,-1473.95446777344,-4829.0087890625,-2344.78784179688},
+		}
+		mapData[796] = { 
+			['floors'] = 7, ['name'] = "BlackTemple", ['rzti'] = 564, ['map_type'] = 2, ['continent'] = 0, ['transform'] = 0,
+			[1] = { 1252.24957847595,834.8330078125,-23.8705387115479,-240.0,-1276.1201171875,594.8330078125 },
+			[2] = { 975.0,650.0,176.0,380.0,-799.0,1030.0 },
+			[3] = { 1005.0,670.0,191.0,400.0,-814.0,1070.0 },
+			[4] = { 440.0009765625,293.333984375,-134.99951171875,343.3330078125,-575.00048828125,636.6669921875 },
+			[5] = { 670.0,446.666687011719,70.0,664.163635253906,-600.0,1110.83032226562 },
+			[6] = { 705.0,470.0,67.5,450.0,-637.5,920.0 },
+			[7] = { 355.0,236.666625976562,-137.5,606.666687011719,-492.5,843.333312988281 },
 		}
 		mapData[759] = { 
 			['floors'] = 3, ['name'] = "HallsofOrigination", ['rzti'] = 644, ['map_type'] = 1, ['continent'] = 0, ['transform'] = 0,
@@ -321,6 +335,11 @@ do
 			['floors'] = 1, ['name'] = "Ahnkahet", ['rzti'] = 619, ['map_type'] = 1, ['continent'] = 0, ['transform'] = 0,
 			[1] = { 972.41796875,648.279022216797,1205.71997070312,200.404998779297,233.302001953125,848.684020996094 },
 		}
+		mapData[800] = { 
+			['floors'] = 2, ['name'] = "Firelands", ['rzti'] = 720, ['map_type'] = 2, ['continent'] = 0, ['transform'] = 0,
+			[1] = { 375.0,250.0,-302.083312988281,343.75,-677.083312988281,593.75 },
+			[2] = { 1440.0,960.0,770.0,265.0,-670.0,1225.0 },
+		}
 		mapData[763] = { 
 			['floors'] = 4, ['name'] = "Scholomance", ['rzti'] = 289, ['map_type'] = 1, ['continent'] = 0, ['transform'] = 0,
 			[1] = { 320.048904418945,213.36499786377,68.6389007568359,104.333000183105,-251.410003662109,317.697998046875 },
@@ -476,6 +495,10 @@ do
 			['floors'] = 2, ['name'] = "HallsofLightning", ['rzti'] = 602, ['map_type'] = 1, ['continent'] = 0, ['transform'] = 0,
 			[1] = { 566.235015869141,377.489990234375,282.549011230469,1157.05004882812,-283.686004638672,1534.5400390625 },
 			[2] = { 708.237014770508,472.160034179688,538.549011230469,959.719970703125,-169.688003540039,1431.88000488281 },
+		}
+		mapData[803] = { 
+			['floors'] = 1, ['name'] = "TheNexusLegendary", ['rzti'] = 951, ['map_type'] = 1, ['continent'] = 0, ['transform'] = 0,
+			[1] = { 1101.2841796875,734.189697265625,-6656.60791015625,3626.82006835938,-7757.89208984375,4361.009765625 },
 		}
 		mapData[766] = { 
 			['floors'] = 3, ['name'] = "AhnQiraj", ['rzti'] = 531, ['map_type'] = 2, ['continent'] = 0, ['transform'] = 0,
@@ -969,7 +992,15 @@ do
 	end
 
 	-- Phasing Hacks
-	idToMap['Hyjal_terrain1'] = idToMap['Hyjal']
+	for k,v in pairs(idToMap) do
+		local m,e = string.find(k,"_terrain%d")
+		if m then
+			rmap = k:sub(1,m-1)
+			idToMap[k] = idToMap[rmap]
+		end
+	end
+	-- non terrain style remap for battle of gilneas
+	idToMap["BattleforGilneas"] = idToMap["GilneasCity"]
 	
 	-- Build the localized name list.
 	local continentList = {GetMapContinents()}
@@ -988,9 +1019,11 @@ do
 			localToMap[zname] = mapfile
 			mapData[idToMap[mapfile]].continent = cID
 			-- Phasing Hacks
-			if mapfile == "Hyjal_terrain1" then
-				mapToLocal["Hyjal"] = zname
-				mapData[idToMap["Hyjal"]].continent = cID				
+			local mstart,e = string.find(mapfile,"_terrain%d")
+			if mstart then
+				local rmap = mapfile:sub(1,mstart-1)
+				mapToLocal[rmap] = zname
+				mapData[idToMap[rmap]].continent = cID
 			end
 		end
 	end
