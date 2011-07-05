@@ -2,7 +2,7 @@
 	Library contains a dataset for Map file names and floors giving the raw map data
 	it also has a few functions to help determine distance and directions.
 --]]
-local MAJOR, MINOR = "LibMapData-1.0", tonumber("87") or 999
+local MAJOR, MINOR = "LibMapData-1.0", tonumber("94") or 999
 assert(LibStub, MAJOR.." requires LibStub")
 
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
@@ -28,6 +28,11 @@ lib.MAP_BG = 3
  -- estimated world map size
 local worldMapWidth = 47714.278579261
 local worlMapHeight = 31809.64857610083
+local missingCache = {
+	data = {},
+	aid = {},
+	locale = {}
+}
 
 local contOffsets = {
 	[1] = {-8590.40725049343,5628.692856102324},
@@ -58,9 +63,36 @@ do
 		['floors'] = 0,['name'] = WORLD_MAP, ['continent'] = 0, ['phase'] = 0, ['map_type'] = 0,
 		[1] = {0,0,0,0,0,0,0}
 	}
-	setmetatable(mapData, { __index = function(t, k) if k then DEFAULT_CHAT_FRAME:AddMessage("LibMapData-1.0 is missing data for "..k) end; return emptyMaps end })
-	setmetatable(idToMap, { __index = function(t, k) if k then DEFAULT_CHAT_FRAME:AddMessage("LibMapData-1.0 is missing data for area id "..k) end; return k end})
-	setmetatable(mapToLocal, { __index = function(t,k) if k then DEFAULT_CHAT_FRAME:AddMessage("LibMapData-1.0 is missing localized data for "..k) end; return k end})
+	setmetatable(mapData, { __index = function(t, k) 
+			if k then 
+				if missingCache.data[k] == nil then
+					DEFAULT_CHAT_FRAME:AddMessage("LibMapData-1.0 is missing data for "..k) 
+					missingCache.data[k] = true
+				end
+			end 
+			return emptyMaps 
+		end 
+	})
+	setmetatable(idToMap, { __index = function(t, k) 
+			if k then 
+				if missingCache.aid[k] == nil then
+					DEFAULT_CHAT_FRAME:AddMessage("LibMapData-1.0 is missing data for area id "..k) 
+					missingCache.aid[k] = true
+				end
+			end 
+			return k 
+		end
+	})
+	setmetatable(mapToLocal, { __index = function(t,k) 
+			if k then 
+				if missingCache.locale[k] == nil then
+					DEFAULT_CHAT_FRAME:AddMessage("LibMapData-1.0 is missing localized data for "..k) 
+					missingCache.locale[k] = true
+				end
+			end
+			return k 
+		end
+	})
 		mapData[795] = { 
 			['floors'] = 0, ['name'] = "MoltenFront", ['rzti'] = 861, ['map_type'] = 0, ['continent'] = 0, ['transform'] = 0,
 			[1] = {1189.58331298828,793.749938964844,-933.333312988281,1702.08325195312,256.25,908.333312988281},
@@ -336,9 +368,10 @@ do
 			[1] = { 972.41796875,648.279022216797,1205.71997070312,200.404998779297,233.302001953125,848.684020996094 },
 		}
 		mapData[800] = { 
-			['floors'] = 2, ['name'] = "Firelands", ['rzti'] = 720, ['map_type'] = 2, ['continent'] = 0, ['transform'] = 0,
-			[1] = { 375.0,250.0,-302.083312988281,343.75,-677.083312988281,593.75 },
-			[2] = { 1440.0,960.0,770.0,265.0,-670.0,1225.0 },
+			['floors'] = 3, ['name'] = "Firelands", ['rzti'] = 720, ['map_type'] = 2, ['continent'] = 0, ['transform'] = 0,
+			[1] = {1587.49993896484,1058.3332824707,-718.75,424.999969482422,868.749938964844,-633.333312988281},
+			[2] = { 375.0,250.0,-302.083312988281,343.75,-677.083312988281,593.75 },
+			[3] = { 1440.0,960.0,770.0,265.0,-670.0,1225.0 },
 		}
 		mapData[763] = { 
 			['floors'] = 4, ['name'] = "Scholomance", ['rzti'] = 289, ['map_type'] = 1, ['continent'] = 0, ['transform'] = 0,
