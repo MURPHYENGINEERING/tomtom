@@ -57,6 +57,7 @@ function TomTom:Initialize(event, addon)
                 lock = false,
                 noclick = false,
                 showtta = true,
+				showdistance = true,
                 autoqueue = true,
                 menu = true,
                 scale = 1.0,

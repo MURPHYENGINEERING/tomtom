@@ -188,16 +188,8 @@ local function createconfig()
 				desc = L["Locks the waypoint arrow, so it can't be moved accidentally"],
 				arg = "arrow.lock",
 			},
-			arrival = {
-				order = 5,
-				type = "toggle",
-				name = L["Show estimated time to arrival"],
-				desc = L["Shows an estimate of how long it will take you to reach the waypoint at your current speed"],
-				width = "double",
-				arg = "arrow.showtta",
-			},
 			rightclick = {
-				order = 6,
+				order = 7,
 				type = "toggle",
 				name = L["Enable the right-click contextual menu"],
 				desc = L["Enables a menu when right-clicking on the waypoint arrow allowing you to clear or remove waypoints"],
@@ -205,7 +197,7 @@ local function createconfig()
 				arg = "arrow.menu",
 			},
 			disableclick = {
-				order = 7,
+				order = 8,
 				type = "toggle",
 				name = L["Disable all mouse input"],
 				desc = L["Disables the crazy taxi arrow for mouse input, allowing all clicks to pass through"],
@@ -213,7 +205,7 @@ local function createconfig()
 				arg = "arrow.noclick",
 			},
 			setclosest = {
-				order = 8,
+				order = 9,
 				type = "toggle",
 				name = L["Automatically set to next closest waypoint"],
 				desc = L["When the current waypoint is cleared (either by the user or automatically) and this option is set, TomTom will automatically set the closest waypoint in the current zone as active waypoint."],
@@ -229,7 +221,7 @@ local function createconfig()
 				arg = "arrow.closestusecontinent",
 			},
 			heredistance = {
-				order = 9,
+				order = 11,
 				type = "range",
 				name = L["\"Arrival Distance\""],
 				desc = L["This setting will control the distance at which the waypoint arrow switches to a downwards arrow, indicating you have arrived at your destination"],
@@ -237,7 +229,7 @@ local function createconfig()
 				arg = "arrow.arrival",
 			},
             enablePing = {
-                order = 9.5,
+                order = 12,
                 type = "toggle",
                 name = L["Play a sound when arriving at a waypoint"],
                 desc = L["When you 'arrive' at a waypoint (this distance is controlled by the 'Arrival Distance' setting in this group) a sound can be played to indicate this.  You can enable or disable this sound using this setting."],
@@ -247,7 +239,7 @@ local function createconfig()
 			display = {
 				type = "group",
 				name = L["Arrow display"],
-				order = 10,
+				order = 13,
 				inline = true,
 				args = {
 					help = {
@@ -255,9 +247,25 @@ local function createconfig()
 						order = 1,
 						name = L["These options let you customize the size and opacity of the waypoint arrow, making it larger or partially transparent, as well as limiting the size of the title display."],
 					},
+					arrival = {
+						order = 1,
+						type = "toggle",
+						name = L["Show estimated time to arrival"],
+						desc = L["Shows an estimate of how long it will take you to reach the waypoint at your current speed"],
+						width = "double",
+						arg = "arrow.showtta",
+					},
+					showdistance = {
+						order = 2,
+						type = "toggle",
+						name = L["Show the distance to the waypoint"],
+						desc = L["Shows the distance (in yards) to the waypoint"],
+						width = "double",
+						arg = "arrow.showdistance",
+					},
 					scale = {
 						type = "range",
-						order = 2,
+						order = 3,
 						name = L["Scale"],
 						desc = L["This setting allows you to change the scale of the waypoint arrow, making it larger or smaller"],
 						min = 0, max = 3, step = 0.05,
@@ -265,7 +273,7 @@ local function createconfig()
 					},
 					alpha = {
 						type = "range",
-						order = 3,
+						order = 4,
 						name = L["Alpha"],
 						desc = L["This setting allows you to change the opacity of the waypoint arrow, making it transparent or opaque"],
 						min = 0, max = 1.0, step = 0.05,
@@ -273,7 +281,7 @@ local function createconfig()
 					},
 					title_width = {
 						type = "range",
-						order = 4,
+						order = 5,
 						name = L["Title Width"],
 						desc = L["This setting allows you to specify the maximum width of the title text.  Any titles that are longer than this width (in game pixels) will be wrapped to the next line."],
 						min = 0, max = 500, step = 1,
@@ -281,7 +289,7 @@ local function createconfig()
 					},
 					title_height = {
 						type = "range",
-						order = 5,
+						order = 6,
 						name = L["Title Height"],
 						desc = L["This setting allows you to specify the maximum height of the title text.  Any titles that are longer than this height (in game pixels) will be truncated."],
 						min = 0, max = 300, step = 1,
@@ -289,7 +297,7 @@ local function createconfig()
 					},
 					title_scale = {
 						type = "range",
-						order = 6,
+						order = 7,
 						name = L["Title Scale"],
 						desc = L["This setting allows you to specify the scale of the title text."],
 						min = 0, max = 3, step = 0.05,
@@ -297,14 +305,14 @@ local function createconfig()
 					},
 					title_alpha = {
 						type = "range",
-						order = 7,
+						order = 8,
 						name = L["Title Alpha"],
 						desc = L["This setting allows you to change the opacity of the title text, making it transparent or opaque"],
 						min = 0, max = 1.0, step = 0.05,
 						arg = "arrow.title_alpha",
 					},
 					reset_position = {
-						order = 8,
+						order = 9,
 						type = "execute",
 						name = L["Reset Position"],
 						desc = L["Resets the position of the waypoint arrow if its been dragged off screen"],

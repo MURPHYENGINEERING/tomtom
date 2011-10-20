@@ -244,6 +244,16 @@ function TomTom:ShowHideCrazyArrow()
 		titleframe:SetScale(scale)
 		titleframe:SetAlpha(TomTom.db.profile.arrow.title_alpha)
 
+		if self.profile.arrow.showdistance then
+			wayframe.status:Show()
+			wayframe.tta:ClearAllPoints()
+			wayframe.tta:SetPoint("TOP", wayframe.status, "BOTTOM", 0, 0)
+		else
+			wayframe.status:Hide()
+			wayframe.tta:ClearAllPoints()
+			wayframe.tta:SetPoint("TOP", wayframe, "BOTTOM", 0, 0)
+		end
+
 		if self.profile.arrow.showtta then
 			tta:Show()
 		else
