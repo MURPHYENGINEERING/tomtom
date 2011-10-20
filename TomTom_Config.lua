@@ -220,6 +220,14 @@ local function createconfig()
 				width = "double",
 				arg = "arrow.setclosest",
 			},
+			closestusecontinent = {
+				order = 10,
+				type = "toggle",
+				name = L["Allow closest waypoint to be outside current zone"],
+				desc = L["Normally when TomTom sets the closest waypoint it chooses the waypoint in your current zone. This option will cause TomTom to search for any waypoints on your current continent. This may lead you outside your current zone, so it is disabled by default."],
+				width = "double",
+				arg = "arrow.closestusecontinent",
+			},
 			heredistance = {
 				order = 9,
 				type = "range",

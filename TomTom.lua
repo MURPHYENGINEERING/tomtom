@@ -66,6 +66,7 @@ function TomTom:Initialize(event, addon)
                 title_scale = 1,
                 title_alpha = 1,
                 setclosest = true,
+				closestusecontinent = false,
                 enablePing = false,
             },
             minimap = {
@@ -1038,17 +1039,37 @@ end
 
 function TomTom:GetClosestWaypoint()
     local m,f,x,y = self:GetCurrentPlayerPosition()
+	local c = lmd:GetContinentFromMap(m)
+
     local closest_waypoint = nil
     local closest_dist = nil
-    if waypoints[m] then
-        for key, waypoint in pairs(waypoints[m]) do
-            local dist, x, y = TomTom:GetDistanceToWaypoint(waypoint) 
-            if (dist and closest_dist == nil) or (dist and dist < closest_dist) then
-                closest_dist = dist
-                closest_waypoint = waypoint
-            end
-        end
-    end
+
+    if not self.profile.arrow.closestusecontinent then
+		-- Simple search within this zone
+		if waypoints[m] then
+			for key, waypoint in pairs(waypoints[m]) do
+				local dist, x, y = TomTom:GetDistanceToWaypoint(waypoint)
+				if (dist and closest_dist == nil) or (dist and dist < closest_dist) then
+					closest_dist = dist
+					closest_waypoint = waypoint
+				end
+			end
+		end
+	else
+		-- Search all waypoints on this continent
+		for map, waypoints in pairs(waypoints) do
+			if c == lmd:GetContinentFromMap(map) then
+				for key, waypoint in pairs(waypoints) do
+					local dist, x, y = TomTom:GetDistanceToWaypoint(waypoint)
+					if (dist and closest_dist == nil) or (dist and dist < closest_dist) then
+						closest_dist = dist
+						closest_waypoint = waypoint
+					end
+				end
+			end
+		end
+	end
+
     if closest_dist then
         return closest_waypoint
     end
