@@ -193,7 +193,13 @@ function TomTom:GetKeyArgs(m, f, x, y, title)
         f = floors == 0 and 0 or 1
     end
 
-    return string.format("%d:%d:%d:%d:%s", m, f, x*10e8, y*10e8, tostring(title))
+	-- Fudge the x/y values so they avoid precision/printf issues
+	local x = x * 10000
+	local y = y * 10000
+
+    local key = string.format("%d:%d:%d:%d:%s", m, f, x*10e4, y*10e4, tostring(title))
+	print(key)
+	return key
 end
 
 local flipFixFrame = CreateFrame("Frame", "TomTomMapFlipFixFrame", UIParent)
