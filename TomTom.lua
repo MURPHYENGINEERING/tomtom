@@ -847,14 +847,15 @@ function TomTom:AddMFWaypoint(m, f, x, y, opts)
 
     local zoneName = lmd:MapLocalize(m)
 
-    if not astrolabe:GetMapInfo(m) then
-        return
-    end
-
     -- Get the default map floor, if necessary
     if not f then
-        local floors = astrolabe:GetNumFloors(m)
-        f = floors == 0 and 0 or 1
+		if not astrolabe:GetMapInfo(m) then
+			-- guess the floor
+			f = 0
+		else
+			local floors = astrolabe:GetNumFloors(m)
+			f = floors == 0 and 0 or 1
+		end
     end
 
     -- Ensure there isn't already a waypoint at this location
