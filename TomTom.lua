@@ -268,15 +268,25 @@ function TomTom:ReloadWaypoints()
             local m,f,x,y = unpack(waypoint)
             local title = waypoint.title
 
-            self:AddMFWaypoint(m, f, x, y, {
-                desc = title,
-                title = title,
-                persistent = waypoint.persistent,
-                minimap = minimap,
-                world = world,
-                callbacks = nil,
-                silent = true,
-            })
+			-- Set up default options
+			local options = {
+				desc = title,
+				title = title,
+				persistent = waypoint.persistent,
+				minimap = minimap,
+				world = world,
+				callbacks = nil,
+				silent = true,
+			}
+
+			-- Override options with what is stored in the profile
+			for k,v in pairs(waypoint) do
+				if type(k) == "string" then
+					options[k] = v
+				end
+			end
+
+            self:AddMFWaypoint(m, f, x, y, options)
         end
     end
 end
