@@ -53,6 +53,7 @@ function TomTom:Initialize(event, addon)
                 goodcolor = {0, 1, 0},
                 badcolor = {1, 0, 0},
                 middlecolor = {1, 1, 0},
+				exactcolor = {0, 1, 0},
                 arrival = 15,
                 lock = false,
                 noclick = false,

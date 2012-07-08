@@ -63,7 +63,7 @@ local function createconfig()
 				order = 1,
 				type = "description",
 				name = L["TomTom provides you with a floating coordinate display that can be used to determine your current position.  These options can be used to enable or disable this display, or customize the block's display."],
-			},      
+			},
 			enable = {
 				order = 2,
 				type = "toggle",
@@ -156,7 +156,7 @@ local function createconfig()
 
 	options.args.crazytaxi = {
 		type = "group",
-		order = 3, 
+		order = 3,
 		name = L["Waypoint Arrow"],
 		get = get,
 		set = set,
@@ -165,7 +165,7 @@ local function createconfig()
 				order = 1,
 				type = "description",
 				name = L["TomTom provides an arrow that can be placed anywhere on the screen.  Similar to the arrow in \"Crazy Taxi\" it will point you towards your next waypoint"],
-			},   
+			},
 			enable = {
 				order = 2,
 				type = "toggle",
@@ -358,9 +358,17 @@ local function createconfig()
 						arg = "arrow.badcolor",
 						hasAlpha = false,
 					},
+					exactcolor = {
+						order = 5,
+						type = "color",
+						name = L["Exact color"],
+						desc = L["The color to be displayed when you are moving in the exact direction of the active waypoint"],
+						arg = "arrow.exactcolor",
+						hasAlpha = false,
+					},
 				},
 			},
-		},   
+		},
 	} -- End crazy taxi options
 
 	options.args.minimap = {
@@ -385,7 +393,7 @@ local function createconfig()
 			otherzone = {
 				type = "toggle",
 				name = L["Display waypoints from other zones"],
-				desc = L["TomTom can hide waypoints in other zones, this setting toggles that functionality"],   
+				desc = L["TomTom can hide waypoints in other zones, this setting toggles that functionality"],
 				width = "double",
 				arg = "minimap.otherzone",
 				disabled = true,
@@ -430,7 +438,7 @@ local function createconfig()
 				order = 3,
 				type = "toggle",
 				name = L["Display waypoints from other zones"],
-				desc = L["TomTom can hide waypoints in other zones, this setting toggles that functionality"],   
+				desc = L["TomTom can hide waypoints in other zones, this setting toggles that functionality"],
 				width = "double",
 				arg = "worldmap.otherzone",
 				disabled = true,
@@ -631,7 +639,7 @@ local function createconfig()
 				type = "range",
 				order = 4,
 				name = L["Clear waypoint distance"],
-				desc = L["Waypoints can be automatically cleared when you reach them.  This slider allows you to customize the distance in yards that signals your \"arrival\" at the waypoint.  A setting of 0 turns off the auto-clearing feature\n\nChanging this setting only takes effect after reloading your interface."],  
+				desc = L["Waypoints can be automatically cleared when you reach them.  This slider allows you to customize the distance in yards that signals your \"arrival\" at the waypoint.  A setting of 0 turns off the auto-clearing feature\n\nChanging this setting only takes effect after reloading your interface."],
 				min = 0, max = 150, step = 1,
 				arg = "persistence.cleardistance",
 			},
@@ -658,7 +666,7 @@ local function createconfig()
 				order = 1,
 				type = "description",
 				name = L["TomTom can be configured to set waypoints for the quest objectives that are shown in the watch frame and on the world map.  These options can be used to configure these options."],
-			},      
+			},
 			enable = {
 				order = 2,
 				type = "toggle",
