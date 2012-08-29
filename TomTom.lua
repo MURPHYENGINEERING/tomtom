@@ -198,7 +198,7 @@ function TomTom:GetKeyArgs(m, f, x, y, title)
 	local x = x * 10000
 	local y = y * 10000
 
-    local key = string.format("%d:%d:%d:%d:%s", m, f, x*10e4, y*10e4, tostring(title))
+    local key = string.format("%d:%d:%s:%s:%s", m, f, x*10e4, y*10e4, tostring(title))
 	return key
 end
 
