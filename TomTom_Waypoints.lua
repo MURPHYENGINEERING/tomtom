@@ -8,7 +8,7 @@
 --  TomTom:AddZWaypoint() and TomTom:RemoveWaypoint() instead.
 ----------------------------------------------------------------------------]]
 
-local astrolabe = DongleStub("TTAstrolabe-1.0")
+local astrolabe = DongleStub("Astrolabe-1.0")
 
 -- Create a tooltip to be used when mousing over waypoints
 local tooltip = CreateFrame("GameTooltip", "TomTomTooltip", UIParent, "GameTooltipTemplate")

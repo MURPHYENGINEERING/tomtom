@@ -12,7 +12,7 @@ eventFrame:RegisterEvent("PLAYER_DEAD")
 eventFrame:RegisterEvent("PLAYER_UNGHOST")
 eventFrame:Hide()
 
-local astrolabe = DongleStub("TTAstrolabe-1.0")
+local astrolabe = DongleStub("Astrolabe-1.0")
 
 -- Local variables to store map, floor, x, y and uid or corpse waypoint
 local m,f,x,y,uid

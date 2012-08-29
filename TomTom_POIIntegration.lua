@@ -9,7 +9,7 @@ local modTbl = {
 }
 
 local L = TomTomLocals
-local astrolabe = DongleStub("TTAstrolabe-1.0")
+local astrolabe = DongleStub("Astrolabe-1.0")
 
 -- This function and the related events/hooks are used to automatically
 -- update the crazy arrow to the closest quest waypoint.

@@ -7,7 +7,7 @@
 -- Simple localization table for messages
 local L = TomTomLocals
 local ldb = LibStub("LibDataBroker-1.1")
-local astrolabe = DongleStub("TTAstrolabe-1.0")
+local astrolabe = DongleStub("Astrolabe-1.0")
 local lmd = LibStub("LibMapData-1.0")
 
 local addonName, addon = ...

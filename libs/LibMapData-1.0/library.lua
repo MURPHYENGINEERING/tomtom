@@ -2,7 +2,7 @@
 	Library contains a dataset for Map file names and floors giving the raw map data
 	it also has a few functions to help determine distance and directions.
 --]]
-local MAJOR, MINOR = "LibMapData-1.0", tonumber("103") or 999
+local MAJOR, MINOR = "LibMapData-1.0", tonumber("108") or 999
 assert(LibStub, MAJOR.." requires LibStub")
 
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
@@ -20,6 +20,12 @@ local atan2 = math.atan2
 local PI2 = math.pi*2
 local floor = math.floor
 local type,assert = type,assert
+local wowMoP
+do
+	local _, _, _, interface = GetBuildInfo()
+	wowMoP = (interface >= 50000)
+end
+
 --- Constants
 lib.MAP_NORMAL = 0
 lib.MAP_INSTANCE = 1
@@ -235,7 +241,7 @@ do
 		}
 		mapData[141] = { 
 			['floors'] = 0, ['name'] = "Dustwallow", ['rzti'] = 1, ['map_type'] = 0, ['continent'] = 2, ['transform'] = 0,
-			[1] = {5250.000061035156,3499.999755859375,974.9999389648438,-2033.333251953125,6225.0,-5533.3330078125},
+			[1] = {5250.0,3500.0,975.0,-2033.333984375,6225.0,-5533.333984375},
 		}
 		mapData[161] = { 
 			['floors'] = 0, ['name'] = "Tanaris", ['rzti'] = 1, ['map_type'] = 0, ['continent'] = 2, ['transform'] = 0,
@@ -1302,11 +1308,21 @@ do
 			['floors'] = 0, ['name'] = "DustwallowMarshScenarioAlliance", ['rzti'] = 1000, ['map_type'] = 5, ['continent'] = 0, ['transform'] = 0,
 			[1] = {1058.333984375,706.25,3979.166015625,-3468.75,5037.5,-4175.0},
 		}
+		mapData[907] = { 
+			['floors'] = 0, ['name'] = "Dustwallow_terrain1", ['rzti'] = 1, ['map_type'] = 0, ['continent'] = 2, ['transform'] = 0,
+			[1] = {5250.0,3500.0,975.0,-2033.333984375,6225.0,-5533.333984375},
+		}
+	-- Dustwallow Transition patch for client that havent been patched
+	SetMapByID(141)
+	local dwMap = GetMapInfo()
+	if dwMap == "DustwallowMarsh" then
+		mapData[141].name = "Dustwallow"
+	end
 	-- Create Reverse map
 	for k,v in pairs(mapData) do
 		idToMap[v['name']] = k
 	end
-
+	
 	-- Phasing Hacks
 	for k,v in pairs(idToMap) do
 		local m,e = string.find(k,"_terrain%d")
@@ -1351,11 +1367,44 @@ do
 		end
 		SetMapByID(k)
 		local _,l,t,r,b = GetCurrentMapZone()
+		local floors = GetNumDungeonMapLevels();
+		local width, height = 0,0
+		width = math.abs((-l) - (-r))
+		height = math.abs(t - b)
 		if l and l ~= 0 and t and t~= 0 and r and r ~= 0 and b and b ~= 0 and v.floors == 0 then
+			if v[1][1] ~= width then
+				v[1][1] = width
+			end
+			if v[1][2] ~= height then
+				v[1][2] = height
+			end
 			v[1][3] = -l
 			v[1][4] = t
 			v[1][5] = -r
 			v[1][6] = b
+		end
+		-- update floor data if we can
+		if v.floors > 0 and floors > 0 then
+			for f = 1, floors do
+				SetDungeonMapLevel(f)
+				local _, l, t, r, b = GetCurrentMapDungeonLevel()
+				if l and l ~= 0 and t and t~= 0 and r and r ~= 0 and b and b ~= 0 then
+					if v[f] == nil then
+						v[f] = {}
+					end
+					local width, height = 0,0
+					width = math.abs((-l) - (-r))
+					height = math.abs(t - b)
+					if v[f][3] ~= -l  and v[f][4] ~= t and v[f][5] ~= -r and v[f][6] ~= b then
+						v[f][1] = width
+						v[f][2] = height
+						v[f][3] = -l
+						v[f][4] = t
+						v[f][5] = -r
+						v[f][6] = b
+					end
+				end
+			end
 		end
 	end
 end
