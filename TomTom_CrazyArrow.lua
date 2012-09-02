@@ -219,7 +219,7 @@ local function OnUpdate(self, elapsed)
 
 		if speed > 0 then
 			local eta = math.abs(dist / speed)
-			tta:SetFormattedText("%01d:%02d", eta / 60, eta % 60)
+			tta:SetFormattedText("%s:%02d", math.floor(eta / 60), math.floor(eta % 60))
 		else
 			tta:SetText("***")
 		end
