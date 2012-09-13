@@ -202,35 +202,37 @@ function TomTom:GetKeyArgs(m, f, x, y, title)
 	return key
 end
 
-local flipFixFrame = CreateFrame("Frame", "TomTomMapFlipFixFrame", UIParent)
-do
-    local throttle = 0.25
-    local counter = 0
-    flipFixFrame:SetScript("OnUpdate", function(self, elapsed)
-        counter = counter + elapsed
-        if counter >= throttle then
-            counter = counter - throttle
-            if not WorldMapFrame:IsVisible() and not WorldMapFrame:IsShown() then
-                local x, y = GetPlayerMapPosition("player")
-                if x <= 0 or y <= 0 then
-                    -- Flip the map, do not flip it back
-                    SetMapToCurrentZone()
-                end
-            end
-        end
-    end)
-end
+-- Removed after 5.0.4 and a patch to Astrolabe
+-- local flipFixFrame = CreateFrame("Frame", "TomTomMapFlipFixFrame", UIParent)
+-- do
+--     local throttle = 0.25
+--     local counter = 0
+--     flipFixFrame:SetScript("OnUpdate", function(self, elapsed)
+--         counter = counter + elapsed
+--         if counter >= throttle then
+--             counter = counter - throttle
+--             if not WorldMapFrame:IsVisible() and not WorldMapFrame:IsShown() then
+--                 local x, y = GetPlayerMapPosition("player")
+--                 if x <= 0 or y <= 0 then
+--                     -- Flip the map, do not flip it back
+--                     SetMapToCurrentZone()
+--                 end
+--             end
+--         end
+--     end)
+-- end
 
 function TomTom:GetCurrentPlayerPosition()
-    -- Try to get the position without 'flipping' the map
-    local m, f, x, y = astrolabe:GetUnitPosition("player", true)
-    if m and x and y and not (x <= 0 or y <= 0) then
-        if not f then
-            local floors = astrolabe:GetNumFloors(m)
-            f = floors == 0 and 0 or 1
-        end
-        return m, f, x, y
-    end
+	return astrolabe:GetCurrentPlayerPosition()
+    -- -- Try to get the position without 'flipping' the map
+    -- local m, f, x, y = astrolabe:GetUnitPosition("player", true)
+    -- if m and x and y and not (x <= 0 or y <= 0) then
+    --     if not f then
+    --         local floors = astrolabe:GetNumFloors(m)
+    --         f = floors == 0 and 0 or 1
+    --     end
+    --     return m, f, x, y
+    -- end
 end
 
 function TomTom:ReloadOptions()
