@@ -1,7 +1,7 @@
 --[[
 Name: AstrolabeMapMonitor
 Revision: $Rev: 44 $
-$Date: 2007-03-30 19:56:21 +0100 (Fri, 30 Mar 2007) $
+$Date: 2007-03-30 20:56:21 +0200 (Fri, 30 Mar 2007) $
 Author(s): Esamynn (esamynn@wowinterface.com)
 Inspired By: Gatherer by Norganna
              MapLibrary by Kristofer Karlsson (krka@kth.se)
