@@ -202,37 +202,19 @@ function TomTom:GetKeyArgs(m, f, x, y, title)
 	return key
 end
 
--- Removed after 5.0.4 and a patch to Astrolabe
--- local flipFixFrame = CreateFrame("Frame", "TomTomMapFlipFixFrame", UIParent)
--- do
---     local throttle = 0.25
---     local counter = 0
---     flipFixFrame:SetScript("OnUpdate", function(self, elapsed)
---         counter = counter + elapsed
---         if counter >= throttle then
---             counter = counter - throttle
---             if not WorldMapFrame:IsVisible() and not WorldMapFrame:IsShown() then
---                 local x, y = GetPlayerMapPosition("player")
---                 if x <= 0 or y <= 0 then
---                     -- Flip the map, do not flip it back
---                     SetMapToCurrentZone()
---                 end
---             end
---         end
---     end)
--- end
+-- Returns the player's current coordinates without flipping the map or
+-- causing any other weirdness. This can and will cause the coordinates to be
+-- weird if you zoom the map out to your parent, but there is no way to
+-- recover this without changing/setting the map zoom. Deal with it =)
+function TomTom:GetCurrentCoords()
+	local x, y = GetPlayerMapPosition("player");
+	if x and y and x > 0 and y > 0 then
+		return x, y
+	end
+end
 
 function TomTom:GetCurrentPlayerPosition()
-	return astrolabe:GetCurrentPlayerPosition()
-    -- -- Try to get the position without 'flipping' the map
-    -- local m, f, x, y = astrolabe:GetUnitPosition("player", true)
-    -- if m and x and y and not (x <= 0 or y <= 0) then
-    --     if not f then
-    --         local floors = astrolabe:GetNumFloors(m)
-    --         f = floors == 0 and 0 or 1
-    --     end
-    --     return m, f, x, y
-    -- end
+	return astrolabe:GetUnitPosition("player", true)
 end
 
 function TomTom:ReloadOptions()
@@ -972,7 +954,7 @@ do
     end
 
     function WorldMap_OnUpdate(self, elapsed)
-        local m,f,x,y = TomTom:GetCurrentPlayerPosition()
+        local x,y = TomTom:GetCurrentCoords()
         local opt = TomTom.db.profile
 
         if not x or not y then
@@ -998,7 +980,7 @@ do
         if bcounter > TomTom.profile.block.throttle then
             bcounter = bcounter - TomTom.profile.block.throttle
 
-            local m,f,x,y = TomTom:GetCurrentPlayerPosition()
+            local x,y = TomTom:GetCurrentCoords()
 
             local opt = TomTom.db.profile
             if not x or not y then
