@@ -452,6 +452,14 @@ local function wayframe_OnEvent(self, event, arg1, ...)
 				local mr,mg,mb = unpack(TomTom.db.profile.arrow.middlecolor)
 				local br,bg,bb = unpack(TomTom.db.profile.arrow.badcolor)
 				local r,g,b = ColorGradient(perc, br, bg, bb, mr, mg, mb, gr, gg, gb)
+
+				-- If we're 98% heading in the right direction, then use the exact
+				-- color instead of the gradient. This allows us to distinguish 'good'
+				-- from 'on target'. Thanks to Gregor_Curse for the suggestion.
+				if perc > 0.98 then
+					r,g,b = unpack(TomTom.db.profile.arrow.exactcolor)
+				end
+
 				feed_crazy.iconR = r
 				feed_crazy.iconG = g
 				feed_crazy.iconB = b
