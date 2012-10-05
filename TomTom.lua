@@ -143,6 +143,7 @@ function TomTom:Initialize(event, addon)
 
     self:RegisterEvent("PLAYER_LEAVING_WORLD")
     self:RegisterEvent("CHAT_MSG_ADDON")
+	RegisterAddonMessagePrefix("TOMTOM3")
 
     self:ReloadOptions()
     self:ReloadWaypoints()
