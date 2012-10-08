@@ -786,34 +786,39 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, callb
     })
 end
 
--- TAG: AddCode
-function TomTom:AddMFWaypoint(m, f, x, y, opts)
+-- Return a set of default callbacks that can be used by addons to provide
+-- more detailed functionality without losing the tooltip and onclick
+-- functionality.
+--
+-- Options that are used in this 'opts' table in this function:
+--  * cleardistance - When the player is this far from the waypoint, the
+--    waypoint will be removed.
+--  * arrivaldistance - When the player is within this radius of the waypoint,
+--    the crazy arrow will change to the 'downwards' arrow, indicating that
+--    the player has arrived.
+
+function TomTom:DefaultCallbacks(opts)
     opts = opts or {}
 
-    local callbacks
-    if opts.callbacks then
-        callbacks = opts.callbacks
-    else
-        callbacks = {
-            minimap = {
-                onclick = _minimap_onclick,
-                tooltip_show = _minimap_tooltip_show,
-                tooltip_update = _both_tooltip_update,
-            },
-            world = {
-                onclick = _world_onclick,
-                tooltip_show = _world_tooltip_show,
-                tooltip_update = _both_tooltip_show,
-            },
-            distance = {
-            },
-        }
-    end
+	local callbacks = {
+		minimap = {
+			onclick = _minimap_onclick,
+			tooltip_show = _minimap_tooltip_show,
+			tooltip_update = _both_tooltip_update,
+		},
+		world = {
+			onclick = _world_onclick,
+			tooltip_show = _world_tooltip_show,
+			tooltip_update = _both_tooltip_show,
+		},
+		distance = {
+		},
+	}
 
     local cleardistance = self.profile.persistence.cleardistance
     local arrivaldistance = self.profile.arrow.arrival
 
-    -- Allow both of these to be overridde by options
+    -- Allow both of these to be overriden by options
     if opts.cleardistance then
         cleardistance = opts.cleardistance
     end
@@ -835,11 +840,23 @@ function TomTom:AddMFWaypoint(m, f, x, y, opts)
         end
     end
 
-    -- Default values
+	return callbacks
+end
+
+function TomTom:AddMFWaypoint(m, f, x, y, opts)
+	opts = opts or {}
+
+	-- Default values
     if opts.persistent == nil then opts.persistent = self.profile.persistence.savewaypoints end
     if opts.minimap == nil then opts.minimap = self.profile.minimap.enable end
     if opts.world == nil then opts.world = self.profile.worldmap.enable end
     if opts.crazy == nil then opts.crazy = self.profile.arrow.autoqueue end
+	if opts.cleardistance == nil then opts.cleardistance = self.profile.persistence.cleardistance end
+	if opts.arrivaldistance == nil then opts.arrivaldistance = self.profile.arrow.arrival end
+
+    if not opts.callbacks then
+		opts.callbacks = TomTom:DefaultCallbacks(opts)
+	end
 
     local zoneName = lmd:MapLocalize(m)
 
@@ -873,7 +890,7 @@ function TomTom:AddMFWaypoint(m, f, x, y, opts)
     -- No need to convert x and y because they're already 0-1 instead of 0-100
     self:SetWaypoint(uid, callbacks, opts.minimap, opts.world)
     if opts.crazy then
-        self:SetCrazyArrow(uid, arrivaldistance, opts.title)
+        self:SetCrazyArrow(uid, opts.arrivaldistance, opts.title)
     end
 
     waypoints[m] = waypoints[m] or {}
