@@ -231,6 +231,11 @@ end
 
 function TomTom:ShowHideCrazyArrow()
 	if self.profile.arrow.enable then
+		if self.profile.arrow.hideDuringPetBattles and C_PetBattles.IsInBattle() then
+			wayframe:Hide()
+			return
+		end
+
 		wayframe:Show()
 
 		if self.profile.arrow.noclick then

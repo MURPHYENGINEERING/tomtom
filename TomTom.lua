@@ -70,6 +70,7 @@ function TomTom:Initialize(event, addon)
                 setclosest = true,
 				closestusecontinent = false,
                 enablePing = false,
+				hideDuringPetBattles = true,
             },
             minimap = {
                 enable = true,
@@ -144,6 +145,10 @@ function TomTom:Initialize(event, addon)
     self:RegisterEvent("PLAYER_LEAVING_WORLD")
     self:RegisterEvent("CHAT_MSG_ADDON")
 	RegisterAddonMessagePrefix("TOMTOM3")
+
+	-- Watch for pet battle start/end so we can hide/show the arrow
+	self:RegisterEvent("PET_BATTLE_OPENING_START", "ShowHideCrazyArrow")
+	self:RegisterEvent("PET_BATTLE_CLOSE", "ShowHideCrazyArrow")
 
     self:ReloadOptions()
     self:ReloadWaypoints()

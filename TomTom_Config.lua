@@ -236,10 +236,18 @@ local function createconfig()
                 width = "double",
                 arg = "arrow.enablePing",
             },
+			hideDuringPetBattles = {
+				order = 13,
+				type = "toggle",
+				name = L["Hide the crazy arrow display during pet battles"],
+				desc = L["When a pet battle begins, the crazy arrow will be hidden from view. When you exit the pet battle, it will be re-shown."],
+				width = "double",
+				arg = "arrow.hideDuringPetBattles",
+			},
 			display = {
 				type = "group",
 				name = L["Arrow display"],
-				order = 13,
+				order = 14,
 				inline = true,
 				args = {
 					help = {
@@ -326,7 +334,7 @@ local function createconfig()
 			color = {
 				type = "group",
 				name = L["Arrow colors"],
-				order = 10,
+				order = 15,
 				inline = true,
 				args = {
 					help = {
