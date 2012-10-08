@@ -893,7 +893,7 @@ function TomTom:AddMFWaypoint(m, f, x, y, opts)
     end
 
     -- No need to convert x and y because they're already 0-1 instead of 0-100
-    self:SetWaypoint(uid, callbacks, opts.minimap, opts.world)
+    self:SetWaypoint(uid, opts.callbacks, opts.minimap, opts.world)
     if opts.crazy then
         self:SetCrazyArrow(uid, opts.arrivaldistance, opts.title)
     end
@@ -1028,7 +1028,7 @@ do
     function Block_OnClick(self, button, down)
         local m,f,x,y = TomTom:GetCurrentPlayerPosition()
         local zoneName = lmd:MapLocalize(m,f)
-        local desc = format("%s: %.2f, %.2f", zoneName, x*100, y*100)
+        local desc = string.format("%s: %.2f, %.2f", zoneName, x*100, y*100)
         TomTom:AddMFWaypoint(m, f, x, y, {
             title = desc,
         })
@@ -1168,7 +1168,7 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
             -- Find a fuzzy match for the zone
 
             local matches = {}
-            lzone = lowergsub(zone)
+            local lzone = lowergsub(zone)
 
             for name, mapId in pairs(nameToMapId) do
                 local lname = lowergsub(name)
@@ -1244,7 +1244,7 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 
         -- Find a fuzzy match for the zone
         local matches = {}
-        lzone = lowergsub(zone)
+        local lzone = lowergsub(zone)
 
         for name,mapId in pairs(nameToMapId) do
             local lname = lowergsub(name)
