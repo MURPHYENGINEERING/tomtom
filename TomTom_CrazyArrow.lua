@@ -83,6 +83,11 @@ wayframe.arrow:SetAllPoints()
 local active_point, arrive_distance, showDownArrow, point_title
 
 function TomTom:SetCrazyArrow(uid, dist, title)
+	if active_point and active_point.corpse and self.db.profile.arrow.stickycorpse then
+		-- do not change the waypoint arrow from corpse
+		return
+	end
+
 	active_point = uid
 	arrive_distance = dist
 	point_title = title

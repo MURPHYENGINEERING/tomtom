@@ -96,6 +96,7 @@ local function SetCorpseArrow()
         uid = TomTom:AddMFWaypoint(m, f, x, y, {
             title = L["My Corpse"],
             persistent = false,
+			corpse = true,
         })
         return uid
     end
