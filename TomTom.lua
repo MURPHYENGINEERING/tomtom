@@ -274,7 +274,10 @@ function TomTom:ReloadWaypoints()
 			-- Override options with what is stored in the profile
 			for k,v in pairs(waypoint) do
 				if type(k) == "string" then
-					options[k] = v
+					if k ~= "callbacks" then
+						-- we can never import callbacks, so ditch them
+						options[k] = v
+					end
 				end
 			end
 
