@@ -150,6 +150,10 @@ function TomTom:SetWaypoint(waypoint, callbacks, show_minimap, show_world)
         table.sort(point.dlist)
     end
 
+	-- Clear the state for callbacks
+	point.state = nil
+	point.lastdist = nil
+
     -- Link the actual frames back to the waypoint object
     point.minimap.point = point
     point.worldmap.point = point
