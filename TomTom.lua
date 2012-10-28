@@ -243,6 +243,18 @@ function TomTom:ClearAllWaypoints()
     end
 end
 
+function TomTom:ResetWaypointOptions()
+	local minimap = self.profile.minimap.enable
+	local world = self.profile.worldmap.enable
+
+	for map, data in pairs(self.waypointprofile) do
+		for key, waypoint in pairs(data) do
+			waypoint.minimap = minimap
+			waypoint.world = sorld
+		end
+	end
+end
+
 function TomTom:ReloadWaypoints()
     self:ClearAllWaypoints()
 

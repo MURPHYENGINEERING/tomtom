@@ -670,6 +670,17 @@ local function createconfig()
 				width = "double",
 				arg = "general.corpse_arrow",
 			},
+			reset_waypoint_options = {
+				type = "execute",
+				order = 7,
+				name = L["Reset waypoint display options to current"],
+				desc = L["If you have changed the waypoint display settings (minimap, world), this will re-set all waypoints to the current options."],
+				func = function()
+					TomTom:ResetWaypointOptions()
+					TomTom:ReloadWaypoints()
+				end,
+				width = "double",
+			},
 		},
 	}
 
