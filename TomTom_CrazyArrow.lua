@@ -95,7 +95,9 @@ function TomTom:SetCrazyArrow(uid, dist, title)
 	if self.profile.arrow.enable then
 		wayframe.title:SetText(title or L["Unknown waypoint"])
 		wayframe:Show()
-		wayframe.crazyFeedFrame:Show()
+		if wayframe.crazyFeedFrame then
+			wayframe.crazyFeedFrame:Show()
+		end
 	end
 end
 
