@@ -440,7 +440,7 @@ WorldMapButton_OnClick = function(self, ...)
         local m,f = GetCurrentMapAreaID()
         local x,y = GetCurrentCursorPosition()
 
-        if not m then
+        if not m or m == WORLDMAP_COSMIC_ID then
             return origScript and origScript(self, ...) or true
         end
 
