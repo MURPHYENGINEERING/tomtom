@@ -47,6 +47,7 @@ function TomTom:Initialize(event, addon)
                 playeraccuracy = 2,
                 cursorenable = true,
                 cursoraccuracy = 2,
+				throttle = 0.1,
             },
             arrow = {
                 enable = true,
@@ -997,7 +998,15 @@ do
         return fmt:format(x*100, y*100)
     end
 
+
+	local coord_throttle = 0
     function WorldMap_OnUpdate(self, elapsed)
+		coord_throttle = coord_throttle + elapsed
+		if coord_throttle <= TomTom.profile.mapcoords.throttle then
+			return
+		end
+
+		coord_throttle = 0
         local x,y = TomTom:GetCurrentCoords()
         local opt = TomTom.db.profile
 
