@@ -474,7 +474,7 @@ end
 -------------------------------------------------------------------]]--
 
 StaticPopupDialogs["TOMTOM_REMOVE_ALL_CONFIRM"] = {
-	preferredIndex = 3,
+	preferredIndex = STATICPOPUPS_NUMDIALOGS,
     text = L["Are you sure you would like to remove ALL TomTom waypoints?"],
     button1 = L["Yes"],
     button2 = L["No"],
