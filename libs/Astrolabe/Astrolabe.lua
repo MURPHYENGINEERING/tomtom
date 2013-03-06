@@ -1,7 +1,7 @@
 --[[
 Name: Astrolabe
-Revision: $Rev: 154 $
-$Date: 2012-10-02 05:08:43 +0200 (Tue, 02 Oct 2012) $
+Revision: $Rev: 160 $
+$Date: 2012-12-09 23:33:30 +0000 (Sun, 09 Dec 2012) $
 Author(s): Esamynn (esamynn at wowinterface.com)
 Inspired By: Gatherer by Norganna
              MapLibrary by Kristofer Karlsson (krka at kth.se)
@@ -42,7 +42,7 @@ Note:
 -- DO NOT MAKE CHANGES TO THIS LIBRARY WITHOUT FIRST CHANGING THE LIBRARY_VERSION_MAJOR
 -- STRING (to something unique) OR ELSE YOU MAY BREAK OTHER ADDONS THAT USE THIS LIBRARY!!!
 local LIBRARY_VERSION_MAJOR = "Astrolabe-1.0"
-local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 154 $", "(%d+)") or 1)
+local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 160 $", "(%d+)") or 1)
 
 if not DongleStub then error(LIBRARY_VERSION_MAJOR .. " requires DongleStub.") end
 if not DongleStub:IsNewerVersion(LIBRARY_VERSION_MAJOR, LIBRARY_VERSION_MINOR) then return end
@@ -76,12 +76,25 @@ Astrolabe.MinimapUpdateMultiplier = 1;
 
 Astrolabe.LastPlayerPosition = { 0, 0, 0, 0 };
 Astrolabe.MinimapIcons = {};
+Astrolabe.IconAssociations = {};
 Astrolabe.IconsOnEdge = {};
 Astrolabe.IconsOnEdge_GroupChangeCallbacks = {};
+Astrolabe.TargetMinimapChanged_Callbacks = {};
 
 Astrolabe.MinimapIconCount = 0
 Astrolabe.ForceNextUpdate = false;
 Astrolabe.IconsOnEdgeChanged = false;
+Astrolabe.DefaultEdgeRangeMultiplier = 1;
+Astrolabe.EdgeRangeMultiplier = {};
+setmetatable(Astrolabe.EdgeRangeMultiplier,
+	{
+		__index = function(t,k)
+			local d = Astrolabe.DefaultEdgeRangeMultiplier; -- this works because we always update the Astrolabe local variable
+			if ( type(k) == "table" ) then t[k] = d; end;
+			return d;
+		end
+	}
+);
 
 -- This variable indicates whether we know of a visible World Map or not.  
 -- The state of this variable is controlled by the AstrolabeMapMonitor library.  
@@ -107,6 +120,7 @@ local yield = coroutine.yield
 local next = next
 local GetFramerate = GetFramerate
 local band = bit.band
+local issecurevariable = issecurevariable
 
 local real_GetCurrentMapAreaID = GetCurrentMapAreaID
 local function GetCurrentMapAreaID()
@@ -455,14 +469,14 @@ local minimapShape = false;
 local minimapRotationOffset = GetPlayerFacing();
 
 
-local function placeIconOnMinimap( minimap, minimapZoom, mapWidth, mapHeight, icon, dist, xDist, yDist )
+local function placeIconOnMinimap( minimap, minimapZoom, mapWidth, mapHeight, icon, dist, xDist, yDist, edgeRangeMultiplier )
 	local mapDiameter;
 	if ( Astrolabe.minimapOutside ) then
 		mapDiameter = MinimapSize.outdoor[minimapZoom];
 	else
 		mapDiameter = MinimapSize.indoor[minimapZoom];
 	end
-	local mapRadius = mapDiameter / 2;
+	local mapRadius = mapDiameter * edgeRangeMultiplier / 2;
 	local xScale = mapDiameter / mapWidth;
 	local yScale = mapDiameter / mapHeight;
 	local iconDiameter = ((icon:GetWidth() / 2) + 3) * xScale;
@@ -525,7 +539,7 @@ end
 function Astrolabe:PlaceIconOnMinimap( icon, mapID, mapFloor, xPos, yPos )
 	-- check argument types
 	argcheck(icon, 2, "table");
-	assert(3, icon.SetPoint and icon.ClearAllPoints, "Usage Message");
+	assert(3, icon.SetPoint and icon.ClearAllPoints and icon.GetWidth, "Usage Message");
 	argcheck(mapID, 3, "number");
 	argcheck(mapFloor, 4, "number", "nil");
 	argcheck(xPos, 5, "number");
@@ -580,8 +594,25 @@ function Astrolabe:PlaceIconOnMinimap( icon, mapID, mapFloor, xPos, yPos )
 	minimapShape = GetMinimapShape and ValidMinimapShapes[GetMinimapShape()];
 	
 	-- place the icon on the Minimap and :Show() it
-	local map = Minimap
-	placeIconOnMinimap(map, map:GetZoom(), map:GetWidth(), map:GetHeight(), icon, dist, xDist, yDist);
+	local map = self.Minimap
+	placeIconOnMinimap(map, map:GetZoom(), map:GetWidth(), map:GetHeight(), icon, dist, xDist, yDist, self.EdgeRangeMultiplier[icon]);
+	-- re-parent the icon if necessary
+	if ( icon.GetParent and icon.SetParent ) then
+		local iconParent = icon:GetParent()
+		if ( iconParent) then
+			if ( iconParent == map ) then
+				-- do nothing
+			elseif ( iconParent:IsObjectType("Minimap") ) then
+				icon:SetParent(map);
+			else
+				 -- just in case our icon has an ancestor inbetween it and the Minimap
+				iconParent = iconParent:GetParent()
+				if ( iconParent and iconParent ~= map and iconParent:IsObjectType("Minimap") ) then
+					iconParent:SetParent(map);
+				end
+			end
+		end
+	end
 	icon:Show()
 	
 	-- We know this icon's position is valid, so we need to make sure the icon placement system is active.  
@@ -610,17 +641,28 @@ function Astrolabe:RemoveIconFromMinimap( icon )
 	return 0;
 end
 
-function Astrolabe:RemoveAllMinimapIcons()
-	self:DumpNewIconsCache()
-	local MinimapIcons = self.MinimapIcons;
-	local IconsOnEdge = self.IconsOnEdge;
-	for k, v in pairs(MinimapIcons) do
-		MinimapIcons[k] = nil;
-		IconsOnEdge[k] = nil;
-		k:Hide();
+function Astrolabe:RemoveAllMinimapIcons( assocName )
+	argcheck(assocName, 2, "string", "nil");
+	if ( assocName == nil ) then -- remove all icons
+		self:DumpNewIconsCache();
+		local MinimapIcons = self.MinimapIcons;
+		local IconsOnEdge = self.IconsOnEdge;
+		for icon, data in pairs(MinimapIcons) do
+			MinimapIcons[icon] = nil;
+			IconsOnEdge[icon] = nil;
+			icon:Hide();
+		end
+		self.MinimapIconCount = 0;
+		self.processingFrame:Hide();
+	
+	else -- remove just icons that match the specified association
+		for icon, iconAssoc in pairs(self.IconAssociations) do
+			if ( iconAssoc == assocName ) then
+				self:RemoveIconFromMinimap(icon)
+			end
+		end
+	
 	end
-	self.MinimapIconCount = 0
-	self.processingFrame:Hide()
 end
 
 local lastZoom; -- to remember the last seen Minimap zoom level
@@ -637,6 +679,8 @@ do
 	local incrementalUpdateThread
 	
 	local function UpdateMinimapIconPositions( self )
+		-- cache a reference to EdgeRangeMultiplier, for performance
+		local EdgeRangeMultiplier = self.EdgeRangeMultiplier;
 		yield()
 		
 		while ( true ) do
@@ -646,7 +690,7 @@ do
 			
 			local M, F, x, y = self:GetCurrentPlayerPosition();
 			if ( M and M >= 0 ) then
-				local Minimap = Minimap;
+				local Minimap = Astrolabe.Minimap;
 				local lastPosition = self.LastPlayerPosition;
 				local lM, lF, lx, ly = unpack(lastPosition);
 				
@@ -671,7 +715,7 @@ do
 						numPerCycle = numPerCycle * 2
 						local count = 0
 						for icon, data in pairs(self.MinimapIcons) do
-							placeIconOnMinimap(Minimap, currentZoom, mapWidth, mapHeight, icon, data.dist, data.xDist, data.yDist);
+							placeIconOnMinimap(Minimap, currentZoom, mapWidth, mapHeight, icon, data.dist, data.xDist, data.yDist, EdgeRangeMultiplier[icon]);
 							
 							count = count + 1
 							if ( count > numPerCycle ) then
@@ -698,7 +742,7 @@ do
 							local xDist = data.xDist - xDelta;
 							local yDist = data.yDist - yDelta;
 							local dist = sqrt(xDist*xDist + yDist*yDist);
-							placeIconOnMinimap(Minimap, currentZoom, mapWidth, mapHeight, icon, dist, xDist, yDist);
+							placeIconOnMinimap(Minimap, currentZoom, mapWidth, mapHeight, icon, dist, xDist, yDist, EdgeRangeMultiplier[icon]);
 							
 							data.dist = dist;
 							data.xDist = xDist;
@@ -765,6 +809,8 @@ do
 	local fullUpdateThread
 	
 	local function CalculateMinimapIconPositions( self )
+		-- cache a reference to EdgeRangeMultiplier, for performance
+		local EdgeRangeMultiplier = self.EdgeRangeMultiplier;
 		yield()
 		
 		while ( true ) do
@@ -775,6 +821,7 @@ do
 			
 			local M, F, x, y = self:GetCurrentPlayerPosition();
 			if ( M and M >= 0 ) then
+				local Minimap = Astrolabe.Minimap;
 				minimapRotationEnabled = GetCVar("rotateMinimap") ~= "0"
 				if ( minimapRotationEnabled ) then
 					minimapRotationOffset = GetPlayerFacing();
@@ -788,14 +835,13 @@ do
 				
 				local currentZoom = Minimap:GetZoom();
 				lastZoom = currentZoom;
-				local Minimap = Minimap;
 				local mapWidth = Minimap:GetWidth();
 				local mapHeight = Minimap:GetHeight();
 				local count = 0
 				for icon, data in pairs(self.MinimapIcons) do
 					local dist, xDist, yDist = self:ComputeDistance(M, F, x, y, data.mapID, data.mapFloor, data.xPos, data.yPos);
 					if ( dist ) then
-						placeIconOnMinimap(Minimap, currentZoom, mapWidth, mapHeight, icon, dist, xDist, yDist);
+						placeIconOnMinimap(Minimap, currentZoom, mapWidth, mapHeight, icon, dist, xDist, yDist, EdgeRangeMultiplier[icon]);
 						
 						data.dist = dist;
 						data.xDist = xDist;
@@ -887,11 +933,92 @@ function Astrolabe:GetDirectionToIcon( icon )
 	end
 end
 
+function Astrolabe:AssociateIcon( icon, assocName )
+	argcheck(icon, 2, "table");
+	argcheck(assocName, 3, "string", "nil");
+	self.IconAssociations[icon] = assocName;
+	self.EdgeRangeMultiplier[icon] = self.EdgeRangeMultiplier[assocName]; -- update the icon's edge multiplier
+	self.ForceNextUpdate = true; -- force a redraw
+end
+
+function Astrolabe:GetIconAssociation( icon )
+	return self.IconAssociations[icon];
+end
+
+function Astrolabe:SetEdgeRangeMultiplier( multiplier, assocName )
+	argcheck(multiplier, 2, "number", "nil");
+	argcheck(assocName, 3, "string", "nil");
+	assert(3, (multiplier or assocName), "Astrolabe:SetEdgeRangeMultiplier( multiplier, [assocName] ) - at least one argument must be specificed");
+	assert(3, (not multiplier or multiplier > 0), "Astrolabe:SetEdgeRangeMultiplier( multiplier, [assocName] ) - mutliplier must be greater than zero");
+	
+	local EdgeRangeMultiplier = self.EdgeRangeMultiplier;
+	local IconAssociations = self.IconAssociations;
+	if ( assocName == nil ) then
+		-- set the default multiplier
+		self.DefaultEdgeRangeMultiplier = multiplier;
+		for icon in pairs(EdgeRangeMultiplier) do
+			local iconAssoc = IconAssociations[icon];
+			if ( type(icon) == "table" and (not iconAssoc or rawget(EdgeRangeMultiplier, iconAssoc) == nil) ) then
+				EdgeRangeMultiplier[icon] = multiplier;
+			end
+		end
+	else
+		-- set the multiplier for specific icons
+		EdgeRangeMultiplier[assocName] = multiplier;
+		for icon, iconAssoc in pairs(IconAssociations) do
+			if ( iconAssoc == assocName ) then
+				EdgeRangeMultiplier[icon] = multiplier;
+			end
+		end
+	end
+	self.ForceNextUpdate = true; -- force a redraw
+end
+
+function Astrolabe:GetEdgeRangeMultiplier( assocOrIcon )
+	argcheck(assocOrIcon, 2, "table", "string", "nil");
+	return rawget(self.EdgeRangeMultiplier, assocOrIcon) or self.DefaultEdgeRangeMultiplier;
+end
+
 function Astrolabe:Register_OnEdgeChanged_Callback( func, ident )
+	argcheck(func, 2, "function");
+	self.IconsOnEdge_GroupChangeCallbacks[func] = ident;
+end
+
+function Astrolabe:SetTargetMinimap( newMinimap )
+	if ( newMinimap == self.Minimap ) then
+		return; -- no change
+	end
+	argcheck(newMinimap, 2, "table");
+	assert(3, issecurevariable(newMinimap, 0), "Astrolabe:SetTargetMinimap( newMinimap ) - argument is not a Minimap");
+	assert(3, newMinimap.IsObjectType, "Astrolabe:SetTargetMinimap( newMinimap ) - argument is not a Minimap");
+	assert(3, type(newMinimap.IsObjectType) == "function", "Astrolabe:SetTargetMinimap( newMinimap ) - argument is not a Minimap");
+	assert(3, newMinimap:IsObjectType("Minimap"), "Astrolabe:SetTargetMinimap( newMinimap ) - argument is not a Minimap");
+	
+	local oldMinimap = self.Minimap;
+	self.processingFrame:SetParent(newMinimap);
+	self.Minimap = newMinimap;
+	self:CalculateMinimapIconPositions(true); -- re-anchor all currently managed icons
+	-- re-parent all currently managed icons
+	for icon, data in pairs(self.MinimapIcons) do
+		if ( icon.GetParent and icon.SetParent ) then
+			if ( icon:GetParent() == oldMinimap ) then
+				icon:SetParent(newMinimap);
+			elseif ( icon:GetParent() and icon:GetParent():GetParent() == oldMinimap ) then -- just incase our icons have an ancestor inbetween them and the Minimap
+				icon:GetParent():SetParent(newMinimap);
+			end
+		end
+	end
+	
+	for func in pairs(self.TargetMinimapChanged_Callbacks) do
+		pcall(func);
+	end
+end
+
+function Astrolabe:Register_TargetMinimapChanged_Callback( func, ident )
 	-- check argument types
 	argcheck(func, 2, "function");
 	
-	self.IconsOnEdge_GroupChangeCallbacks[func] = ident;
+	self.TargetMinimapChanged_Callbacks[func] = ident;
 end
 
 --*****************************************************************************
@@ -947,7 +1074,7 @@ end
 function Astrolabe:OnEvent( frame, event )
 	if ( event == "MINIMAP_UPDATE_ZOOM" ) then
 		-- update minimap zoom scale
-		local Minimap = Minimap;
+		local Minimap = self.Minimap;
 		local curZoom = Minimap:GetZoom();
 		if ( GetCVar("minimapZoom") == GetCVar("minimapInsideZoom") ) then
 			if ( curZoom < 2 ) then
@@ -1106,8 +1233,12 @@ local function activate( newInstance, oldInstance )
 		end
 		newInstance.MinimapIconCount = iconCount
 		
+		-- explicity carry over our Minimap reference, or create it if we don't already have one
+		newInstance.Minimap = oldInstance.Minimap or _G.Minimap
+		
 		Astrolabe = oldInstance;
 	else
+		newInstance.Minimap = _G.Minimap
 		local frame = CreateFrame("Frame");
 		newInstance.processingFrame = frame;
 	end
@@ -1140,9 +1271,10 @@ local function activate( newInstance, oldInstance )
 		end
 	end
 	
+	local Minimap = newInstance.Minimap
 	local frame = newInstance.processingFrame;
 	frame:Hide();
-	frame:SetParent("Minimap");
+	frame:SetParent(Minimap);
 	frame:UnregisterAllEvents();
 	frame:RegisterEvent("MINIMAP_UPDATE_ZOOM");
 	frame:RegisterEvent("PLAYER_LEAVING_WORLD");
