@@ -28,6 +28,7 @@ AddonCore.lua
 
 Localization.enUS.lua
 Localization.deDE.lua
+Localization.frFR.lua
 Localization.zhCN.lua
 Localization.ruRU.lua
 Localization.zhTW.lua
