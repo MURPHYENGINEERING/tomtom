@@ -127,9 +127,6 @@ end
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("QUEST_POI_UPDATE")
 eventFrame:RegisterEvent("QUEST_LOG_UPDATE")
-hooksecurefunc("WatchFrame_Update", function(self)
-    ObjectivesChanged()
-end)
 
 eventFrame:SetScript("OnEvent", function(self, event, ...)
     if event == "QUEST_POI_UPDATE" then
@@ -208,28 +205,6 @@ local function poi_OnClick(self, button)
         poiclickwaypoints[key] = uid
     end
 end
-
-local hooked = {}
-hooksecurefunc("QuestPOI_DisplayButton", function(parentName, buttonType, buttonIndex, questId)
-    local buttonName = "poi"..tostring(parentName)..tostring(buttonType).."_"..tostring(buttonIndex);
-    local poiButton = _G[buttonName];
-
-    if not hooked[buttonName] then
-        poiButton:HookScript("OnClick", poi_OnClick)
-        poiButton:RegisterForClicks("AnyUp")
-        hooked[buttonName] = true
-    end
-
-    -- Check to see if there is a swap button
-    local swapName = "poi" .. parentName .. "_Swap"
-    local swapButton = _G[swapName]
-
-    if not hooked[swapName] and swapButton then
-        swapButton:HookScript("OnClick", poi_OnClick)
-        swapButton:RegisterForClicks("AnyUp")
-        hooked[swapName] = true
-    end
-end)
 
 function TomTom:EnableDisablePOIIntegration()
     enableClicks= TomTom.profile.poi.enable

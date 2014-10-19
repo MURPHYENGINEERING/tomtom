@@ -333,11 +333,11 @@ function TomTom:ShowHideWorldCoords()
         TomTomWorldFrame.Cursor:ClearAllPoints()
 
         if mapSizedUp then
-            TomTomWorldFrame.Player:SetPoint("RIGHT", WorldMapPositioningGuide, "BOTTOM", -15, 15)
-            TomTomWorldFrame.Cursor:SetPoint("LEFT", WorldMapPositioningGuide, "BOTTOM", 15, 15)
+            TomTomWorldFrame.Player:SetPoint("TOPRIGHT", WorldMapTitleButton, "TOPRIGHT",  -64, -8)
+            TomTomWorldFrame.Cursor:SetPoint("TOPLEFT",  WorldMapTitleButton, "TOPRIGHT",  352, -8)
         else
-            TomTomWorldFrame.Player:SetPoint("LEFT", WorldMapPositioningGuide, "BOTTOMLEFT", 25, 16)
-            TomTomWorldFrame.Cursor:SetPoint("LEFT", WorldMapPositioningGuide, "BOTTOMLEFT", 140, 16)
+            TomTomWorldFrame.Player:SetPoint("TOPRIGHT", WorldMapTitleButton, "TOPRIGHT", -256, -8)
+            TomTomWorldFrame.Cursor:SetPoint("TOPLEFT",  WorldMapTitleButton, "TOPRIGHT",  128, -8)
         end
 
         TomTomWorldFrame.Player:Hide()
