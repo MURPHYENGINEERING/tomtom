@@ -16,6 +16,10 @@ local astrolabe = DongleStub("Astrolabe-1.0")
 local lastWaypoint
 local scanning          -- This function is not re-entrant, stop that
 
+local function getQIDFromIndex(questIndex)
+	return (select(8, GetQuestLogTitle(questIndex)))
+end
+
 local function ObjectivesChanged()
     -- This function should only run if enableClosest is set
     if not enableClosest then
@@ -62,7 +66,7 @@ local function ObjectivesChanged()
             break
         end
 
-        local qid = select(9, GetQuestLogTitle(questIndex))
+        local qid = getQIDFromIndex(questIndex)
         local completed, x, y, objective = QuestPOIGetIconInfo(qid)
 
         if x and y then
@@ -78,7 +82,7 @@ local function ObjectivesChanged()
     if closest then
         local questIndex = GetQuestIndexForWatch(closest)
         local title = GetQuestLogTitle(questIndex)
-        local qid = select(9, GetQuestLogTitle(questIndex))
+        local qid = getQIDFromIndex(questIndex)
         local completed, x, y, objective = QuestPOIGetIconInfo(qid)
 
         if completed then
@@ -161,7 +165,7 @@ local function poi_OnClick(self, button)
     if not questIndex and self.questId then
         -- Lookup the questIndex for the given questId
         for idx = 1, GetNumQuestLogEntries(), 1 do
-            local qid = select(9, GetQuestLogTitle(idx))
+            local qid = getQIDFromIndex(idx)
             if qid == self.questId then
                 questIndex = idx
             end
@@ -173,7 +177,7 @@ local function poi_OnClick(self, button)
     end
 
     local title = GetQuestLogTitle(questIndex)
-    local qid = select(9, GetQuestLogTitle(questIndex))
+    local qid = getQIDFromIndex(questIndex)
     local completed, x, y, objective = QuestPOIGetIconInfo(qid)
     if completed then
         title = "Turn in: " .. title
