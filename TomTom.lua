@@ -428,6 +428,11 @@ local world_click_verify = {
 
 local origScript = WorldMapButton_OnClick
 WorldMapButton_OnClick = function(self, ...)
+    if WorldMapButton.ignoreClick then
+        WorldMapButton.ignoreClick = false;
+        return;
+    end
+
     local mouseButton, button = ...
     if mouseButton == "RightButton" then
         -- Check for all the modifiers that are currently set
@@ -450,8 +455,8 @@ WorldMapButton_OnClick = function(self, ...)
     end
 end
 
-if WorldMapButton:GetScript("OnMouseUp") == origScript then
-    WorldMapButton:SetScript("OnMouseUp", WorldMapButton_OnClick)
+if WorldMapButton:GetScript("OnClick") == origScript then
+    WorldMapButton:SetScript("OnClick", WorldMapButton_OnClick)
 end
 
 local function WaypointCallback(event, arg1, arg2, arg3)
