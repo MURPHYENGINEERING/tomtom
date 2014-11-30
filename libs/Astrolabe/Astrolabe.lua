@@ -1,6 +1,6 @@
 --[[
 Name: Astrolabe
-Revision: $Rev: 161 $
+Revision: $Rev: 161.1 $
 $Date: 2014-10-14 22:59:04 -0700 (Tue, 14 Oct 2014) $
 Author(s): Esamynn (esamynn at wowinterface.com)
 Inspired By: Gatherer by Norganna
@@ -42,7 +42,7 @@ Note:
 -- DO NOT MAKE CHANGES TO THIS LIBRARY WITHOUT FIRST CHANGING THE LIBRARY_VERSION_MAJOR
 -- STRING (to something unique) OR ELSE YOU MAY BREAK OTHER ADDONS THAT USE THIS LIBRARY!!!
 local LIBRARY_VERSION_MAJOR = "Astrolabe-1.0"
-local LIBRARY_VERSION_MINOR = tonumber(string.match("$Revision: 161 $", "(%d+)") or 1)
+local LIBRARY_VERSION_MINOR = 161.1 -- updated version provided with TomTom
 
 if not DongleStub then error(LIBRARY_VERSION_MAJOR .. " requires DongleStub.") end
 if not DongleStub:IsNewerVersion(LIBRARY_VERSION_MAJOR, LIBRARY_VERSION_MINOR) then return end
@@ -1258,8 +1258,10 @@ local function activate( newInstance, oldInstance )
 			local contZoneList = newInstance.ContinentList[C];
 			contZoneList[0] = continents[C*2 - 1];
 			for Z = 1, (#zones / 2) do
-				contZoneList[Z] = zones[Z*2 - 1];
-				SetMapByID(contZoneList[Z]);
+				local areaId = zones[Z*2 - 1];
+				SetMapByID(areaId);
+				local zoneKey = GetCurrentMapZone();
+				contZoneList[zoneKey] = areaId
 				harvestMapData(HarvestedMapData);
 			end
 		end
