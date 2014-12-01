@@ -52,41 +52,6 @@ local function GetCorpseLocation()
         x = cx
         y = cy
     end
-
-    -- Scan the continent maps to see if we can find the player's corpse
-    local c
-    local oc,oz = GetCurrentMapContinent(), GetCurrentMapZone()
-
-    for i=1,select("#", GetMapContinents()) do
-        SetMapZoom(i)
-        local cx, cy = GetCorpseMapPosition()
-        if cx ~= 0 and cy ~= 0 then
-            c = i
-            break
-        end
-    end
-
-    -- If we found the corpse on a continent, find out which zone it is in
-    if c and c ~= -1 then
-        for i=1,select("#", GetMapZones(c)) do
-            SetMapZoom(c, i)
-            local cx,cy = GetCorpseMapPosition()
-            if cx > 0 and cy > 0 then
-                m = GetCurrentMapAreaID()
-                f = GetCurrentMapDungeonLevel()
-                x = cx
-                y = cy
-                break
-            end
-        end
-    end
-
-    -- Restore the map to its previous zoom level
-    SetMapZoom(oc, oz)
-
-    if m and f and x and y then
-        return m,f,x,y
-    end
 end
 
 local function SetCorpseArrow()
