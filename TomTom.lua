@@ -7,11 +7,13 @@
 -- Simple localization table for messages
 local L = TomTomLocals
 local ldb = LibStub("LibDataBroker-1.1")
-local astrolabe = DongleStub("Astrolabe-1.0")
 local lmd = LibStub("LibMapData-1.0")
 
 local addonName, addon = ...
 local TomTom = addon
+
+addon.astrolabe = DongleStub("Astrolabe-TomTom-1.0")
+local astrolabe = addon.astrolabe
 
 -- Local definitions
 local GetCurrentCursorPosition
