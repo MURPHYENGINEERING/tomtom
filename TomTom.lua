@@ -821,6 +821,17 @@ function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, callb
     })
 end
 
+function TomTom:AddWaypointToCurrentZone(x, y, desc)
+    local m, f = TomTom:GetCurrentPlayerPosition()
+    if not m then
+        return
+    end
+
+    return self:AddMFWaypoint(m, f, x/100, y/100, {
+        title = desc,
+    })
+end
+
 -- Return a set of default callbacks that can be used by addons to provide
 -- more detailed functionality without losing the tooltip and onclick
 -- functionality.
