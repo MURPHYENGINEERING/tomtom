@@ -7,7 +7,7 @@
 -- Simple localization table for messages
 local L = TomTomLocals
 local ldb = LibStub("LibDataBroker-1.1")
-local lmd = LibStub("LibMapData-1.0")
+local hbd = LibStub("HereBeDragons-1.0")
 
 local addonName, addon = ...
 local TomTom = addon
@@ -679,7 +679,7 @@ function TomTom:CHAT_MSG_ADDON(event, prefix, data, channel, sender)
     x = tonumber(x)
     y = tonumber(y)
 
-    local zoneName = lmd:MapLocalize(m)
+    local zoneName = hbd:GetLocalizedMap(m)
     self:AddMFWaypoint(m, f, x, y, {title = title})
     local msg = string.format(L["|cffffff78TomTom|r: Added '%s' (sent from %s) to zone %s"], title, sender, zoneName)
     ChatFrame1:AddMessage(msg)
@@ -712,7 +712,7 @@ local function _both_tooltip_show(event, tooltip, uid, dist)
         tooltip:AddLine(L["Unknown distance"])
     end
     local m,f,x,y = unpack(data)
-    local zoneName = lmd:MapLocalize(m)
+    local zoneName = hbd:GetLocalizedMap(m)
 
     tooltip:AddLine(string.format(L["%s (%.2f, %.2f)"], zoneName, x*100, y*100), 0.7, 0.7, 0.7)
     tooltip:Show()
@@ -904,7 +904,7 @@ function TomTom:AddMFWaypoint(m, f, x, y, opts)
 		opts.callbacks = TomTom:DefaultCallbacks(opts)
 	end
 
-    local zoneName = lmd:MapLocalize(m)
+    local zoneName = hbd:GetLocalizedMap(m)
 
     -- Get the default map floor, if necessary
     if not f then
@@ -1076,7 +1076,7 @@ do
 
     function Block_OnClick(self, button, down)
         local m,f,x,y = TomTom:GetCurrentPlayerPosition()
-        local zoneName = lmd:MapLocalize(m,f)
+        local zoneName = hbd:GetLocalizedMap(m)
         local desc = string.format("%s: %.2f, %.2f", zoneName, x*100, y*100)
         TomTom:AddMFWaypoint(m, f, x, y, {
             title = desc,
@@ -1087,7 +1087,7 @@ end
 function TomTom:DebugListWaypoints()
     local m,f,x,y = self:GetCurrentPlayerPosition()
     local ctxt = RoundCoords(x, y, 2)
-    local czone = lmd:MapLocalize(m)
+    local czone = hbd:GetLocalizedMap(m)
     self:Printf(L["You are at (%s) in '%s' (map: %d, floor: %d)"], ctxt, czone or "UNKNOWN", m, f)
     if waypoints[m] then
         for key, wp in pairs(waypoints[m]) do
@@ -1113,7 +1113,7 @@ end
 
 function TomTom:GetClosestWaypoint()
     local m,f,x,y = self:GetCurrentPlayerPosition()
-	local c = lmd:GetContinentFromMap(m)
+	local c = hbd:GetCZFromMapID(m)
 
     local closest_waypoint = nil
     local closest_dist = nil
@@ -1132,7 +1132,7 @@ function TomTom:GetClosestWaypoint()
 	else
 		-- Search all waypoints on this continent
 		for map, waypoints in pairs(waypoints) do
-			if c == lmd:GetContinentFromMap(map) then
+			if c == hbd:GetCZFromMapID(m) then
 				for key, waypoint in pairs(waypoints) do
 					local dist, x, y = TomTom:GetDistanceToWaypoint(waypoint)
 					if (dist and closest_dist == nil) or (dist and dist < closest_dist) then

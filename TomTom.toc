@@ -22,7 +22,7 @@ libs\AceEvent-3.0\AceEvent-3.0.xml
 libs\AceDB-3.0\AceDB-3.0.xml
 libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
 libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
-libs\LibMapData-1.0\library.lua
+libs\HereBeDragons-1.0\HereBeDragons-1.0.lua
 
 AddonCore.lua
 
