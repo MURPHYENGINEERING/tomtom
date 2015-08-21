@@ -12,8 +12,7 @@ local hbd = LibStub("HereBeDragons-1.0")
 local addonName, addon = ...
 local TomTom = addon
 
-addon.astrolabe = DongleStub("Astrolabe-TomTom-1.0")
-local astrolabe = addon.astrolabe
+addon.hbd = hbd
 
 -- Local definitions
 local GetCurrentCursorPosition
@@ -200,7 +199,7 @@ end
 
 function TomTom:GetKeyArgs(m, f, x, y, title)
     if not f then
-        local floors = astrolabe:GetNumFloors(m)
+        local floors = hbd:GetNumFloors(m)
         f = floors == 0 and 0 or 1
     end
 
@@ -224,7 +223,8 @@ function TomTom:GetCurrentCoords()
 end
 
 function TomTom:GetCurrentPlayerPosition()
-	return astrolabe:GetUnitPosition("player", true)
+    local x, y, mapID, mapFloor = hbd:GetPlayerZonePosition()
+    return mapID, mapFloor, x, y
 end
 
 function TomTom:ReloadOptions()
@@ -805,7 +805,7 @@ end
 
 function TomTom:AddZWaypoint(c, z, x, y, desc, persistent, minimap, world, callbacks, silent, crazy)
     -- Convert the c,z,x,y tuple to m,f,x,y and pass the work off to AddMFWaypoint()
-    local mapId, floor = astrolabe:GetMapID(c, z)
+    local mapId, floor = hbd:GetMapIDFromCZ(c, z)
     if not mapId then
         return
     end
@@ -908,13 +908,8 @@ function TomTom:AddMFWaypoint(m, f, x, y, opts)
 
     -- Get the default map floor, if necessary
     if not f then
-		if not astrolabe:GetMapInfo(m) then
-			-- guess the floor
-			f = 0
-		else
-			local floors = astrolabe:GetNumFloors(m)
-			f = floors == 0 and 0 or 1
-		end
+        local floors = hbd:GetNumFloors(m)
+        f = floors == 0 and 0 or 1
     end
 
     -- Ensure there isn't already a waypoint at this location
@@ -979,7 +974,7 @@ function TomTom:WaypointMFExists(m, f, x, y, desc)
 end
 
 function TomTom:WaypointExists(c, z, x, y, desc)
-    local m, f = astrolabe:GetMapID(c, z)
+    local m, f = hbd:GetMapIDFromCZ(c, z)
     return self:WaypointMFExists(m, f, x, y, desc)
 end
 

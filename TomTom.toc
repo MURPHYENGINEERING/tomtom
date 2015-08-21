@@ -9,11 +9,11 @@
 ## Notes-ruRU: Удобный портативный навигатор по игровой карте
 ## Author: Cladhaire
 ## SavedVariables: TomTomDB, TomTomWaypoints, TomTomWaypointsMF
+## OptionalDeps: HereBeDragons-1.0
 
 ## X-Localizations: enUS, enGB, deDE, frFR, zhCN, ruRU, zhTW
 ## X-CompatibleLocales: enUS, enGB, deDE, frFR, esES, esMX, zhCN, zhTW, koKR, ruRU
 
-libs\Astrolabe\Load.xml
 libs\LibStub\LibStub.lua
 libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
 libs\AceGUI-3.0\AceGUI-3.0.xml
@@ -23,6 +23,7 @@ libs\AceDB-3.0\AceDB-3.0.xml
 libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
 libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 libs\HereBeDragons-1.0\HereBeDragons-1.0.lua
+libs\HereBeDragons-1.0\HereBeDragons-Pins-1.0.lua
 
 AddonCore.lua
 
