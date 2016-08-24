@@ -1161,9 +1161,14 @@ end
 SLASH_TOMTOM_WAYBACK1 = "/wayb"
 SLASH_TOMTOM_WAYBACK2 = "/wayback"
 SlashCmdList["TOMTOM_WAYBACK"] = function(msg)
+    local title = L["Wayback"]
+    if msg and msg:match("%S") then
+        title = msg
+    end
+
     local backm,backf,backx,backy = TomTom:GetCurrentPlayerPosition()
     TomTom:AddMFWaypoint(backm, backf, backx, backy, {
-        title = L["Wayback"],
+        title = title,
     })
 end
 
