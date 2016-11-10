@@ -451,7 +451,9 @@ WorldMapButton_OnClick = function(self, ...)
             return origScript and origScript(self, ...) or true
         end
 
-        local uid = TomTom:AddMFWaypoint(m,f,x,y)
+        local uid = TomTom:AddMFWaypoint(m, f, x, y, {
+            title = L["TomTom waypoint"],
+        })
     else
         return origScript and origScript(self, ...) or true
     end
@@ -705,7 +707,7 @@ end
 local function _both_tooltip_show(event, tooltip, uid, dist)
     local data = uid
 
-    tooltip:SetText(data.title or L["TomTom waypoint"])
+    tooltip:SetText(data.title or L["Unknown waypoint"])
     if dist and tonumber(dist) then
         tooltip:AddLine(string.format(L["%s yards away"], math.floor(dist)), 1, 1, 1)
     else
@@ -1380,7 +1382,7 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
         x = tonumber(x)
         y = tonumber(y)
         TomTom:AddMFWaypoint(mapId, nil, x/100, y/100, {
-            title = desc,
+            title = desc or L["TomTom waypoint"],
         })
     elseif tonumber(tokens[1]) then
         -- A vanilla set command
@@ -1399,7 +1401,7 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
         local m, f = TomTom:GetCurrentPlayerPosition()
         if m and x and y then
             TomTom:AddMFWaypoint(m, f, x/100, y/100, {
-                title = desc
+                title = desc or L["TomTom waypoint"],
             })
         end
     else
