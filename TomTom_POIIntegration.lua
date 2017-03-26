@@ -167,11 +167,11 @@ local function poi_OnClick(self, button)
     local m, f = GetCurrentMapAreaID()
 
     local questIndex = self.quest and self.quest.questLogIndex
-    if not questIndex and self.questId then
-        -- Lookup the questIndex for the given questId
+    if not questIndex and self.questID then
+        -- Lookup the questIndex for the given questID
         for idx = 1, GetNumQuestLogEntries(), 1 do
             local qid = getQIDFromIndex(idx)
-            if qid == self.questId then
+            if qid == self.questID then
                 questIndex = idx
             end
         end
