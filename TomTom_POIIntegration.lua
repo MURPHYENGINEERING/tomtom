@@ -164,28 +164,31 @@ local function poi_OnClick(self, button)
     SetCVar("questPOI", 1)
 
     -- Run our logic, and set a waypoint for this button
-    local m, f = GetCurrentMapAreaID()
+    local m = GetCurrentMapAreaID()
+    local f = GetCurrentMapDungeonLevel()
 
-    local questIndex = self.quest and self.quest.questLogIndex
-    if not questIndex and self.questID then
-        -- Lookup the questIndex for the given questID
-        for idx = 1, GetNumQuestLogEntries(), 1 do
-            local qid = getQIDFromIndex(idx)
-            if qid == self.questID then
-                questIndex = idx
+    QuestPOIUpdateIcons()
+
+    local questIndex = GetQuestLogIndexByID(self.questID)
+    local title, completed, x, y
+
+    if questIndex and questIndex ~= 0 then
+        title = GetQuestLogTitle(questIndex)
+        completed, x, y = QuestPOIGetIconInfo(self.questID)
+    else
+        -- Must be a World Quest
+        title = C_TaskQuest.GetQuestInfoByQuestID(self.questID)
+        completed = false
+        x, y = C_TaskQuest.GetQuestLocation(self.questID)
+        m = select(2, C_TaskQuest.GetQuestZoneID(self.questID)) or m
+        for i, q in pairs(C_TaskQuest.GetQuestsForPlayerByMapID(m)) do
+            -- Attemp to find the floor for the world quest
+            if q.questID == questID then
+                f = q.floor
             end
         end
     end
 
-    if not questIndex and self.index then
-        questIndex = GetQuestIndexForWatch(self.index)
-    end
-
-    QuestPOIUpdateIcons()
-
-    local title = GetQuestLogTitle(questIndex)
-    local qid = getQIDFromIndex(questIndex)
-    local completed, x, y, objective = QuestPOIGetIconInfo(qid)
     if completed then
         title = "Turn in: " .. title
     end
@@ -193,7 +196,7 @@ local function poi_OnClick(self, button)
     if not x or not y then
         -- No coordinate information for this quest/objective
         local header = "|cFF33FF99TomTom|r"
-        print(L["%s: No coordinate information found for '%s' at this map level"]:format(header, title))
+        print(L["%s: No coordinate information found for '%s' at this map level"]:format(header, title or self.questID))
         return
     end
 
