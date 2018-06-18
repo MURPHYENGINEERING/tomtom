@@ -1,4 +1,4 @@
-## Interface: 70300
+## Interface: 80000
 ## Title: TomTom
 ## Author: jnwhiteh
 ## Version: @project-version@
@@ -8,8 +8,8 @@
 ## Notes-zhCN:一个简单的导航助手。
 ## Notes-ruRU: Удобный портативный навигатор по игровой карте
 ## Author: Cladhaire
-## SavedVariables: TomTomDB, TomTomWaypoints, TomTomWaypointsMF
-## OptionalDeps: HereBeDragons-1.0
+## SavedVariables: TomTomDB, TomTomWaypoints, TomTomWaypointsM
+## OptionalDeps: HereBeDragons-2.0
 
 ## X-Localizations: enUS, enGB, deDE, frFR, zhCN, ruRU, zhTW
 ## X-CompatibleLocales: enUS, enGB, deDE, frFR, esES, esMX, zhCN, zhTW, koKR, ruRU
@@ -22,8 +22,8 @@ libs\AceEvent-3.0\AceEvent-3.0.xml
 libs\AceDB-3.0\AceDB-3.0.xml
 libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
 libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
-libs\HereBeDragons-1.0\HereBeDragons-1.0.lua
-libs\HereBeDragons-1.0\HereBeDragons-Pins-1.0.lua
+libs\HereBeDragons\HereBeDragons-2.0.lua
+libs\HereBeDragons\HereBeDragons-Pins-2.0.lua
 
 AddonCore.lua
 
