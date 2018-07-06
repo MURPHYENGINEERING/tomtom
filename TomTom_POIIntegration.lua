@@ -1,5 +1,5 @@
 local addonName, addon = ...
-local hbd = addon.hbd
+local hbd = LibStub("HereBeDragons-2.0")
 
 local enableClicks = true       -- True if waypoint-clicking is enabled to set points
 local enableClosest = true      -- True if 'Automatic' quest waypoints are enabled
@@ -36,11 +36,19 @@ local function ObjectivesChanged()
         scanning = true
     end
 
-    local map, floor = GetCurrentMapAreaID()
-    local floors = hbd:GetNumFloors(map)
-    floor = (floors == 0 and 0 or 1)
+    local map = C_Map.GetBestMapForUnit("player")
+    if not map then
+        scanning = false
+        return
+    end
 
-    local px, py = GetPlayerMapPosition("player")
+    local player = C_Map.GetPlayerMapPosition(map, "player")
+    if not player then
+        scanning = false
+        return
+    end
+
+    local px, py = player:GetXY()
 
     -- Bail out if we can't get the player's position
     if not px or not py or px <= 0 or py <= 0 then
@@ -72,7 +80,7 @@ local function ObjectivesChanged()
         local completed, x, y, objective = QuestPOIGetIconInfo(qid)
 
         if x and y then
-            local dist = hbd:GetZoneDistance(map, floor, px, py, map, floor, x, y)
+            local dist = hbd:GetZoneDistance(map, px, py, map, x, y)
             if dist < closestdist then
                 closest = watchIndex
                 closestdist = dist
@@ -95,8 +103,8 @@ local function ObjectivesChanged()
         if lastWaypoint then
             -- This is a hack that relies on the UID format, do not use this
             -- in your addons, please.
-            local pm, pf, px, py = unpack(lastWaypoint)
-            if map == pm and floor == pf and x == px and y == py and lastWaypoint.title == title then
+            local pm, px, py = unpack(lastWaypoint)
+            if map == pm and x == px and y == py and lastWaypoint.title == title then
                 -- This is the same waypoint, do nothing
                 setWaypoint = false
             else
@@ -107,7 +115,7 @@ local function ObjectivesChanged()
 
         if setWaypoint then
             -- Set the new waypoint
-            lastWaypoint = TomTom:AddMFWaypoint(map, floor, x, y, {
+            lastWaypoint = TomTom:AddWaypoint(map, x, y, {
                 title = title,
                 persistent = false,
                 arrivaldistance = TomTom.profile.poi.arrival,
@@ -164,8 +172,7 @@ local function poi_OnClick(self, button)
     SetCVar("questPOI", 1)
 
     -- Run our logic, and set a waypoint for this button
-    local m = GetCurrentMapAreaID()
-    local f = GetCurrentMapDungeonLevel()
+    local m = C_Map.GetBestMapForUnit("player")
 
     QuestPOIUpdateIcons()
 
@@ -181,12 +188,6 @@ local function poi_OnClick(self, button)
         completed = false
         x, y = C_TaskQuest.GetQuestLocation(self.questID)
         m = select(2, C_TaskQuest.GetQuestZoneID(self.questID)) or m
-        for i, q in pairs(C_TaskQuest.GetQuestsForPlayerByMapID(m)) do
-            -- Attemp to find the floor for the world quest
-            if q.questID == questID then
-                f = q.floor
-            end
-        end
     end
 
     if completed then
@@ -200,7 +201,7 @@ local function poi_OnClick(self, button)
         return
     end
 
-    local key = TomTom:GetKeyArgs(m, f, x, y, title)
+    local key = TomTom:GetKeyArgs(m, x, y, title)
 
     local alreadySet = false
     if poiclickwaypoints[key] then
@@ -212,7 +213,7 @@ local function poi_OnClick(self, button)
     end
 
     if not alreadySet then
-        local uid = TomTom:AddMFWaypoint(m, f, x, y, {
+        local uid = TomTom:AddWaypoint(m, x, y, {
             title = title,
             arrivaldistance = TomTom.profile.poi.arrival,
         })
@@ -225,13 +226,14 @@ local function poi_OnClick(self, button)
     SetCVar("questPOI", cvar and 1 or 0)
 end
 
-hooksecurefunc("TaskPOI_OnClick", function(self, button)
-    poi_OnClick(self, button)
-end)
-
-hooksecurefunc("QuestPOIButton_OnClick", function(self, button)
-    poi_OnClick(self, button)
-end)
+---LFO: Something needs to replace this!
+---hooksecurefunc("TaskPOI_OnClick", function(self, button)
+---    poi_OnClick(self, button)
+---end)
+---
+---hooksecurefunc("QuestPOIButton_OnClick", function(self, button)
+---    poi_OnClick(self, button)
+---end)
 
 function TomTom:EnableDisablePOIIntegration()
     enableClicks= TomTom.profile.poi.enable
