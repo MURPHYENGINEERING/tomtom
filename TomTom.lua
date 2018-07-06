@@ -251,7 +251,7 @@ function TomTom:ResetWaypointOptions()
 	for map, data in pairs(self.waypointprofile) do
 		for key, waypoint in pairs(data) do
 			waypoint.minimap = minimap
-			waypoint.world = sorld
+			waypoint.world = world
 			waypoint.cleardistance = cleardistance
 			waypoint.arrivaldistance = arrivaldistance
 		end
