@@ -1009,7 +1009,7 @@ do
     end
 end
 
-function TomTom:DebugListWaypoints()
+function TomTom:DebugListLocalWaypoints()
     local m,x,y = self:GetCurrentPlayerPosition()
     local ctxt = RoundCoords(x, y, 2)
     local czone = hbd:GetLocalizedMap(m)
@@ -1027,13 +1027,31 @@ function TomTom:DebugListWaypoints()
     end
 end
 
+function TomTom:DebugListAllWaypoints()
+    local m,x,y = self:GetCurrentPlayerPosition()
+    local ctxt = RoundCoords(x, y, 2)
+    local czone = hbd:GetLocalizedMap(m)
+    self:Printf(L["You are at (%s) in '%s' (map: %d)"], ctxt, czone or "UNKNOWN", m)
+    for m in pairs(waypoints) do
+        local zoneName = hbd:GetLocalizedMap(m)
+        self:Printf("%s:", zoneName)
+        for key, wp in pairs(waypoints[m]) do
+            local ctxt = RoundCoords(wp[2], wp[3], 2)
+            local desc = wp.title and wp.title or L["Unknown waypoint"]
+            local indent = "   "
+            self:Printf(L["%s%s - %s (map: %d)"], indent, desc, ctxt, wp[1])
+        end
+    end
+end
+
 local function usage()
     ChatFrame1:AddMessage(L["|cffffff78TomTom |r/way |cffffff78Usage:|r"])
     ChatFrame1:AddMessage(L["|cffffff78/way <x> <y> [desc]|r - Adds a waypoint at x,y with descrtiption desc"])
     ChatFrame1:AddMessage(L["|cffffff78/way <zone> <x> <y> [desc]|r - Adds a waypoint at x,y in zone with description desc"])
     ChatFrame1:AddMessage(L["|cffffff78/way reset all|r - Resets all waypoints"])
     ChatFrame1:AddMessage(L["|cffffff78/way reset <zone>|r - Resets all waypoints in zone"])
-    ChatFrame1:AddMessage(L["|cffffff78/way list|r - Lists active waypoints in current zone"])
+    ChatFrame1:AddMessage(L["|cffffff78/way local|r - Lists active waypoints in current zone"])
+    ChatFrame1:AddMessage(L["|cffffff78/way list|r - Lists all active waypoints"])
 end
 
 
@@ -1126,11 +1144,44 @@ SLASH_TOMTOM_WAY1 = "/way"
 SLASH_TOMTOM_WAY2 = "/tway"
 SLASH_TOMTOM_WAY3 = "/tomtomway"
 
-local nameToMapId = {}
+TomTom.NameToMapId = {}
+local NameToMapId = TomTom.NameToMapId
 do
     -- Fetch the names of the zones
-    nameToMapId = {}
-    -- LFO: Insert code here to walk the map table and then disambiguate names based on groups and parent map names.
+    for id in pairs(hbd.mapData) do
+--        if (hbd.mapData[id].mapType == Enum.UIMapType.Zone) or (hbd.mapData[id].mapType == Enum.UIMapType.Micro) then
+        if hbd.mapData[id][1] > 0 then
+            -- Record only Zone or Micro maps
+            local name = hbd.mapData[id].name
+            if name and NameToMapId[name] then
+                if type(NameToMapId[name]) ~= "table" then
+                    -- convert to table
+                    NameToMapId[name] = {NameToMapId[name]}
+                end
+                table.insert(NameToMapId[name], id)
+            else
+                NameToMapId[name] = id
+            end
+        end
+    end
+    -- Handle any duplicates
+    local newEntries = {}
+    for name, mapID in pairs(NameToMapId) do
+        if type(mapID) == "table" then
+            NameToMapId[name] = nil
+            for idx, mapId in pairs(mapID) do
+                local parent = hbd.mapData[mapId].parent
+                local parentName = hbd.mapData[parent].name
+                if parentName then
+                    newEntries[name .. ":" .. parentName] = mapId
+                end
+            end
+        end
+    end
+    -- Add the de-duplicated entries
+    for name, mapID in pairs(newEntries) do
+        NameToMapId[name] = mapID
+    end
 end
 
 local wrongseparator = "(%d)" .. (tonumber("1.1") and "," or ".") .. "(%d)"
@@ -1147,8 +1198,11 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
     -- Lower the first token
     local ltoken = tokens[1] and tokens[1]:lower()
 
-    if ltoken == "list" then
-        TomTom:DebugListWaypoints()
+    if ltoken == "local" then
+        TomTom:DebugListLocalWaypoints()
+        return
+    elseif ltoken == "list" then
+        TomTom:DebugListAllWaypoints()
         return
     elseif ltoken == "reset" then
         local ltoken2 = tokens[2] and tokens[2]:lower()
@@ -1168,7 +1222,7 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
             local matches = {}
             local lzone = lowergsub(zone)
 
-            for name, mapId in pairs(nameToMapId) do
+            for name, mapId in pairs(NameToMapId) do
                 local lname = lowergsub(name)
                 if lname == lzone then
                     -- We have an exact match
@@ -1179,7 +1233,7 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
                 end
             end
 
-            if #matches > 5 then
+            if #matches > 7 then
                 local msg = string.format(L["Found %d possible matches for zone %s.  Please be more specific"], #matches, zone)
                 ChatFrame1:AddMessage(msg)
                 return
@@ -1195,7 +1249,7 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
             end
 
             local zoneName = matches[1]
-            local mapId = nameToMapId[zoneName]
+            local mapId = NameToMapId[zoneName]
 
             local numRemoved = 0
             if waypoints[mapId] then
@@ -1244,7 +1298,7 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
         local matches = {}
         local lzone = lowergsub(zone)
 
-        for name,mapId in pairs(nameToMapId) do
+        for name,mapId in pairs(NameToMapId) do
             local lname = lowergsub(name)
             if lname == lzone then
                 -- We have an exact match
@@ -1255,7 +1309,7 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
             end
         end
 
-        if #matches > 5 then
+        if #matches > 7 then
             local msg = string.format(L["Found %d possible matches for zone %s.  Please be more specific"], #matches, zone)
             ChatFrame1:AddMessage(msg)
             return
@@ -1271,7 +1325,7 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 
         -- There was only one match, so proceed
         local zoneName = matches[1]
-        local mapId = nameToMapId[zoneName]
+        local mapId = NameToMapId[zoneName]
 
         x = x and tonumber(x)
         y = y and tonumber(y)
