@@ -230,7 +230,7 @@ function TomTom:ReloadOptions()
     self:ShowHideWorldCoords()
     self:ShowHideCoordBlock()
     self:ShowHideCrazyArrow()
-    --LFO: self:EnableDisablePOIIntegration()
+    self:EnableDisablePOIIntegration()
 end
 
 function TomTom:ClearAllWaypoints()
