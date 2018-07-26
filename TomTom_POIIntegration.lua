@@ -226,14 +226,9 @@ local function poi_OnClick(self, button)
     SetCVar("questPOI", cvar and 1 or 0)
 end
 
----LFO: Something needs to replace this!
----hooksecurefunc("TaskPOI_OnClick", function(self, button)
----    poi_OnClick(self, button)
----end)
----
----hooksecurefunc("QuestPOIButton_OnClick", function(self, button)
----    poi_OnClick(self, button)
----end)
+hooksecurefunc("QuestPOIButton_OnClick", function(self, button)
+    poi_OnClick(self, button)
+end)
 
 function TomTom:EnableDisablePOIIntegration()
     enableClicks= TomTom.profile.poi.enable
