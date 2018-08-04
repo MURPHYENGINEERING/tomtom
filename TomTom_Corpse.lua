@@ -74,7 +74,7 @@ eventFrame:SetScript("OnUpdate", function(self, elapsed)
         return
     else
         counter = 0
-        if TomTom.profile.general.corpse_arrow then
+        if TomTom and TomTom.profile and TomTom.profile.general and TomTom.profile.general.corpse_arrow then
             if GetCorpseLocation() then
                 if SetCorpseArrow() then
                     self:Hide()
