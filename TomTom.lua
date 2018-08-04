@@ -643,7 +643,7 @@ end
 
 function TomTom:SendWaypoint(uid, channel)
     local data = uid
-    local m, f, x, y = unpack(data)
+    local m, x, y = unpack(data)
     local msg = string.format("%d:%f:%f:%s", m, x, y, data.title or "")
     C_ChatInfo.SendAddonMessage("TOMTOM4", msg, channel)
 end
