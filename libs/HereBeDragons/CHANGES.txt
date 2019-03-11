@@ -1,58 +1,41 @@
-tag cd12ccfd13832690f1422c5795a3921c452298a7 1.92-beta
+tag 529cf963909b0c048d607d9fb35e549e2867a61c 2.01-release
 Author:	Hendrik Leppkes <h.leppkes@gmail.com>
-Date:	Sat Jun 23 20:03:11 2018 +0200
+Date:	Thu Jan 24 10:17:51 2019 +0100
 
-Tag as 1.92-beta
+Tag as 2.01-release
 
-commit f1b0f720ccce59c8139ae5e0cbfac21100c24874
+commit 6df387471e91795b8152b6271ce7a8fa15c9d151
 Author: Hendrik Leppkes <h.leppkes@gmail.com>
-Date:   Sat Jun 23 18:53:33 2018 +0200
+Date:   Thu Jan 24 10:17:20 2019 +0100
 
-    Fix minimap drawing zone limitation
+    Remove load guards
 
-commit d087939c3b4734ac18a010420b12a4a3810ab5a2
+commit 601d62a39f98f533d81027473efdfe5f52672df5
 Author: Hendrik Leppkes <h.leppkes@gmail.com>
-Date:   Sat Jun 23 18:53:18 2018 +0200
+Date:   Thu Jan 24 10:06:55 2019 +0100
 
-    Use HBD parent map data for pin drawing
+    Add support for specifying the frame level category for world map pins
 
-commit 70c7ea002a3d702dd482958d11b7660f6ad36b7c
+commit 41e7284588afe1f43f987df7efd4669c5467ebb4
 Author: Hendrik Leppkes <h.leppkes@gmail.com>
-Date:   Sat Jun 23 18:52:40 2018 +0200
+Date:   Tue Jan 22 13:13:53 2019 +0100
 
-    Store the maps parent in the data table
-
-commit 3ecf06773358df59c80f66ae91de16da88b4264e
-Author: Hendrik Leppkes <h.leppkes@gmail.com>
-Date:   Sat Jun 23 18:27:36 2018 +0200
-
-    Fix show flag handling in world map drawing for instance-based coordinates
-
-commit ec1e0d064b7a02ac97980fc5b7fc10adda044390
-Author: Hendrik Leppkes <h.leppkes@gmail.com>
-Date:   Wed Jun 20 20:19:26 2018 +0200
-
-    Set a scaling limit for the pins so they show in a consistent size on all maps
+    Remove HereBeDragons-1.0 from the source
     
-    Fixes WoWAce Issue #12
+    1.0 was developed for Legion, and has not functioned in WoW 8.0
 
-commit e8e542646986796906d14abe6a8cba716e2f58c6
+commit 3ee227ed2b69d15ffeab4c9b06f06141dc879f78
 Author: Hendrik Leppkes <h.leppkes@gmail.com>
-Date:   Wed Jun 20 20:19:01 2018 +0200
+Date:   Mon Sep 10 11:09:08 2018 +0200
 
-    Properly reset existing icons when re-using pins
+    Use the parent parameter instead of accessing the table, it holds the same value
+
+commit 6f03f6f9297155fba47b03f16c29dabd7445081d
+Author: Hendrik Leppkes <h.leppkes@gmail.com>
+Date:   Mon Sep 10 11:07:18 2018 +0200
+
+    Improve map discovery to handle improperly flagged dungeon floor maps
     
-    Fixes GitHub Issue #4
-
-commit 61383763a1ce7b87379d50b534150693e2d17ab7
-Author: Hendrik Leppkes <h.leppkes@gmail.com>
-Date:   Wed Jun 13 19:50:42 2018 +0200
-
-    Fix drawing pins on the world map
-
-commit af699f6637a2d07ba3000273534116aefaffc679
-Author: Hendrik Leppkes <h.leppkes@gmail.com>
-Date:   Sat May 26 19:15:44 2018 +0200
-
-    Optimize transform storage for faster lookups
+    These maps sometimes do not show up as a child, and can only be detected
+    by checking the map group.
 
