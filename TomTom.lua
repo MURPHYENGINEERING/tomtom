@@ -1058,25 +1058,29 @@ end
 function TomTom:GetCZWFromMapID(m)
     local zone, continent, world
 
-    local mapInfo = C_Map.GetMapInfo(m)
+    local mapInfo = nil
     repeat
         mapInfo = C_Map.GetMapInfo(m)
-        if mapInfo.mapInfo == 3 then
+        if not mapInfo then
+            -- No more parents, return what we have
+            return continent, zone, world
+        end
+        if mapInfo.mapType == Enum.UIMapType.Zone then
             -- Its a zone map
             zone = m
-        elseif mapInfo.mapInfo == 2 then
+        elseif mapInfo.mapType == Enum.UIMapType.Continent then
             continent = m
-        elseif mapInfo.mapInfo == 1 then
+        elseif mapInfo.mapType == Enum.UIMapType.World then
             world = m
         end
         m = mapInfo.parentMapID
-    until (m == 946)
-    return continent, world, zone
+    until (m == 0)
+    return continent, zone, world
 end
 
 function TomTom:GetClosestWaypoint()
     local m,x,y = self:GetCurrentPlayerPosition()
-    local c,w,z = TomTom:GetCZWFromMapID(m)
+    local c,z,w = TomTom:GetCZWFromMapID(m)
 
     local closest_waypoint = nil
     local closest_dist = nil
