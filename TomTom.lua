@@ -1012,8 +1012,8 @@ end
 function TomTom:DebugListLocalWaypoints()
     local m,x,y = self:GetCurrentPlayerPosition()
     local ctxt = RoundCoords(x, y, 2)
-    local czone = hbd:GetLocalizedMap(m)
-    self:Printf(L["You are at (%s) in '%s' (map: %d)"], ctxt, czone or "UNKNOWN", m)
+    local czone = hbd:GetLocalizedMap(m) or "UNKNOWN"
+    self:Printf(L["You are at (%s) in '%s' (map: %s)"], ctxt, czone , tostring(m))
     if waypoints[m] then
         for key, wp in pairs(waypoints[m]) do
             local ctxt = RoundCoords(wp[2], wp[3], 2)
@@ -1030,11 +1030,12 @@ end
 function TomTom:DebugListAllWaypoints()
     local m,x,y = self:GetCurrentPlayerPosition()
     local ctxt = RoundCoords(x, y, 2)
-    local czone = hbd:GetLocalizedMap(m)
-    self:Printf(L["You are at (%s) in '%s' (map: %d)"], ctxt, czone or "UNKNOWN", m)
+    local czone = hbd:GetLocalizedMap(m) or "UNKNOWN"
+    self:Printf(L["You are at (%s) in '%s' (map: %s)"], ctxt, czone, tostring(m))
     for m in pairs(waypoints) do
+        local c,z,w = TomTom:GetCZWFromMapID(m)
         local zoneName = hbd:GetLocalizedMap(m)
-        self:Printf("%s:", zoneName)
+        self:Printf("%s: (map: %d, zone: %s, continent: %s, world: %s)", zoneName, m, tostring(z), tostring(c), tostring(w))
         for key, wp in pairs(waypoints[m]) do
             local ctxt = RoundCoords(wp[2], wp[3], 2)
             local desc = wp.title and wp.title or L["Unknown waypoint"]
@@ -1057,8 +1058,10 @@ end
 
 function TomTom:GetCZWFromMapID(m)
     local zone, continent, world
-
     local mapInfo = nil
+
+    if not m then return nil, nil, nil; end
+
     repeat
         mapInfo = C_Map.GetMapInfo(m)
         if not mapInfo then
