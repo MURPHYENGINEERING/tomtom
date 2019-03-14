@@ -66,7 +66,7 @@ local function OnDragStop(self, button)
 end
 
 local function OnEvent(self, event, ...)
-	if event == "ZONE_CHANGED_NEW_AREA" and TomTom.profile.arrow.enable then
+	if (event == "ZONE_CHANGED_NEW_AREA" or event == "ZONE_CHANGED") and TomTom.profile.arrow.enable then
 		self:Show()
 	end
 end
@@ -75,6 +75,7 @@ wayframe:SetScript("OnDragStart", OnDragStart)
 wayframe:SetScript("OnDragStop", OnDragStop)
 wayframe:RegisterForDrag("LeftButton")
 wayframe:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+wayframe:RegisterEvent("ZONE_CHANGED")
 wayframe:SetScript("OnEvent", OnEvent)
 
 wayframe.arrow = wayframe:CreateTexture(nil, "OVERLAY")
