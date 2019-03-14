@@ -42,6 +42,7 @@ wayframe:SetWidth(56)
 wayframe:SetPoint("CENTER", 0, 0)
 wayframe:EnableMouse(true)
 wayframe:SetMovable(true)
+wayframe:SetClampedToScreen(true)
 wayframe:Hide()
 
 -- Frame used to control the scaling of the title and friends
