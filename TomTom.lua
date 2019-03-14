@@ -1226,6 +1226,9 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
     elseif ltoken == "list" then
         TomTom:DebugListAllWaypoints()
         return
+    elseif ltoken == "arrow" then
+        TomTom:DebugCrazyArrow()
+        return
     elseif ltoken == "reset" then
         local ltoken2 = tokens[2] and tokens[2]:lower()
         if ltoken2 == "all" then

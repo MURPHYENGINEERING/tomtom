@@ -568,3 +568,25 @@ end
 function TomTom:CrazyArrowIsHijacked()
     return wayframe.hijacked
 end
+
+-- Logs Crazy Arrow status
+function TomTom:DebugCrazyArrow()
+    local msg
+    msg = string.format(L["|cffffff78TomTom:|r CrazyArrow %s hijacked"], (wayframe.hijacked and L["is"]) or L["not"])
+    ChatFrame1:AddMessage(msg)
+    msg = string.format(L["|cffffff78TomTom:|r CrazyArrow %s visible"], (wayframe:IsVisible() and L["is"]) or L["not"])
+    ChatFrame1:AddMessage(msg)
+    msg = string.format(L["|cffffff78TomTom:|r Waypoint %s valid"], (active_point and TomTom:IsValidWaypoint(active_point) and L["is"]) or L["not"])
+    ChatFrame1:AddMessage(msg)
+
+    local dist,x,y = TomTom:GetDistanceToWaypoint(active_point)
+    msg = string.format("|cffffff78TomTom:|r Waypoint distance=%s", tostring(dist))
+    ChatFrame1:AddMessage(msg)
+
+    if wayframe:IsVisible() then
+        local point, relativeTo, relativePoint, xOfs, yOfs = wayframe:GetPoint(1)
+        relativeTo = (relativeTo and relativeTo:GetName()) or "UIParent"
+        msg = string.format("|cffffff78TomTom:|r CrazyArrow point=%s frame=%s rpoint=%s xo=%.2f yo=%.2f",  point, relativeTo, relativePoint, xOfs, yOfs)
+        ChatFrame1:AddMessage(msg)
+    end
+end
