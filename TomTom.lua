@@ -1194,7 +1194,7 @@ do
             NameToMapId[name] = nil
             for idx, mapId in pairs(mapID) do
                 local parent = hbd.mapData[mapId].parent
-                local parentName = hbd.mapData[parent].name
+                local parentName = (parent and (parent > 0) and hbd.mapData[parent].name)
                 if parentName then
                     -- We rely on the implicit acending order of mapID's so the lowest one wins
                     if not newEntries[name .. ":" .. parentName] then
