@@ -1195,7 +1195,12 @@ do
                 local parent = hbd.mapData[mapId].parent
                 local parentName = hbd.mapData[parent].name
                 if parentName then
-                    newEntries[name .. ":" .. parentName] = mapId
+                    -- We rely on the implicit acending order of mapID's so the lowest one wins
+                    if not newEntries[name .. ":" .. parentName] then
+                        newEntries[name .. ":" .. parentName] = mapId
+                    else
+                        newEntries[name .. ":" .. tostring(mapId)] = mapId
+                    end
                 end
             end
         end
