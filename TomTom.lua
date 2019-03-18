@@ -1171,8 +1171,8 @@ local NameToMapId = TomTom.NameToMapId
 do
     -- Fetch the names of the zones
     for id in pairs(hbd.mapData) do
---        if (hbd.mapData[id].mapType == Enum.UIMapType.Zone) or (hbd.mapData[id].mapType == Enum.UIMapType.Micro) then
-        if hbd.mapData[id][1] > 0 then
+        if (hbd.mapData[id].mapType == Enum.UIMapType.Zone) or
+           (hbd.mapData[id].mapType == Enum.UIMapType.Micro) then
             -- Record only Zone or Micro maps
             local name = hbd.mapData[id].name
             if name and NameToMapId[name] then
