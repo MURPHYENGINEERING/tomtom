@@ -1184,6 +1184,7 @@ do
             else
                 NameToMapId[name] = id
             end
+            NameToMapId["#" .. id] = id
         end
     end
     -- Handle any duplicates
