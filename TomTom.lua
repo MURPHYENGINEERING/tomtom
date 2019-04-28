@@ -938,6 +938,9 @@ do
     local coord_fmt = "%%.%df, %%.%df"
     function RoundCoords(x,y,prec)
         local fmt = coord_fmt:format(prec, prec)
+        if not x or not y then
+            return "---"
+        end
         return fmt:format(x*100, y*100)
     end
 
