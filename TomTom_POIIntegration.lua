@@ -139,8 +139,10 @@ local function ObjectivesChanged()
 end
 
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("QUEST_POI_UPDATE")
-eventFrame:RegisterEvent("QUEST_LOG_UPDATE")
+if not addon.CLASSIC then
+    eventFrame:RegisterEvent("QUEST_POI_UPDATE")
+    eventFrame:RegisterEvent("QUEST_LOG_UPDATE")
+end
 
 eventFrame:SetScript("OnEvent", function(self, event, ...)
     if event == "QUEST_POI_UPDATE" then
@@ -232,9 +234,11 @@ local function poi_OnClick(self, button)
     SetCVar("questPOI", cvar and 1 or 0)
 end
 
-hooksecurefunc("QuestPOIButton_OnClick", function(self, button)
-    poi_OnClick(self, button)
-end)
+if not addon.CLASSIC then
+    hooksecurefunc("QuestPOIButton_OnClick", function(self, button)
+        poi_OnClick(self, button)
+    end)
+end
 
 function TomTom:EnableDisablePOIIntegration()
     enableClicks= TomTom.profile.poi.enable
