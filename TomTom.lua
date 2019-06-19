@@ -13,6 +13,7 @@ local addonName, addon = ...
 local TomTom = addon
 
 addon.hbd = hbd
+addon.CLASSIC = math.floor(select(4, GetBuildInfo() ) / 100) == 113
 
 -- Local definitions
 local GetCurrentCursorPosition
@@ -151,8 +152,10 @@ function TomTom:Initialize(event, addon)
     C_ChatInfo.RegisterAddonMessagePrefix("TOMTOM4")
 
 	-- Watch for pet battle start/end so we can hide/show the arrow
-	self:RegisterEvent("PET_BATTLE_OPENING_START", "ShowHideCrazyArrow")
-	self:RegisterEvent("PET_BATTLE_CLOSE", "ShowHideCrazyArrow")
+	if not self.CLASSIC then
+	    self:RegisterEvent("PET_BATTLE_OPENING_START", "ShowHideCrazyArrow")
+	    self:RegisterEvent("PET_BATTLE_CLOSE", "ShowHideCrazyArrow")
+	end
 
     self:ReloadOptions()
     self:ReloadWaypoints()
