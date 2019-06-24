@@ -81,7 +81,7 @@ local function ObjectivesChanged()
 
         if x and y then
             local dist = hbd:GetZoneDistance(map, px, py, map, x, y)
-            if dist < closestdist then
+            if dist and (dist < closestdist) then
                 closest = watchIndex
                 closestdist = dist
             end
