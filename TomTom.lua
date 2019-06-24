@@ -1216,8 +1216,9 @@ do
         local c,z,w = TomTom:GetCZWFromMapID(id)
         local mapType = (overrides[id] and overrides[id].mapType) or hbd.mapData[id].mapType
         if (mapType == Enum.UIMapType.Zone) or
+           (mapType == Enum.UIMapType.Continent) or
            (mapType == Enum.UIMapType.Micro) then
-            -- Record only Zone or Micro maps
+            -- Record only Zone or Continent or Micro maps
             local name = hbd.mapData[id].name
             if (overrides[id] and overrides[id].suffix) then
                 name = name .. " " .. overrides[id].suffix
