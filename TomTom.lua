@@ -1061,17 +1061,25 @@ local function usage()
     ChatFrame1:AddMessage(L["|cffffff78/way list|r - Lists all active waypoints"])
 end
 
+TomTom.CZWFromMapID = {}
 
 function TomTom:GetCZWFromMapID(m)
-    local zone, continent, world
+    local zone, continent, world, map
     local mapInfo = nil
 
     if not m then return nil, nil, nil; end
 
+    -- Return the cached CZW
+    if TomTom.CZWFromMapID[m] then
+        return unpack(TomTom.CZWFromMapID[m])
+    end
+
+    map = m -- Save the original map
     repeat
         mapInfo = C_Map.GetMapInfo(m)
         if not mapInfo then
             -- No more parents, return what we have
+            TomTom.CZWFromMapID[map] = {continent, zone, world}
             return continent, zone, world
         end
         if mapInfo.mapType == Enum.UIMapType.Zone then
@@ -1084,6 +1092,7 @@ function TomTom:GetCZWFromMapID(m)
         end
         m = mapInfo.parentMapID
     until (m == 0)
+    TomTom.CZWFromMapID[map] = {continent, zone, world}
     return continent, zone, world
 end
 
@@ -1204,6 +1213,7 @@ local overrides = {
 do
     -- Fetch the names of the zones
     for id in pairs(hbd.mapData) do
+        local c,z,w = TomTom:GetCZWFromMapID(id)
         local mapType = (overrides[id] and overrides[id].mapType) or hbd.mapData[id].mapType
         if (mapType == Enum.UIMapType.Zone) or
            (mapType == Enum.UIMapType.Micro) then
@@ -1212,15 +1222,19 @@ do
             if (overrides[id] and overrides[id].suffix) then
                 name = name .. " " .. overrides[id].suffix
             end
-            if name and NameToMapId[name] then
-                if type(NameToMapId[name]) ~= "table" then
-                    -- convert to table
-                    NameToMapId[name] = {NameToMapId[name]}
+            -- What about some instances?  Do they have coords?  How to test for that case?
+            if w then -- It must be in some world to be named and have coords
+                if name and NameToMapId[name] then
+                    if type(NameToMapId[name]) ~= "table" then
+                        -- convert to table
+                        NameToMapId[name] = {NameToMapId[name]}
+                    end
+                    table.insert(NameToMapId[name], id)
+                else
+                    NameToMapId[name] = id
                 end
-                table.insert(NameToMapId[name], id)
-            else
-                NameToMapId[name] = id
             end
+            -- Record just the raw map # as a possible override.
             NameToMapId["#" .. id] = id
         end
     end
