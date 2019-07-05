@@ -1191,7 +1191,7 @@ function TomTom:GetClosestWaypoint()
     end
 end
 
-function TomTom:SetClosestWaypoint()
+function TomTom:SetClosestWaypoint(verbose)
     local uid = self:GetClosestWaypoint()
     if uid then
         local data = uid
@@ -1212,7 +1212,7 @@ function TomTom:SetClosestWaypoint()
         else
            msg = L["|cffffff78TomTom:|r Could not find a closest waypoint in this continent."]
         end
-        if self.profile.general.announce then
+        if verbose then
             ChatFrame1:AddMessage(msg)
         end
     end
@@ -1222,7 +1222,7 @@ end
 SLASH_TOMTOM_CLOSEST_WAYPOINT1 = "/cway"
 SLASH_TOMTOM_CLOSEST_WAYPOINT2 = "/closestway"
 SlashCmdList["TOMTOM_CLOSEST_WAYPOINT"] = function(msg)
-    TomTom:SetClosestWaypoint()
+    TomTom:SetClosestWaypoint(true)
 end
 
 SLASH_TOMTOM_WAYBACK1 = "/wayb"
