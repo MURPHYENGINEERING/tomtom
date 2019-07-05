@@ -355,6 +355,19 @@ function TomTom:ShowHideWorldCoords()
     end
 end
 
+function TomTom:DebugCoordBlock()
+    local msg
+    msg = string.format(L["|cffffff78TomTom:|r CoordBlock %s visible"], (TomTomBlock:IsVisible() and L["is"]) or L["not"])
+    ChatFrame1:AddMessage(msg)
+
+    if TomTomBlock:IsVisible() then
+        local point, relativeTo, relativePoint, xOfs, yOfs = TomTomBlock:GetPoint(1)
+        relativeTo = (relativeTo and relativeTo:GetName()) or "UIParent"
+        msg = string.format("|cffffff78TomTom:|r CoordBlock point=%s frame=%s rpoint=%s xo=%.2f yo=%.2f",  point, relativeTo, relativePoint, xOfs, yOfs)
+        ChatFrame1:AddMessage(msg)
+    end
+end
+
 function TomTom:ShowHideCoordBlock()
     -- Bail out if we're not supposed to be showing this frame
     if self.profile.block.enable then
@@ -1075,6 +1088,8 @@ local function usage()
     ChatFrame1:AddMessage(L["|cffffff78/way reset <zone>|r - Resets all waypoints in zone"])
     ChatFrame1:AddMessage(L["|cffffff78/way local|r - Lists active waypoints in current zone"])
     ChatFrame1:AddMessage(L["|cffffff78/way list|r - Lists all active waypoints"])
+    ChatFrame1:AddMessage(L["|cffffff78/way arrow|r - Prints status of the Crazy Arrow"])
+    ChatFrame1:AddMessage(L["|cffffff78/way block|r - Prints status of the Coordinate Block"])
 end
 
 TomTom.CZWFromMapID = {}
@@ -1308,6 +1323,9 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
         return
     elseif ltoken == "arrow" then
         TomTom:DebugCrazyArrow()
+        return
+    elseif ltoken == "block" then
+        TomTom:DebugCoordBlock()
         return
     elseif ltoken == "reset" then
         local ltoken2 = tokens[2] and tokens[2]:lower()
