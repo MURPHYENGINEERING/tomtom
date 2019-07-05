@@ -832,6 +832,16 @@ function TomTom:DefaultCallbacks(opts)
         arrivaldistance = opts.arrivaldistance
     end
 
+    -- User wants ping, they get ping!
+    if TomTom.profile.arrow.enablePing then
+        if arrivaldistance <= 0 then
+            arrivaldistance = 1
+        end
+        if arrivaldistance < cleardistance then
+            arrivaldistance = cleardistance
+        end
+    end
+
     if cleardistance == arrivaldistance then
         callbacks.distance[cleardistance] = function(...)
             _both_clear_distance(...);
