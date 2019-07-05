@@ -521,6 +521,14 @@ local function createconfig()
 						min = 0, max = 2, step = 1,
 						arg = "mapcoords.playeraccuracy",
 					},
+					playeroffset = {
+						order = 8,
+						type = "range",
+						name = L["Player coordinate offset"],
+						desc = L["Coordinates can be slid from the default location, to accomodate other addons.  This setting allows you to control that offset"],
+						min = -16, max = 48, step = 1,
+						arg = "mapcoords.playeroffset",
+					},
 				},
 			},
 			cursor = {
@@ -536,7 +544,6 @@ local function createconfig()
 						width = "double",
 						arg = "mapcoords.cursorenable",
 					},
-
 					cursoraccuracy = {
 						order = 5,
 						type = "range",
@@ -545,6 +552,15 @@ local function createconfig()
 						min = 0, max = 2, step = 1,
 						arg = "mapcoords.cursoraccuracy",
 					},
+					cursoroffset = {
+						order = 7,
+						type = "range",
+						name = L["Cursor coordinate offset"],
+						desc = L["Coordinates can be slid from the default location, to accomodate other addons.  This setting allows you to control that offset"],
+						min = -32, max = 64, step = 1,
+						arg = "mapcoords.cursoroffset",
+					},
+
 				},
 			},
 		},

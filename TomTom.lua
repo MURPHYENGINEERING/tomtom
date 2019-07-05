@@ -47,8 +47,10 @@ function TomTom:Initialize(event, addon)
             mapcoords = {
                 playerenable = true,
                 playeraccuracy = 2,
+                playeroffset = 0,
                 cursorenable = true,
                 cursoraccuracy = 2,
+                cursoroffset = 0,
 				throttle = 0.1,
             },
             arrow = {
@@ -324,11 +326,15 @@ function TomTom:ShowHideWorldCoords()
         TomTomWorldFrame.Cursor:ClearAllPoints()
 
         if WorldMapMixin.isMaximized then
-            TomTomWorldFrame.Player:SetPoint("TOPLEFT", WorldMapFrame.BorderFrame, "TOPLEFT",   30, -6)
-            TomTomWorldFrame.Cursor:SetPoint("TOPLEFT",  WorldMapFrame.BorderFrame, "TOPRIGHT",  -170, -6)
+            TomTomWorldFrame.Player:SetPoint("TOPLEFT", WorldMapFrame.BorderFrame, "TOPLEFT",
+                                             self.db.profile.mapcoords.playeroffset, -6)
+            TomTomWorldFrame.Cursor:SetPoint("TOPLEFT",  WorldMapFrame.BorderFrame, "TOPRIGHT",
+                                             - self.db.profile.mapcoords.cursoroffset + -170, -6)
         else
-            TomTomWorldFrame.Player:SetPoint("TOPLEFT", WorldMapFrame.BorderFrame, "TOPLEFT", 100, -6)
-            TomTomWorldFrame.Cursor:SetPoint("TOPLEFT",  WorldMapFrame.BorderFrame, "TOPRIGHT", -170, -6)
+            TomTomWorldFrame.Player:SetPoint("TOPLEFT", WorldMapFrame.BorderFrame, "TOPLEFT",
+                                                        self.db.profile.mapcoords.playeroffset + 100, -6)
+            TomTomWorldFrame.Cursor:SetPoint("TOPLEFT",  WorldMapFrame.BorderFrame, "TOPRIGHT",
+                                                         - self.db.profile.mapcoords.cursoroffset + -170, -6)
         end
 
         TomTomWorldFrame.Player:Hide()
