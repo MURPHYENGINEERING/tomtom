@@ -254,10 +254,18 @@ local function createconfig()
 				width = "double",
 				arg = "arrow.stickycorpse",
 			},
+			strata = {
+				order = 16,
+				type = "toggle",
+				name = L["Place the arrow in the HIGH strata"],
+				desc = L["If your arrow is covered up by something else, try this to bump it up a layer."],
+				width = "double",
+				arg = "arrow.highstrata",
+			},
 			display = {
 				type = "group",
 				name = L["Arrow display"],
-				order = 15,
+				order = 16,
 				inline = true,
 				args = {
 					help = {
