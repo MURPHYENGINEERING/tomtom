@@ -845,6 +845,7 @@ SlashCmdList["TOMTOM"] = function(msg)
 	end
 
 	InterfaceOptionsFrame_OpenToCategory("TomTom")
+	InterfaceOptionsFrame_OpenToCategory("TomTom")
 end
 
 local hijackFrame = CreateFrame("Frame", nil, InterfaceOptionsFrame)
