@@ -569,7 +569,7 @@ end,
             local mapId = data[1]
 
             if mapId then
-                if UIDIsSavedTomTom.waypointprofile[mapId][key] then
+                if TomTom:UIDIsSaved(uid) then
                     TomTom.waypointprofile[mapId][key] = nil
                 else
                     TomTom.waypointprofile[mapId][key] = data
