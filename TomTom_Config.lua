@@ -438,6 +438,13 @@ local function createconfig()
 				width = "double",
 				arg = "minimap.menu",
 			},
+			iconsize = {
+				type = "range",
+				name = L["Minimap Icon Size"],
+				desc = L["This setting allows you to control the default size of the minimap icon. "],
+				min = 4, max = 64, step = 2,
+				arg = "minimap.default_iconsize",
+			},
 		},
 	} -- End minimap options
 
@@ -570,6 +577,14 @@ local function createconfig()
 					},
 
 				},
+			},
+			iconsize = {
+				order = 10,
+				type = "range",
+				name = L["World Map Icon Size"],
+				desc = L["This setting allows you to control the default size of the world map icon"],
+				min = 4, max = 64, step = 2,
+				arg = "worldmap.default_iconsize",
 			},
 		},
 	} -- End world map options

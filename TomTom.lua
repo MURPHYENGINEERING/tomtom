@@ -84,6 +84,7 @@ function TomTom:Initialize(event, addon)
                 otherzone = true,
                 tooltip = true,
                 menu = true,
+                default_iconsize = 16,
             },
             worldmap = {
                 enable = true,
@@ -92,6 +93,7 @@ function TomTom:Initialize(event, addon)
                 clickcreate = true,
                 menu = true,
                 create_modifier = "C",
+                default_iconsize = 16,
             },
             comm = {
                 enable = true,

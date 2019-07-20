@@ -70,6 +70,7 @@ local waypointMap = {}
 
 function TomTom:SetWaypoint(waypoint, callbacks, show_minimap, show_world)
     local m, x, y = unpack(waypoint)
+    local profile = self.profile
 
     -- Try to acquire a waypoint from the frame pool
     local point = table.remove(pool)
@@ -142,8 +143,8 @@ function TomTom:SetWaypoint(waypoint, callbacks, show_minimap, show_world)
     else
         point.minimap.icon:SetTexture(waypoint.minimap_icon or "Interface\\AddOns\\TomTom\\Images\\GoldGreenDot")
     end
-    point.minimap.icon:SetHeight(waypoint.minimap_icon_size or 16)
-    point.minimap.icon:SetWidth(waypoint.minimap_icon_size or 16)
+    point.minimap.icon:SetHeight(waypoint.minimap_icon_size or profile.minimap.default_iconsize)
+    point.minimap.icon:SetWidth(waypoint.minimap_icon_size or profile.minimap.default_iconsize)
 
     -- Set up the worldmap.icon
     if waypoint.worldmap_displayID then
@@ -151,8 +152,8 @@ function TomTom:SetWaypoint(waypoint, callbacks, show_minimap, show_world)
     else
         point.worldmap.icon:SetTexture(waypoint.worldmap_icon or "Interface\\AddOns\\TomTom\\Images\\GoldGreenDot")
     end
-    point.worldmap:SetHeight(waypoint.worldmap_icon_size or 16)
-    point.worldmap:SetWidth(waypoint.worldmap_icon_size or 16)
+    point.worldmap:SetHeight(waypoint.worldmap_icon_size or profile.worldmap.default_iconsize)
+    point.worldmap:SetWidth(waypoint.worldmap_icon_size or profile.worldmap.default_iconsize)
 
     -- Process the callbacks table to put distances in a consumable format
     if callbacks and callbacks.distance then
