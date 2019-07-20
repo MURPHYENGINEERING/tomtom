@@ -6,4 +6,7 @@ tools-used:
     - libstub
     - herebedragons
 
+ignore:
+    - Images/src
+
 enable-nolib-creation: no
