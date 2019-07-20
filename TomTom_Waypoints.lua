@@ -88,7 +88,7 @@ function TomTom:SetWaypoint(waypoint, callbacks, show_minimap, show_world)
 
         minimap.icon = minimap:CreateTexture(nil,"OVERLAY")
         minimap.icon:SetPoint("CENTER", 0, 0)
-        minimap.icon:SetBlendMode("ADD")  -- ADD/BLEND
+        minimap.icon:SetBlendMode("BLEND")  -- ADD/BLEND
 
         minimap.arrow = minimap:CreateTexture(nil,"OVERLAY")
         minimap.arrow:SetTexture("Interface\\AddOns\\TomTom\\Images\\MinimapArrow-Green")
@@ -141,7 +141,7 @@ function TomTom:SetWaypoint(waypoint, callbacks, show_minimap, show_world)
     if waypoint.minimap_displayID then
          SetPortraitTextureFromCreatureDisplayID(point.minimap.icon, waypoint.minimap_displayID)
     else
-        point.minimap.icon:SetTexture(waypoint.minimap_icon or "Interface\\AddOns\\TomTom\\Images\\GoldGreenDot")
+        point.minimap.icon:SetTexture(waypoint.minimap_icon or profile.minimap.default_icon)
     end
     point.minimap.icon:SetHeight(waypoint.minimap_icon_size or profile.minimap.default_iconsize)
     point.minimap.icon:SetWidth(waypoint.minimap_icon_size or profile.minimap.default_iconsize)
@@ -150,7 +150,7 @@ function TomTom:SetWaypoint(waypoint, callbacks, show_minimap, show_world)
     if waypoint.worldmap_displayID then
          SetPortraitTextureFromCreatureDisplayID(point.worldmap.icon, waypoint.worldmap_displayID)
     else
-        point.worldmap.icon:SetTexture(waypoint.worldmap_icon or "Interface\\AddOns\\TomTom\\Images\\GoldGreenDot")
+        point.worldmap.icon:SetTexture(waypoint.worldmap_icon or profile.worldmap.default_icon)
     end
     point.worldmap:SetHeight(waypoint.worldmap_icon_size or profile.worldmap.default_iconsize)
     point.worldmap:SetWidth(waypoint.worldmap_icon_size or profile.worldmap.default_iconsize)

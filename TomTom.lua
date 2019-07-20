@@ -85,6 +85,7 @@ function TomTom:Initialize(event, addon)
                 tooltip = true,
                 menu = true,
                 default_iconsize = 16,
+                default_icon = "Interface\\AddOns\\TomTom\\Images\\GoldGreenDot",
             },
             worldmap = {
                 enable = true,
@@ -94,6 +95,7 @@ function TomTom:Initialize(event, addon)
                 menu = true,
                 create_modifier = "C",
                 default_iconsize = 16,
+                default_icon = "Interface\\AddOns\\TomTom\\Images\\GoldGreenDot",
             },
             comm = {
                 enable = true,
