@@ -149,10 +149,10 @@ function TomTom:SetWaypoint(waypoint, callbacks, show_minimap, show_world)
     if waypoint.worldmap_displayID then
          SetPortraitTextureFromCreatureDisplayID(point.worldmap.icon, waypoint.worldmap_displayID)
     else
-        point.minimap.icon:SetTexture(waypoint.worldmap_icon or "Interface\\AddOns\\TomTom\\Images\\GoldGreenDot")
+        point.worldmap.icon:SetTexture(waypoint.worldmap_icon or "Interface\\AddOns\\TomTom\\Images\\GoldGreenDot")
     end
-    point.worldmap.icon:SetHeight(waypoint.worldmap_icon_size or 16)
-    point.worldmap.icon:SetWidth(waypoint.worldmap_icon_size or 16)
+    point.worldmap:SetHeight(waypoint.worldmap_icon_size or 16)
+    point.worldmap:SetWidth(waypoint.worldmap_icon_size or 16)
 
     -- Process the callbacks table to put distances in a consumable format
     if callbacks and callbacks.distance then
