@@ -542,7 +542,7 @@ local dropdown_info = {
         local uid = TomTom.dropdown.uid
         local data = uid
         TomTom:RemoveWaypoint(uid)
-        --TomTom:PrintF("Removing waypoint %0.2f, %0.2f in %s", data.x, data.y, data.zone)
+        --TomTom:Printf("Removing waypoint %0.2f, %0.2f in %s", data.x, data.y, data.zone)
     end,
 },
 { -- Remove all waypoints from this zone
@@ -575,10 +575,9 @@ end,
     func = function()
         -- Add/remove it from the SV file
         local uid = TomTom.dropdown.uid
-        local data = waypoints[uid]
-        if data then
-            local key = TomTom:GetKey(data)
-            local mapId = data[1]
+        if uid then
+            local key = TomTom:GetKey(uid)
+            local mapId = uid[1]
 
             if mapId then
                 if TomTom:UIDIsSaved(uid) then
@@ -587,6 +586,8 @@ end,
                     TomTom.waypointprofile[mapId][key] = data
                 end
             end
+        else
+            TomTom:Printf("Eh?  No waypoint!")
         end
     end,
 },
