@@ -583,7 +583,7 @@ end,
                 if TomTom:UIDIsSaved(uid) then
                     TomTom.waypointprofile[mapId][key] = nil
                 else
-                    TomTom.waypointprofile[mapId][key] = data
+                    TomTom.waypointprofile[mapId][key] = uid
                 end
             end
         end
