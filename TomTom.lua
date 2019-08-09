@@ -586,8 +586,6 @@ end,
                     TomTom.waypointprofile[mapId][key] = data
                 end
             end
-        else
-            TomTom:Printf("Eh?  No waypoint!")
         end
     end,
 },
