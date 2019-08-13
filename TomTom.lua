@@ -428,12 +428,12 @@ function TomTom:ShowHideCoordBlock()
 
         -- Set the block position
         TomTomBlock:ClearAllPoints()
-        if self.profile.block.position then
-            local pos = self.profile.block.position
-            TomTomBlock:SetPoint(pos[1], UIParent, pos[3], pos[4], pos[5])
-        else
-            TomTomBlock:SetPoint("TOP", UIParent, "BOTTOM", -20, -10)
+        if not self.profile.block.position then
+            self.profile.block.position = {"CENTER", nil, "CENTER", 0, -100}
         end
+        local pos = self.profile.block.position
+        TomTomBlock:SetPoint(pos[1], UIParent, pos[3], pos[4], pos[5])
+
 
         -- Update the font size
         local font,height = TomTomBlock.Text:GetFont()
