@@ -1058,11 +1058,13 @@ do
 
     function Block_OnClick(self, button, down)
         local m,x,y = TomTom:GetCurrentPlayerPosition()
-        local zoneName = hbd:GetLocalizedMap(m)
-        local desc = string.format("%s: %.2f, %.2f", zoneName, x*100, y*100)
-        TomTom:AddWaypoint(m, x, y, {
-            title = desc,
-        })
+        if m and x and y then
+            local zoneName = hbd:GetLocalizedMap(m)
+            local desc = string.format("%s: %.2f, %.2f", zoneName, x*100, y*100)
+            TomTom:AddWaypoint(m, x, y, {
+                title = desc,
+            })
+        end
     end
 
     function Block_OnEvent(self, event, ...)
