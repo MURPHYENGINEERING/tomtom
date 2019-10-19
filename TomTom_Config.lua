@@ -228,7 +228,7 @@ local function createconfig()
 				type = "range",
 				name = L["\"Arrival Distance\""],
 				desc = L["This setting will control the distance at which the waypoint arrow switches to a downwards arrow, indicating you have arrived at your destination"],
-				min = 0, max = 150, step = 5,
+				min = 0, max = 150, step = 1,
 				width = "double",
 				arg = "arrow.arrival",
 			},
@@ -239,6 +239,21 @@ local function createconfig()
                 desc = L["When you 'arrive' at a waypoint (this distance is controlled by the 'Arrival Distance' setting in this group) a sound can be played to indicate this.  You can enable or disable this sound using this setting."],
                 width = "double",
                 arg = "arrow.enablePing",
+            },
+			setPingChannel = {
+                order = 12,
+                type = "select",
+                name = L["Channel to play the ping through"],
+                desc = L["When a 'ping' is played, use the indicated sound channel so the volume can be controlled."],
+                width = "double",
+                values = {
+					["Master"] = MASTER_VOLUME,
+					["SFX"] = SOUND_VOLUME,
+					["Music"] = MUSIC_VOLUME,
+					["Ambience"] = AMBIENCE_VOLUME,
+					["Dialog"] = DIALOG_VOLUME
+                },
+                arg = "arrow.pingChannel",
             },
 			hideDuringPetBattles = {
 				order = 13,

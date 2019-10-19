@@ -77,6 +77,7 @@ function TomTom:Initialize(event, addon)
                 setclosest = true,
 				closestusecontinent = false,
                 enablePing = false,
+                pingChannel = "SFX",
 				hideDuringPetBattles = true,
             },
             minimap = {
@@ -773,7 +774,7 @@ end
 
 local function _both_ping_arrival(event, uid, range, distance, lastdistance)
     if TomTom.profile.arrow.enablePing then
-        PlaySoundFile("Interface\\AddOns\\TomTom\\Media\\ping.mp3")
+        PlaySoundFile("Interface\\AddOns\\TomTom\\Media\\ping.mp3", TomTom.profile.arrow.pingChannel)
     end
 end
 
