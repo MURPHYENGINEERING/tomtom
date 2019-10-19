@@ -392,6 +392,16 @@ local dropdown_info = {
 				end
 			end,
 		},
+		{
+			-- Lock Arrow
+			text = L["Arrow locked"],
+			checked = function () return TomTom.db.profile.arrow.lock; end,
+			func = function ()
+				TomTom.db.profile.arrow.lock = not TomTom.db.profile.arrow.lock
+				TomTom:ShowHideCrazyArrow()
+			end,
+			isNotRadio = true,
+		}
 	},
     [2] = {
         send = {
