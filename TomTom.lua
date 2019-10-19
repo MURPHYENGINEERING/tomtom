@@ -240,7 +240,9 @@ function TomTom:ReloadOptions()
     self:ShowHideWorldCoords()
     self:ShowHideCoordBlock()
     self:ShowHideCrazyArrow()
-    self:EnableDisablePOIIntegration()
+    if not TomTom.CLASSIC then
+        self:EnableDisablePOIIntegration()
+    end
 end
 
 function TomTom:ClearAllWaypoints()
