@@ -1121,7 +1121,9 @@ local function usage()
     ChatFrame1:AddMessage(L["|cffffff78/way <x> <y> [desc]|r - Adds a waypoint at x,y with descrtiption desc"])
     ChatFrame1:AddMessage(L["|cffffff78/way <zone> <x> <y> [desc]|r - Adds a waypoint at x,y in zone with description desc"])
     ChatFrame1:AddMessage(L["|cffffff78/way reset all|r - Resets all waypoints"])
+    ChatFrame1:AddMessage(L["|cffffff78/way reset away|r - Resets all waypoints not in current zone"])
     ChatFrame1:AddMessage(L["|cffffff78/way reset <zone>|r - Resets all waypoints in zone"])
+    ChatFrame1:AddMessage(L["|cffffff78/way reset not <zone>|r - Resets all waypoints not in zone"])
     ChatFrame1:AddMessage(L["|cffffff78/way local|r - Lists active waypoints in current zone"])
     ChatFrame1:AddMessage(L["|cffffff78/way list|r - Lists all active waypoints"])
     ChatFrame1:AddMessage(L["|cffffff78/way arrow|r - Prints status of the Crazy Arrow"])
@@ -1372,10 +1374,31 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
                 StaticPopupDialogs["TOMTOM_REMOVE_ALL_CONFIRM"].OnAccept()
                 return
             end
-
+        elseif ltoken2 == "away" then
+            local m, x, y = TomTom:GetCurrentPlayerPosition()
+            for map, map_waypoints in pairs(waypoints) do
+                if map ~= m then
+                    local numRemoved = 0
+                    for key, uid in pairs(waypoints[map]) do
+                        TomTom:RemoveWaypoint(uid)
+                        numRemoved = numRemoved + 1
+                    end
+                    local zoneName = hbd:GetLocalizedMap(map)
+                    if numRemoved > 0 then
+                        ChatFrame1:AddMessage(L["Removed %d waypoints from %s"]:format(numRemoved, zoneName))
+                    end
+                end
+            end
         elseif tokens[2] then
             -- Reset the named zone
-            local zone = table.concat(tokens, " ", 2)
+            local notHere = false
+            local zone = ""
+            if lowergsub(tokens[2]) == "not" then
+                notHere = true
+                zone = table.concat(tokens, " ", 3)
+            else
+                zone = table.concat(tokens, " ", 2)
+            end
             -- Find a fuzzy match for the zone
 
             local matches = {}
@@ -1409,6 +1432,23 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
 
             local zoneName = matches[1]
             local mapId = NameToMapId[zoneName]
+
+            if notHere then
+                for map, map_waypoints in pairs(waypoints) do
+                    if map ~= mapId then
+                        local numRemoved = 0
+                        for key, uid in pairs(waypoints[map]) do
+                            TomTom:RemoveWaypoint(uid)
+                            numRemoved = numRemoved + 1
+                        end
+                        local zoneName = hbd:GetLocalizedMap(map)
+                        if numRemoved > 0 then
+                            ChatFrame1:AddMessage(L["Removed %d waypoints from %s"]:format(numRemoved, zoneName))
+                        end
+                    end
+                end
+                return
+            end
 
             local numRemoved = 0
             if waypoints[mapId] then
