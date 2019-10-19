@@ -36,7 +36,7 @@ local function createconfig()
 			TomTom:ShowHideWorldCoords()
 		elseif ns == "arrow" then
 			TomTom:ShowHideCrazyArrow()
-        elseif ns == "poi" then
+        elseif ns == "poi" and (not TomTom.CLASSIC) then
             TomTom:EnableDisablePOIIntegration()
 		elseif opt == "otherzone" then
 			TomTom:ReloadWaypoints()
@@ -880,9 +880,11 @@ local function createBlizzOptions()
 	config:RegisterOptionsTable("TomTom-Feeds", options.args.feeds)
 	dialog:AddToBlizOptions("TomTom-Feeds", options.args.feeds.name, "TomTom")
 
-    -- POI Options
-	config:RegisterOptionsTable("TomTom-POI", options.args.poi)
-	dialog:AddToBlizOptions("TomTom-POI", options.args.poi.name, "TomTom")
+	-- POI Options
+	if not TomTom.CLASSIC then
+		config:RegisterOptionsTable("TomTom-POI", options.args.poi)
+		dialog:AddToBlizOptions("TomTom-POI", options.args.poi.name, "TomTom")
+	end
 
 	-- Profile Options
 	local p_options = options.args.profile.args.options
