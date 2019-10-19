@@ -427,7 +427,6 @@ local function createconfig()
 				desc = L["TomTom can hide waypoints in other zones, this setting toggles that functionality"],
 				width = "double",
 				arg = "minimap.otherzone",
-				disabled = true,
 			},
 			tooltip = {
 				order = 4,
@@ -496,7 +495,6 @@ local function createconfig()
 				desc = L["TomTom can hide waypoints in other zones, this setting toggles that functionality"],
 				width = "double",
 				arg = "worldmap.otherzone",
-				disabled = true,
 			},
 			tooltip = {
 				order = 4,
