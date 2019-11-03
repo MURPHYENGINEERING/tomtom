@@ -297,6 +297,7 @@ function TomTom:ReloadWaypoints()
 				world = world,
 				callbacks = nil,
 				silent = true,
+				from = "Anon",
 			}
 
 			-- Override options with what is stored in the profile
@@ -474,7 +475,7 @@ local function WorldMap_OnClick (self, ...)
             return false
         end
 
-        local uid = TomTom:AddWaypoint(m, x, y, { title = L["TomTom waypoint"],})
+        local uid = TomTom:AddWaypoint(m, x, y, { title = L["TomTom waypoint"], from="TomTom/wm"})
         return true
     else
         return false
@@ -492,6 +493,7 @@ local function WaypointCallback(event, arg1, arg2, arg3)
         if arg3 then
             tooltip:SetText(L["TomTom waypoint"])
             tooltip:AddLine(string.format(L["%s yards away"], math.floor(arg2)), 1, 1 ,1)
+            tooltip:AddLine(string.format(L["From: %s"], data.from or "?"))
             tooltip:Show()
         else
             tooltip.lines[2]:SetFormattedText(L["%s yards away"], math.floor(arg2), 1, 1, 1)
@@ -703,7 +705,7 @@ function TomTom:CHAT_MSG_ADDON(event, prefix, data, channel, sender)
     y = tonumber(y)
 
     local zoneName = hbd:GetLocalizedMap(m)
-    self:AddWaypoint(m, x, y, {title = title})
+    self:AddWaypoint(m, x, y, {title = title, from=("TomTom/"..sender)})
     local msg = string.format(L["|cffffff78TomTom|r: Added '%s' (sent from %s) to zone %s"], title, sender, zoneName)
     ChatFrame1:AddMessage(msg)
 end
@@ -738,6 +740,7 @@ local function _both_tooltip_show(event, tooltip, uid, dist)
     local zoneName = hbd:GetLocalizedMap(m)
 
     tooltip:AddLine(string.format(L["%s (%.2f, %.2f)"], zoneName, x*100, y*100), 0.7, 0.7, 0.7)
+    tooltip:AddLine(string.format(L["From: %s"], data.from or "?"))
     tooltip:Show()
 end
 
@@ -822,7 +825,7 @@ function TomTom:AddWaypointToCurrentZone(x, y, desc)
         return
     end
 
-    return self:AddWaypoint(m, x/100, y/100, {title = desc})
+    return self:AddWaypoint(m, x/100, y/100, {title = desc, from="TomTom/AWTCZ"})
 end
 
 -- Return a set of default callbacks that can be used by addons to provide
@@ -916,7 +919,7 @@ function TomTom:AddWaypoint(m, x, y, opts)
     end
 
     -- uid is the 'new waypoint' called this for historical reasons
-    local uid = {m, x, y, title = opts.title}
+    local uid = {m, x, y, title = opts.title, from=(opts.from or "?")}
 
     -- Copy over any options, so we have them
     for k,v in pairs(opts) do
@@ -1066,6 +1069,7 @@ do
             local desc = string.format("%s: %.2f, %.2f", zoneName, x*100, y*100)
             TomTom:AddWaypoint(m, x, y, {
                 title = desc,
+                from = "TomTom/Block"
             })
         end
     end
@@ -1274,6 +1278,7 @@ SlashCmdList["TOMTOM_WAYBACK"] = function(msg)
     local backm,backx,backy = TomTom:GetCurrentPlayerPosition()
     TomTom:AddWaypoint(backm,backx, backy, {
         title = title,
+        from = "TomTom/wayb"
     })
 end
 
@@ -1537,6 +1542,7 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
         y = tonumber(y)
         TomTom:AddWaypoint(mapId, x/100, y/100, {
             title = desc or L["TomTom waypoint"],
+            from = "TomTom/way",
         })
     elseif tonumber(tokens[1]) then
         -- A vanilla set command
@@ -1556,6 +1562,7 @@ SlashCmdList["TOMTOM_WAY"] = function(msg)
         if m and x and y then
             TomTom:AddWaypoint(m, x/100, y/100, {
                 title = desc or L["TomTom waypoint"],
+                from = "TomTom/way",
             })
         end
     else
