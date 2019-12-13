@@ -1,5 +1,5 @@
-## Interface: 80205
-##classic ## Interface: 11302
+##retail ## Interface: 80205
+## Interface: 11303
 ## Title: TomTom
 ## Author: jnwhiteh
 ## Version: @project-version@
