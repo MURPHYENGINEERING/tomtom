@@ -1,6 +1,6 @@
 -- HereBeDragons is a data API for the World of Warcraft mapping system
 
-local MAJOR, MINOR = "HereBeDragons-2.0", 10
+local MAJOR, MINOR = "HereBeDragons-2.0", 13
 assert(LibStub, MAJOR .. " requires LibStub")
 
 local HereBeDragons, oldversion = LibStub:NewLibrary(MAJOR, MINOR)
@@ -66,7 +66,8 @@ local instanceIDOverrides = {
     [1626] = 1220, -- Suramar Withered Scenario
     [1662] = 1220, -- Suramar Invasion Scenario
     -- BfA
-    [2241] = 1,    -- Uldum N'zoth invasion
+    [2241] = 1,    -- Uldum N'zoth assault
+    [2275] = 870,  -- Vale of Eternal Blossoms N'zoth Minor Vision
 }
 
 local dynamicInstanceIDOverrides = {}
@@ -254,7 +255,7 @@ local function UpdateCurrentPosition(instanceCheck)
     -- try to override the instance if possible
     if instanceCheck then
         local _x, _y, instance = HereBeDragons:GetPlayerWorldPosition()
-        if instance and mapData[uiMapID] and mapData[uiMapID].instance ~= instance and uiMapID ~= -1 and not dynamicInstanceIDOverrides[instance] then
+        if instance and mapData[uiMapID] and mapData[uiMapID].instance ~= instance and uiMapID ~= -1 and not instanceIDOverrides[instance] and not instanceIDOverrides[mapData[uiMapID].instance] then
             dynamicInstanceIDOverrides[instance] = mapData[uiMapID].instance
         end
     end
