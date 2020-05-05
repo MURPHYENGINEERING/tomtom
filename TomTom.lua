@@ -415,8 +415,10 @@ function TomTom:ShowHideCoordBlock()
             TomTomBlock:SetScript("OnDragStop", Block_OnDragStop)
             TomTomBlock:SetScript("OnDragStart", Block_OnDragStart)
             TomTomBlock:RegisterEvent("PLAYER_ENTERING_WORLD")
-            TomTomBlock:RegisterEvent("PET_BATTLE_OPENING_START")
-            TomTomBlock:RegisterEvent("PET_BATTLE_CLOSE")
+            if not self.CLASSIC then
+                TomTomBlock:RegisterEvent("PET_BATTLE_OPENING_START")
+                TomTomBlock:RegisterEvent("PET_BATTLE_CLOSE")
+            end
             TomTomBlock:SetScript("OnEvent", Block_OnEvent)
         end
         if self.profile.arrow.hideDuringPetBattles and C_PetBattles and C_PetBattles.IsInBattle() then
