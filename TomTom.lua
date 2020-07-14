@@ -1021,17 +1021,17 @@ do
         local opt = TomTom.db.profile
 
         if not x or not y then
-            self.Player:SetText("Player: ---")
+            self.Player:SetText(L["Player: ---"])
         else
-            self.Player:SetFormattedText("Player: %s", RoundCoords(x, y, opt.mapcoords.playeraccuracy))
+            self.Player:SetFormattedText(L["Player: %s"], RoundCoords(x, y, opt.mapcoords.playeraccuracy))
         end
 
         local cX, cY = GetCurrentCursorPosition()
 
         if not cX or not cY then
-            self.Cursor:SetText("Cursor: ---")
+            self.Cursor:SetText(L["Cursor: ---"])
         else
-            self.Cursor:SetFormattedText("Cursor: %s", RoundCoords(cX, cY, opt.mapcoords.cursoraccuracy))
+            self.Cursor:SetFormattedText(L["Cursor: %s"], RoundCoords(cX, cY, opt.mapcoords.cursoraccuracy))
         end
     end
 end
@@ -1115,7 +1115,7 @@ function TomTom:DebugListAllWaypoints()
     for m in pairs(waypoints) do
         local c,z,w = TomTom:GetCZWFromMapID(m)
         local zoneName = hbd:GetLocalizedMap(m) or "?"
-        self:Printf("%s: (map: %d, zone: %s, continent: %s, world: %s)", zoneName, m, tostring(z), tostring(c), tostring(w))
+        self:Printf(L["%s: (map: %d, zone: %s, continent: %s, world: %s)"], zoneName, m, tostring(z), tostring(c), tostring(w))
         for key, wp in pairs(waypoints[m]) do
             local ctxt = RoundCoords(wp[2], wp[3], 2)
             local desc = wp.title and wp.title or L["Unknown waypoint"]
