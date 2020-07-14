@@ -8,6 +8,7 @@
 ## Notes-frFR: Agit comme un assistant de navigation portable
 ## Notes-zhCN:一个简单的导航助手。
 ## Notes-ruRU: Удобный портативный навигатор по игровой карте
+## Notes-deDE: Dient dir als portabler Navigationsassistent.
 ## Author: Cladhaire
 ## SavedVariables: TomTomDB, TomTomWaypoints, TomTomWaypointsM
 ## OptionalDeps: HereBeDragons-2.0
