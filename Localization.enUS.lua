@@ -3,6 +3,7 @@
 TomTomLocals = {
 	["%d yards"] = "%d yards",
 	["%s (%.2f, %.2f)"] = "%s (%.2f, %.2f)",
+	["%s: (map: %d, zone: %s, continent: %s, world: %s)"] = "%s: (map: %d, zone: %s, continent: %s, world: %s)",
 	["%s yards away"] = "%s yards away",
 	["%s%s - %s %s %s %s"] = "%s%s - %s %s %s %s",
 	["%s%s - %s (map: %d)"] = "%s%s - %s (map: %d)",
@@ -210,6 +211,16 @@ TomTomLocals = {
 	["|cffffff78TomTom:|r Selected waypoint (%s%s%s) in %s"] = "|cffffff78TomTom:|r Selected waypoint (%s%s%s) in %s",
 	["|cffffff78TomTom:|r Waypoint %s valid"] = "|cffffff78TomTom:|r Waypoint %s valid",
 	["|cffffff78TomTom|r: Added '%s' (sent from %s) to zone %s"] = "|cffffff78TomTom|r: Added '%s' (sent from %s) to zone %s",
+	["Old Gold Green Dot"] = "Old Gold Green Dot",
+	["New Gold Blue Dot"] = "New Gold Blue Dot",
+	["New Gold Green Dot"] = "New Gold Green Dot",
+	["New Gold Purple Dot"] = "New Gold Purple Dot",
+	["New Gold Red Dot"] = "New Gold Red Dot",
+	["New Purple Ring"] = "New Purple Ring",
+	["Player: ---"] = "Player: ---",
+	["Player: %s"] = "Player: %s",
+	["Cursor: ---"] = "Cursor: ---",
+	["Cursor: %s"] = "Cursor: %s",
 }
 
 setmetatable(TomTomLocals, {__index=function(t,k) rawset(t, k, k); return k; end})
