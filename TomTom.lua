@@ -382,8 +382,8 @@ function TomTom:ShowHideCoordBlock()
     if self.profile.block.enable then
         -- Create the frame if it doesn't exist
         if not TomTomBlock then
-            -- Create the coordinate display
-            TomTomBlock = CreateFrame("Button", "TomTomBlock", UIParent)
+            -- Create the coordinate display, as of WoW 9.0, BackdropTemplate is needed.
+            TomTomBlock = CreateFrame("Button", "TomTomBlock", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
             TomTomBlock:SetWidth(120)
             TomTomBlock:SetHeight(32)
             TomTomBlock:SetToplevel(1)
