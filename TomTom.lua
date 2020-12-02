@@ -811,6 +811,7 @@ end
 local function noop() end
 
 function TomTom:RemoveWaypoint(uid)
+    if not uid then return end
     if type(uid) ~= "table" then error("TomTom:RemoveWaypoint(uid) UID is not a table."); end
     local data = uid
     self:ClearWaypoint(uid)
