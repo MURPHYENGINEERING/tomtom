@@ -1196,7 +1196,7 @@ function TomTom:GetCZWFromMapID(m)
             zone = m
         elseif mapType == Enum.UIMapType.Continent then
             continent = m
-        elseif mapType == Enum.UIMapType.World then
+        elseif (mapType == Enum.UIMapType.World) or (mapType == Enum.UIMapType.Cosmic) then
             world = m
             continent = continent or m -- Hack for one continent worlds
         end
