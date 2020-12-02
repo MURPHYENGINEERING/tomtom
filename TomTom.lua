@@ -1159,9 +1159,11 @@ local overrides = {
     [579] = {suffix = "1"}, -- Lunarfall Excavation
     [580] = {suffix = "2"}, -- Lunarfall Excavation
     [581] = {suffix = "3"}, -- Lunarfall Excavation
+    [582] = {mapType = Enum.UIMapType.Zone}, -- Lunarfall
     [585] = {suffix = "1"}, -- Frostwall Mine
     [586] = {suffix = "2"}, -- Frostwall Mine
     [587] = {suffix = "3"}, -- Frostwall Mine
+    [590] = {mapType = Enum.UIMapType.Zone}, -- Frostwall
     [625] = {mapType = Enum.UIMapType.Orphan}, -- Dalaran
     [626] = {mapType = Enum.UIMapType.Micro}, -- Dalaran
     [627] = {mapType = Enum.UIMapType.Zone},
