@@ -15,6 +15,8 @@
 
 ## X-Localizations: enUS, enGB, deDE, frFR, zhCN, ruRU, zhTW
 ## X-CompatibleLocales: enUS, enGB, deDE, frFR, esES, esMX, zhCN, zhTW, koKR, ruRU
+## X-Curse-Project-ID: 18808
+## X-WoWI-ID: 7032
 
 libs\LibStub\LibStub.lua
 libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
