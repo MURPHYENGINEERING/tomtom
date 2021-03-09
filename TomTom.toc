@@ -1,4 +1,4 @@
-## Interface: 90002
+## Interface: 90005
 ## classic ## Interface: 11306
 ## Title: TomTom
 ## Author: jnwhiteh, lortiz
