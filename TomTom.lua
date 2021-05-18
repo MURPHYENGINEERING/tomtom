@@ -199,7 +199,7 @@ function TomTom:Initialize(event, addon)
 end
 
 function TomTom:Enable(addon)
-    if not TomTom.CLASSIC then
+    if (WOW_PROJECT_ID == WOW_PROJECT_MAINLINE) then
         self:EnableDisablePOIIntegration()
     end
     self:ReloadWaypoints()
