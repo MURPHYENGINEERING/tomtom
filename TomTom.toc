@@ -16,6 +16,7 @@
 ## X-CompatibleLocales: enUS, enGB, deDE, frFR, esES, esMX, zhCN, zhTW, koKR, ruRU
 ## X-Curse-Project-ID: 18808
 ## X-WoWI-ID: 7032
+## X-Wago-ID: Rn6VaONd
 
 libs\LibStub\LibStub.lua
 libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
