@@ -1,6 +1,6 @@
 ## Interface: 90005
 ## Title: TomTom
-## Author: jnwhiteh, lortiz
+## Author: Cladhaire, Ludovicus
 ## Version: @project-version@
 ## License: All Rights Reserved
 ## Notes: Acts as your portable navigation assistant
@@ -8,7 +8,6 @@
 ## Notes-zhCN:一个简单的导航助手。
 ## Notes-ruRU: Удобный портативный навигатор по игровой карте
 ## Notes-deDE: Dient dir als portabler Navigationsassistent.
-## Author: Cladhaire, Ludovicus
 ## SavedVariables: TomTomDB, TomTomWaypoints, TomTomWaypointsM
 ## OptionalDeps: HereBeDragons-2.0
 
