@@ -155,6 +155,13 @@ local function OnUpdate(self, elapsed)
 
 	status:SetText(sformat(L["%d yards"], dist))
 
+	-- Avoid calling GetText and doing string comparisons if we don't have to
+	-- (even though it should be O(1) with short strings, I don't know how involved GetText is)
+	if active_point.isCrazyArrowTitleDirty then
+		wayframe.title:SetText(active_point.title or L["Unknown waypoint"])
+		active_point.isCrazyArrowTitleDirty = false
+	end
+
 	local cell
 
 	-- Showing the arrival arrow?
@@ -342,6 +349,14 @@ local dropdown_info = {
 			text = L["Send waypoint to"],
 			hasArrow = true,
 			value = "send",
+		},
+		{
+			-- give the waypoint a new name
+			text = L["Change waypoint title"],
+			func = function()
+					local uid = TomTom.dropdown.uid
+					local dialog = StaticPopup_Show("TOMTOM_CHANGE_WAYPOINT_TITLE", nil, nil, uid)
+			end,
 		},
 		{
 			-- Clear waypoint from crazy arrow

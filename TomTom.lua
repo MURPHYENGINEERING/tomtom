@@ -530,6 +530,61 @@ StaticPopupDialogs["TOMTOM_REMOVE_ALL_CONFIRM"] = {
     hideOnEscape = 1,
 }
 
+StaticPopupDialogs["TOMTOM_CHANGE_WAYPOINT_TITLE"] = {
+    preferredIndex = STATICPOPUPS_NUMDIALOGS,
+    cancels = "TOMTOM_CHANGE_WAYPOINT_TITLE",
+    text = L["Change waypoint title"],
+    button1 = ACCEPT,
+    button2 = CANCEL,
+    OnShow = function(self)
+        self.editBox:SetText(self.data.title)
+        self.editBox:HighlightText()
+    end,
+    OnAccept = function(self)
+        local waypoint = self.data
+        local newTitle = self.editBox:GetText()
+        if newTitle == waypoint.title then return end
+
+        -- We could remove and add the waypoint, but let's keep the object alive
+        -- so we don't disturb anything else that's tracking its reference.
+        -- This also prevents the "Added waypoint" message which might be confusing.
+
+        -- the key depends on title, so we'll need to reinsert the reference into
+        -- the waypoints and persistence maps
+        local oldKey = TomTom:GetKey(waypoint)
+        
+        waypoint.title = newTitle
+        -- Use a dirty flag to avoid repeated string comparisons that usually fail
+        waypoint.isCrazyArrowTitleDirty = true
+
+        local newKey = TomTom:GetKey(waypoint)
+
+        local mapId = waypoint[1]
+
+        local waypoints = TomTom.waypoints[mapId]
+        if waypoints then
+            waypoints[oldKey] = nil
+            waypoints[newKey] = waypoint
+        end
+
+        local persistence = TomTom.waypointprofile[mapId]
+        if persistence and persistence[oldKey] then
+            persistence[oldKey] = nil
+            persistence[newKey] = waypoint
+        end
+    end,
+    EditBoxOnEnterPressed = function(self)
+        self:GetParent().button1:Click()
+    end,
+    EditBoxOnEscapePressed = function(self)
+        self:GetParent().button2:Click()
+    end,
+    hasEditBox = true,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+}
+
 local dropdown_info = {
     -- Define level one elements here
     [1] = {
@@ -551,6 +606,14 @@ local dropdown_info = {
         text = L["Send waypoint to"],
         hasArrow = true,
         value = "send",
+    },
+    {
+        -- give the waypoint a new name
+        text = L["Change waypoint title"],
+        func = function()
+            local uid = TomTom.dropdown.uid
+            local dialog = StaticPopup_Show("TOMTOM_CHANGE_WAYPOINT_TITLE", nil, nil, uid)
+        end,
     },
     { -- Remove waypoint
     text = L["Remove waypoint"],
